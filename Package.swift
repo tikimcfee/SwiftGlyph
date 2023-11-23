@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
         .package(url: "https://github.com/codeface-io/SwiftNodes.git", .upToNextMajor(from: "0.7.0")),
+        .package(url: "https://github.com/codeface-io/LSPServiceKit.git", branch: "master"),
         .package(path: "../MetalLink"),
     ],
     targets: [
@@ -30,6 +31,7 @@ let package = Package(
                 "BitHandling",
                 "MetalLink",
                 "SwiftNodes",
+                "LSPServiceKit",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
             ]

@@ -1,0 +1,29 @@
+{
+  "swift" : {
+    "path" : "/usr/bin/xcrun",
+    "arguments" : [
+      "sourcekit-lsp"
+    ],
+    "environment" : {
+      "SOURCEKIT_LOGGING" : "0"
+    }
+  },
+  "python" : {
+    "path" : "/opt/homebrew/bin/pylsp",
+    "arguments" : [
+      "-v"
+    ],
+    "environment" : {
+
+    }
+  },
+  "kotlin" : {
+    "path" : "/opt/homebrew/bin/kotlin-language-server",
+    "arguments" : [
+
+    ],
+    "environment" : {
+
+    }
+  }
+}

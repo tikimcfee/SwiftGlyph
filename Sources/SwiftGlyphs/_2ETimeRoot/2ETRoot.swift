@@ -95,6 +95,15 @@ public class TwoETimeRoot: MetalLinkReader {
             openDirectory { file in
                 guard let url = file.parent else { return }
                 GlobalInstances.fileBrowser.setRootScope(url)
+                Task {
+                    do {
+                        // This loads up the last server into the shared wrapper as an enum instance.
+                        // That's a pretty dirty trick.
+                        try await GlobalInstances.gridStore.sharedLsp.quickNewServer(at: url)
+                    } catch {
+                        print(error)
+                    }
+                }
             }
         }
     }

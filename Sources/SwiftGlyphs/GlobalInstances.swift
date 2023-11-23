@@ -117,4 +117,8 @@ public class GridStore {
     public private(set) lazy var nodeFocusController: CodeGridSelectionController = CodeGridSelectionController(
         tokenCache: globalTokenCache
     )
+    
+    public private(set) lazy var sharedLsp: SwiftGlyphLSPWrapper = {
+        SwiftGlyphLSPWrapper()
+    }()
 }
