@@ -5,19 +5,40 @@ import PackageDescription
 
 let package = Package(
     name: "SwiftGlyphs",
+    platforms: [
+        .iOS(.v15),
+        .macOS(.v13),
+    ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "SwiftGlyphs",
-            targets: ["SwiftGlyphs"]),
+            targets: ["SwiftGlyphs"]
+        ),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
+        .package(url: "https://github.com/codeface-io/SwiftNodes.git", .upToNextMajor(from: "0.7.0")),
+        .package(path: "../MetalLink"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SwiftGlyphs"),
+            name: "SwiftGlyphs",
+            dependencies: [
+                "BitHandling",
+                "MetalLink",
+                "SwiftNodes",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftParser", package: "swift-syntax"),
+            ]
+        ),
         .testTarget(
             name: "SwiftGlyphsTests",
-            dependencies: ["SwiftGlyphs"]),
+            dependencies: [
+                "SwiftGlyphs"
+            ]
+        ),
     ]
 )
