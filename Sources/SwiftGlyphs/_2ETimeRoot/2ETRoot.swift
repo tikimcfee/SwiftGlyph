@@ -95,15 +95,37 @@ public class TwoETimeRoot: MetalLinkReader {
             openDirectory { file in
                 guard let url = file.parent else { return }
                 GlobalInstances.fileBrowser.setRootScope(url)
-                Task {
-                    do {
-                        // This loads up the last server into the shared wrapper as an enum instance.
-                        // That's a pretty dirty trick.
-                        try await GlobalInstances.gridStore.sharedLsp.quickNewServer(at: url)
-                    } catch {
-                        print(error)
-                    }
+                
+                // TODO: Is this a thing now?
+                self.tryLSPLoad(url)
+            }
+        }
+    }
+    
+    func tryLSPLoad(_ url: URL) {
+        Task {
+            do {
+                // This loads up the last server into the shared wrapper as an enum instance.
+                // That's a pretty dirty trick.
+                try await GlobalInstances.gridStore.sharedLsp.quickNewServer(at: url)
+                
+                guard let folder = try CodeFolder(url, codeFileEndings: ["swift"]) else {
+                    return
                 }
+                
+                guard case let .loaded(server) = GlobalInstances.gridStore.sharedLsp.state else {
+                    return
+                }
+                
+                let result = try await folder.retrieveSymbolsAndReferences(
+                    at: url,
+                    from: server,
+                    codebaseRootFolder: url
+                )
+                
+                print(result)
+            } catch {
+                print(error)
             }
         }
     }
