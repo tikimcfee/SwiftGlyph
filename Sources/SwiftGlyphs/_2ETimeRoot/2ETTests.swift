@@ -62,10 +62,6 @@ extension TwoETimeRoot {
 extension TwoETimeRoot {
     
     func setupRenderPlanTest() throws {
-        builder.mode = .multiCollection
-        
-//        root.add(child: GlobalInstances.gridStore.traceLayoutController.currentTraceLine)
-        
         camera.position = LFloat3(0, 0, 300)
         
         var lastPlan: RenderPlan?
@@ -161,8 +157,6 @@ extension TwoETimeRoot {
     }
     
     func setupNodeBackgroundTest() throws {
-        builder.mode = .multiCollection // TODO: DO NOT switch to mono without render breakpoints. crazy memory leak / performance issue with many grids
-        
         func doAdd(_ consumer: GlyphCollectionSyntaxConsumer) {
             root.add(child: consumer.targetCollection)
             editor.transformedByAdding(.trailingFromLastGrid(consumer.targetGrid))

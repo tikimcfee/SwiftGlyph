@@ -13,7 +13,7 @@ public class WorldGridSnapping {
 //    // map the relative directions you can go from a grid
 //    // - a direction has a reference to target grid, such that it can become a 'focus'
 //    // grid -> Set<Direction> = {left(toLeft), right(toRight), down(below), forward(zFront)}    
-    private typealias Mapping = [CodeGrid: [SourcedRelativeGridMapping]]
+    public typealias Mapping = [CodeGrid: [SourcedRelativeGridMapping]]
     private var mapping = Mapping()
     
     public var gridReg1: CodeGrid?
@@ -27,6 +27,8 @@ public class WorldGridSnapping {
     public var nodeReg4: MetalLinkNode?
     
     public var searchTargetGrid: CodeGrid?
+    
+    public init() { }
 }
 
 public extension WorldGridSnapping {

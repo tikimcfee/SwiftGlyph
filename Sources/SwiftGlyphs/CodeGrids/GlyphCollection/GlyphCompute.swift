@@ -20,15 +20,16 @@ extension GlyphCollectionSyntaxConsumer {
 //            print("Failed to read \(fileURL), returning empty data")
 //        }
         
-//        let data = String(
-//            RAW_ATLAS_STRING_.prefix(10_000)
-//        ).data!.nsData
+        let data = "🇵🇷".data!.nsData
         
-        let data = RAW_ATLAS_STRING_.data!.nsData
+//        let data = String(
+//            RAW_ATLAS_STRING_.prefix(60_000)
+//        ).data!.nsData
+//        
+//        let data = RAW_ATLAS_STRING_.data!.nsData
         
         // Setup Metal
         let device = GlobalInstances.defaultLink.device
-//        let commandQueue = GlobalInstances.defaultLink.commandQueue
         
         // Create a Metal buffer from the Data object
         guard let metalBuffer = device.makeBuffer(
@@ -38,18 +39,12 @@ extension GlyphCollectionSyntaxConsumer {
         ) else {
             fatalError("Unable to create Metal buffer")
         }
+        print("have a new buffer I thinK: ", metalBuffer)
         
-        print("have a new buffer I thinK: ", metalBuffer.length)
-//        runComputeKernel(on: metalBuffer)
-        let mappedData = runComputeKernel32(on: metalBuffer)
-        let normalStringMap = String(data: data.swiftData, encoding: .utf8)
-        
-        print("--- Did they blend?? --")
-        print(mappedData == normalStringMap)
-        print("--- --  *** ***  --  --")
+        runComputeKernel32(on: metalBuffer)
     }
     
-    func runComputeKernel32(on metalBuffer: MTLBuffer) -> String? {
+    func runComputeKernel32(on metalBuffer: MTLBuffer) {
         let defaultLibrary = GlobalInstances.defaultLink.defaultLibrary
         let device = GlobalInstances.defaultLink.device
         let commandQueue = GlobalInstances.defaultLink.commandQueue
@@ -59,21 +54,21 @@ extension GlyphCollectionSyntaxConsumer {
               let computePipelineState = try? device.makeComputePipelineState(function: kernelFunction)
         else {
             print("Unable to create compute pipeline state")
-            return nil
+            return
         }
 
         // Create a command buffer
         guard let commandBuffer = commandQueue.makeCommandBuffer(),
               let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder() else {
             print("Unable to create command buffer or encoder")
-            return nil
+            return
         }
 
         // Create an output buffer matching the GlyphMapKernelOut structure
         let outputBufferSize = metalBuffer.length * MemoryLayout<GlyphMapKernelOut>.stride
         guard let outputBuffer = device.makeBuffer(length: outputBufferSize, options: []) else {
             print("Unable to create output buffer")
-            return nil
+            return
         }
 
         // Set the compute kernel's parameters
@@ -118,19 +113,30 @@ extension GlyphCollectionSyntaxConsumer {
         let numberOfElements = outputBuffer.length / MemoryLayout<GlyphMapKernelOut>.stride
 
         // Bind the memory to the correct type
-        let pointer = contents.bindMemory(to: GlyphMapKernelOut.self, capacity: numberOfElements)
+        let pointer = contents.bindMemory(
+            to: GlyphMapKernelOut.self,
+            capacity: numberOfElements
+        )
 
         var scalarView = String.UnicodeScalarView()
         for i in 0..<numberOfElements {
-            let glyph = pointer[i] // Access each GlyphMapKernelOut
-            // Process 'glyph' as needed
-            guard glyph.sourceValue > 0,
+            let glyph = pointer[i]
+            guard glyph.sourceValue > 0, // Assert not a terminator
                   let scalar = UnicodeScalar(glyph.sourceValue)
             else { continue }
+
             scalarView.append(scalar)
+            
+            let pairOut = writer.addGlyphToAtlas(scalar)
+            if let pair = pairOut.0 {
+                pointer[i].textureDescriptorU = pair.u
+                pointer[i].textureDescriptorV = pair.v
+            }
+            if let bundle = pairOut.1 {
+                pointer[i].textureSize = bundle.texture.simdSize
+            }
         }
-        let scalarString = String(scalarView)
         
-        return scalarString
+        print("The atlas has been filled")
     }
 }

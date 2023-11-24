@@ -1,13 +1,13 @@
 import SwiftSyntax
 //import Parser
 
-extension SyntaxIdentifier {
+public extension SyntaxIdentifier {
     // TODO: I may be able to be stupid if I switch to tree sitter
     // to compute the id as an instance map to UUIDs
     var stringIdentifier: String { "\(hashValue)" }
 }
 
-extension SwiftSyntax.TriviaPiece {
+public extension SwiftSyntax.TriviaPiece {
     var stringify: String {
         var output = ""
         write(to: &output)
@@ -15,14 +15,14 @@ extension SwiftSyntax.TriviaPiece {
     }
 }
 
-extension Trivia {
+public extension Trivia {
     var stringified: String {
 		// #^ check if write(to:) appends or overwrites to avoid this map and join
         return reduce(into: "") { $1.write(to: &$0) }
     }
 }
 
-extension Syntax {
+public extension Syntax {
     var allText: String {
         return tokens(viewMode: .all).reduce(into: "") { result, token in
             result.append(token.triviaAndText)
@@ -47,7 +47,7 @@ extension Syntax {
     }
 }
 
-extension TokenSyntax {
+public extension TokenSyntax {
     var triviaAndText: String {
         leadingTrivia.stringified
             .appending(text)
@@ -64,7 +64,7 @@ extension TokenSyntax {
     }
 }
 
-extension SyntaxChildren {
+public extension SyntaxChildren {
     func listOfChildren() -> String {
         reduce(into: "") { result, element in
             let elementList = element

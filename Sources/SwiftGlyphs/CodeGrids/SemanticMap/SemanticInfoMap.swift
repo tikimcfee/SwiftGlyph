@@ -21,24 +21,28 @@ public class SemanticInfoMap {
     // var totalProtonicReversal = [NodeId: (Syntax, SemanticInfo)]
     // Or just one can be removed.. I think I walked myself into duplicating the map
     // since SemanticInfo captures the node Syntax... TreeSitter will make me laughcry.
-    var flattenedSyntax = [SyntaxIdentifier: Syntax]()  //TODO: *1
-    var semanticsLookupBySyntaxId = [SyntaxIdentifier: SemanticInfo]()  //TODO: *1
-    var syntaxIDLookupByNodeId = [NodeSyntaxID: SyntaxIdentifier]()
+    public var flattenedSyntax = [SyntaxIdentifier: Syntax]()  //TODO: *1
+    public var semanticsLookupBySyntaxId = [SyntaxIdentifier: SemanticInfo]()  //TODO: *1
+    public var syntaxIDLookupByNodeId = [NodeSyntaxID: SyntaxIdentifier]()
 
-	var structs = AssociatedSyntaxMap()
-	var classes = AssociatedSyntaxMap()
-	var enumerations = AssociatedSyntaxMap()
-	var functions = AssociatedSyntaxMap()
-	var variables = AssociatedSyntaxMap()
-	var typeAliases = AssociatedSyntaxMap()
-	var protocols = AssociatedSyntaxMap()
-	var initializers = AssociatedSyntaxMap()
-	var deinitializers = AssociatedSyntaxMap()
-	var extensions = AssociatedSyntaxMap()
-    var switches = AssociatedSyntaxMap()
+    public var structs = AssociatedSyntaxMap()
+    public var classes = AssociatedSyntaxMap()
+    public var enumerations = AssociatedSyntaxMap()
+    public var functions = AssociatedSyntaxMap()
+    public var variables = AssociatedSyntaxMap()
+    public var typeAliases = AssociatedSyntaxMap()
+    public var protocols = AssociatedSyntaxMap()
+    public var initializers = AssociatedSyntaxMap()
+    public var deinitializers = AssociatedSyntaxMap()
+    public var extensions = AssociatedSyntaxMap()
+    public var switches = AssociatedSyntaxMap()
     
-    var allSemanticInfo: [SemanticInfo] {
+    public var allSemanticInfo: [SemanticInfo] {
         return Array(semanticsLookupBySyntaxId.values)
+    }
+    
+    public init() {
+        
     }
 }
 

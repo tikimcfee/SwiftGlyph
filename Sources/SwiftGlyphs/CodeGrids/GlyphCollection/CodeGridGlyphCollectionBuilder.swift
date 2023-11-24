@@ -10,20 +10,12 @@ import Foundation
 import MetalLink
 import MetalLinkHeaders
 
-public extension CodeGridGlyphCollectionBuilder {
-    enum Mode {
-        case multiCollection
-    }
-}
-
 public class CodeGridGlyphCollectionBuilder {
     let link: MetalLink
     let atlas: MetalLinkAtlas
     let sharedSemanticMap: SemanticInfoMap
     let sharedTokenCache: CodeGridTokenCache
     let sharedGridCache: GridCache
-    
-    var mode: Mode = .multiCollection
     
     public init(
         link: MetalLink,
@@ -40,7 +32,7 @@ public class CodeGridGlyphCollectionBuilder {
         
     }
     
-    func getCollection(bufferSize: Int = BackingBufferDefaultSize) -> GlyphCollection {
+    public func getCollection(bufferSize: Int = BackingBufferDefaultSize) -> GlyphCollection {
         return try! GlyphCollection(
             link: link,
             linkAtlas: atlas,
@@ -48,7 +40,7 @@ public class CodeGridGlyphCollectionBuilder {
         )
     }
     
-    func createGrid(
+    public func createGrid(
         bufferSize: Int = BackingBufferDefaultSize
     ) -> CodeGrid {
         let grid = CodeGrid(
@@ -60,7 +52,7 @@ public class CodeGridGlyphCollectionBuilder {
         return grid
     }
     
-    func createConsumerForNewGrid() -> GlyphCollectionSyntaxConsumer {
+    public func createConsumerForNewGrid() -> GlyphCollectionSyntaxConsumer {
         GlyphCollectionSyntaxConsumer(targetGrid: createGrid())
     }
 }

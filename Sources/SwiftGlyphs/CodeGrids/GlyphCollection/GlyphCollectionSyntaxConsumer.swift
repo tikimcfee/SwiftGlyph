@@ -12,57 +12,57 @@ import MetalLinkHeaders
 import MetalKit
 import BitHandling
 
-struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
-    let targetGrid: CodeGrid
-    let targetCollection: GlyphCollection
-    var writer: GlyphCollectionWriter
+public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
+    public let targetGrid: CodeGrid
+    public let targetCollection: GlyphCollection
+    public var writer: GlyphCollectionWriter
     
     private static let __TEST_ASYNC__ = false
     
-    init(targetGrid: CodeGrid) {
+    public init(targetGrid: CodeGrid) {
         self.targetGrid = targetGrid
         self.targetCollection = targetGrid.rootNode
         self.writer = GlyphCollectionWriter(target: targetCollection)
     }
   
     @discardableResult
-    func consume(url: URL) -> CodeGrid {
+    public func consume(url: URL) -> CodeGrid {
         guard !Self.__TEST_ASYNC__ else {
             return __asyncConsume(url: url)
         }
         
         // MARK: --- BRING THE METAL ---
-//        ___BRING_THE_METAL__(url)
+        ___BRING_THE_METAL__(url)
         // MARK: --- :horns: -----------
         
-        guard let fileSource = loadSourceUrl(url) else {
-            return consumeText(textPath: url)
-        }
-        let size = fileSource.root.allText.count + 512
-        
-        guard size < 1_000_000 else {
-            print("Yo dude that's just like too many letters and stuff: \(url)")
-            
-            var trashNodes = CodeGridNodes()
-            write(
-                "This file's just too big right now: \(size)",
-                "raw-text-\(UUID().uuidString)",
-                .green,
-                &trashNodes
-            )
-            targetGrid.rootNode.setRootMesh()
-            return targetGrid
-        }
-        
-        try? targetGrid
-            .rootNode
-            .instanceState
-            .constants
-            .expandBuffer(nextSize: size, force: true)
-        
-        print("starting consume: \(url.lastPathComponent)")
-        consume(rootSyntaxNode: Syntax(fileSource))
-        print("completed consume: \(url.lastPathComponent)")
+//        guard let fileSource = loadSourceUrl(url) else {
+//            return consumeText(textPath: url)
+//        }
+//        let size = fileSource.root.allText.count + 512
+//        
+//        guard size < 1_000_000 else {
+//            print("Yo dude that's just like too many letters and stuff: \(url)")
+//            
+//            var trashNodes = CodeGridNodes()
+//            write(
+//                "This file's just too big right now: \(size)",
+//                "raw-text-\(UUID().uuidString)",
+//                .green,
+//                &trashNodes
+//            )
+//            targetGrid.rootNode.setRootMesh()
+//            return targetGrid
+//        }
+//        
+//        try? targetGrid
+//            .rootNode
+//            .instanceState
+//            .constants
+//            .expandBuffer(nextSize: size, force: true)
+//        
+//        print("starting consume: \(url.lastPathComponent)")
+//        consume(rootSyntaxNode: Syntax(fileSource))
+//        print("completed consume: \(url.lastPathComponent)")
         
         return targetGrid
     }
@@ -77,7 +77,7 @@ struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         return targetGrid
     }
     
-    func consumeText(textPath: URL) -> CodeGrid {
+    public func consumeText(textPath: URL) -> CodeGrid {
         guard let fullString = try? String(contentsOf: textPath) else {
             return targetGrid
         }
@@ -88,7 +88,7 @@ struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         return targetGrid
     }
     
-    func consumeText(text fullString: String) -> CodeGrid {
+    public func consumeText(text fullString: String) -> CodeGrid {
         var nodes = CodeGridNodes()
         let id = "raw-text-\(UUID().uuidString)"
         write(fullString, id, NSUIColor.white, &nodes)
@@ -97,7 +97,7 @@ struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
     }
     
     // --> cmd+f 'slow-stuff'
-    func consume(rootSyntaxNode: Syntax) {
+    public func consume(rootSyntaxNode: Syntax) {
         FlatteningVisitor(
             target: targetGrid.semanticInfoMap,
             builder: targetGrid.semanticInfoBuilder
@@ -133,7 +133,7 @@ struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         targetGrid.semanticInfoMap.insertNodeInfo(tokenIdNodeName, tokenId)
     }
     
-    func write(
+    public func write(
         _ string: String,
         _ nodeID: NodeSyntaxID,
         _ color: NSUIColor,
@@ -154,7 +154,7 @@ struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
     }
     
     
-    func acceleratedConsume(
+    public func acceleratedConsume(
         url: URL
     ) async {
         let reader = SplittingFileReader(targetURL: url)

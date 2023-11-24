@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "SwiftGlyphs",
     platforms: [
-        .iOS(.v15),
+        .iOS(.v16),
         .macOS(.v13),
     ],
     products: [
@@ -16,10 +16,10 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/rapidlugo/LSPServiceKit.git", branch: "master"),
         .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
         .package(url: "https://github.com/codeface-io/SwiftNodes.git", .upToNextMajor(from: "0.7.0")),
-        .package(url: "https://github.com/codeface-io/LSPServiceKit.git", branch: "master"),
         .package(path: "../MetalLink"),
     ],
     targets: [
@@ -39,7 +39,8 @@ let package = Package(
         .testTarget(
             name: "SwiftGlyphsTests",
             dependencies: [
-                "SwiftGlyphs"
+                "SwiftGlyphs",
+                "BitHandling",
             ]
         ),
     ]

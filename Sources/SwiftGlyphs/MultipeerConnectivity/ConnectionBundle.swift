@@ -7,7 +7,7 @@ typealias BundledDelegate = NSObject
     & MCNearbyServiceBrowserDelegate
     & MCNearbyServiceAdvertiserDelegate
 
-class ConnectionBundle {
+public class ConnectionBundle {
     var myPeerId: MCPeerID
     var globalSession: MCSession
     var serviceBrowser: MCNearbyServiceBrowser
@@ -24,7 +24,7 @@ class ConnectionBundle {
         }
     }
 
-    init(_ requestedDisplayName: String? = nil) {
+    public init(_ requestedDisplayName: String? = nil) {
         let peerId = Self.createPeerId(requestedDisplayName)
         self.myPeerId = peerId
         self.globalSession = Self.createSession(peerId)

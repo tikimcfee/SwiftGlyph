@@ -12,8 +12,8 @@ import SwiftSyntax
 /// Pretty much just don't use this. I have no idea what I could be doing incorrectly but just calling
 /// child nodes works. Using the walker doesn't. I'm assuming the 'walk' path makes assumptions about
 /// the state of nodes, and since I retain nodes all over the place, I'm likely breaking those assumptions.
-class ChildIterator: IteratorProtocol {
-    typealias Element = Syntax
+public class ChildIterator: IteratorProtocol {
+    public typealias Element = Syntax
     
     private class OneShotVisitor: SyntaxAnyVisitor {
         var enumeratedChildren = [Syntax]()
@@ -28,11 +28,11 @@ class ChildIterator: IteratorProtocol {
         }
     }
     
-    let count: Int
+    public let count: Int
     private let root: Syntax
     private var iterator: Array<Syntax>.Iterator
 
-    init(
+    public init(
         _ syntax: Syntax
     ) {
         self.root = syntax
@@ -42,15 +42,15 @@ class ChildIterator: IteratorProtocol {
         self.iterator = visitor.enumeratedChildren.makeIterator()
     }
     
-    func next() -> SwiftSyntax.Syntax? {
+    public func next() -> SwiftSyntax.Syntax? {
         iterator.next()
     }
 }
 
 // For whatever reason, it's safer to iterate through children than walking and doing things that way.
 // Luckily the recursion is super simple, and barring super crazy nesting, the stack should be fine.
-class IterativeRecursiveVisitor {
-    static func walkRecursiveFromSyntax(
+public class IterativeRecursiveVisitor {
+    public static func walkRecursiveFromSyntax(
         _ root: Syntax,
         _ receiver: (Syntax) throws -> Void
     ) {
@@ -62,7 +62,7 @@ class IterativeRecursiveVisitor {
         }
     }
     
-    static private func consumeRecursiveStart(
+    private static func consumeRecursiveStart(
         _ allChildNodes: SyntaxChildren,
         _ receiver: (Syntax) throws -> Void
     ) throws {
@@ -73,16 +73,16 @@ class IterativeRecursiveVisitor {
     }
 }
 
-class FlatteningVisitor {
-    let target: SemanticInfoMap
-    let builder: SemanticInfoBuilder
+public class FlatteningVisitor {
+    public let target: SemanticInfoMap
+    public let builder: SemanticInfoBuilder
     
-    init(target: SemanticInfoMap, builder: SemanticInfoBuilder) {
+    public init(target: SemanticInfoMap, builder: SemanticInfoBuilder) {
         self.target = target
         self.builder = builder
     }
     
-    func walkRecursiveFromSyntax(_ root: Syntax) {
+    public func walkRecursiveFromSyntax(_ root: Syntax) {
         tryMap(root)
         consumeRecursiveStart(root.children(viewMode: .sourceAccurate))
     }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#if os(macOS)
 extension View {
     
     @discardableResult
@@ -39,3 +40,4 @@ extension View {
         return window
     }
 }
+#endif

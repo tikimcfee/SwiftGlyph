@@ -1,41 +1,41 @@
 import Foundation
 import MultipeerConnectivity
 
-enum StreamError: Error {
+public enum StreamError: Error {
     case readError(error: Error?, partialData: [UInt8])
 }
 
-struct ReceivedInputStream: Identifiable, Hashable {
+public struct ReceivedInputStream: Identifiable, Hashable {
     let stream: InputStream
     let target: MCPeerID
-    let id = UUID().uuidString
+    public let id = UUID().uuidString
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(target)
     }
 }
 
-struct PreparedOutputStream: Identifiable, Hashable {
+public struct PreparedOutputStream: Identifiable, Hashable {
     let stream: OutputStream
     let target: MCPeerID
-    let id = UUID().uuidString
+    public let id = UUID().uuidString
     
     func send(_ data: Data) {
         let streamedBytes = stream.writeDataWithBoundPointer(data)
         print("Stream finished with written bytes [\(streamedBytes)]")
     }
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(target)
     }
 }
 
-typealias OutputStreamReceiver = (PreparedOutputStream) -> Void
-typealias InputStreamReceiver = (ReceivedInputStream) -> Void
+public typealias OutputStreamReceiver = (PreparedOutputStream) -> Void
+public typealias InputStreamReceiver = (ReceivedInputStream) -> Void
 
-extension ConnectionBundle {
+public extension ConnectionBundle {
 
     func prepareInputStream(for peer: MCPeerID, _ stream: InputStream, _ receiver: @escaping InputStreamReceiver) {
         streamWorker.run {
@@ -67,7 +67,7 @@ extension ConnectionBundle {
     }
 }
 
-extension OutputStream {
+public extension OutputStream {
     func writeDataWithBoundPointer(_ data: Data) -> Int {
         return data.withUnsafeBytes { bufferPointer in
             guard let baseAddress = bufferPointer.bindMemory(to: UInt8.self).baseAddress else {
@@ -79,7 +79,7 @@ extension OutputStream {
     }
 }
 
-extension Stream {
+public extension Stream {
     var whyIsItBroken: String {
         let error = streamError?.localizedDescription ?? "nil error"
         let ioInput = (self as? InputStream)?.hasBytesAvailable
@@ -89,7 +89,7 @@ extension Stream {
     }
 }
 
-extension Stream.Status {
+public extension Stream.Status {
     var name: String {
         switch self {
         case .notOpen: return "notOpen"

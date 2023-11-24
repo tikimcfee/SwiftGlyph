@@ -96,7 +96,7 @@ extension CodeGrid {
 }
 
 //MARK: -- Consume Syntax
-extension CodeGrid {
+public extension CodeGrid {
     @discardableResult
     func consume(rootSyntaxNode: Syntax) -> CodeGrid {
         doSyntaxConsume(rootSyntaxNode: rootSyntaxNode)

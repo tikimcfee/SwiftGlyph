@@ -11,7 +11,7 @@ import MetalLink
 
 // MARK: - Associated Nodes for ID
 
-extension SemanticInfoMap {
+public extension SemanticInfoMap {
     func doOnAssociatedNodes(
         _ nodeId: SyntaxIdentifier,
         _ cache: CodeGridTokenCache,
@@ -102,7 +102,7 @@ extension SemanticInfoMap {
 
 // MARK: Parent Hierarchy from ID
 
-extension SemanticInfoMap {
+public extension SemanticInfoMap {
     func basicJumpToDefinition(_ token: TokenSyntax) {
         
     }

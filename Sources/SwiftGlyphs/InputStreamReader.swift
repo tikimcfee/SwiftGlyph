@@ -7,16 +7,20 @@
 
 import Foundation
 
-struct InputStreamReader {
-    let stream: InputStream
+public struct InputStreamReader {
+    public let stream: InputStream
     
-    static let bufferSize = 16 * 1024
+    public static let bufferSize = 16 * 1024
     
-    func printStream() {
+    public init(stream: InputStream) {
+        self.stream = stream
+    }
+    
+    public func printStream() {
         print("<> monitor: \(stream.streamStatus) | \(stream.streamError?.localizedDescription ?? "nil err" ) | \(stream.hasBytesAvailable)")
     }
     
-    func readData() throws -> Data {
+    public func readData() throws -> Data {
         let bufferSize = Self.bufferSize
         var buffer = [UInt8](repeating: 0, count: bufferSize)
         

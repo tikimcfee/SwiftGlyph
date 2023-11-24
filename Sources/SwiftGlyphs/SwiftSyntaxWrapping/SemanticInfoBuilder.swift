@@ -13,6 +13,8 @@ public class SemanticInfoBuilder {
     public private(set) var localCallStackCache = [String: Set<SemanticInfo>]()
     public private(set) var localInfoCache = [Syntax: SemanticInfo]()
     
+    public init() { }
+    
     func semanticInfo(
         for node: Syntax,
         type: SyntaxEnum? = nil,

@@ -36,15 +36,17 @@ public class CodeGrid: Identifiable, Equatable {
     public private(set) var rootNode: GlyphCollection
     public private(set) var nameNode: WordNode?
     public let tokenCache: CodeGridTokenCache
-    let gridBackground: BackgroundQuad
+    public let gridBackground: BackgroundQuad
     
-    var targetNode: MetalLinkNode { rootNode }
-    var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
+    public var targetNode: MetalLinkNode { rootNode }
+    public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
     
-    var childGrids: [CodeGrid] = []
+    public private(set) var childGrids: [CodeGrid] = []
     
-    init(rootNode: GlyphCollection,
-         tokenCache: CodeGridTokenCache) {
+    public init(
+        rootNode: GlyphCollection,
+        tokenCache: CodeGridTokenCache
+    ) {
         self.rootNode = rootNode
         self.tokenCache = tokenCache
         self.gridBackground = BackgroundQuad(rootNode.link) // TODO: Link dependency feels lame
@@ -53,7 +55,7 @@ public class CodeGrid: Identifiable, Equatable {
     }
     
     @discardableResult
-    func applyName() -> CodeGrid {
+    public func applyName() -> CodeGrid {
         guard nameNode == nil else { return self }
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
@@ -88,7 +90,7 @@ public class CodeGrid: Identifiable, Equatable {
         return self
     }
     
-    func setNameNode(_ node: WordNode) {
+    public func setNameNode(_ node: WordNode) {
         if let nameNode {
             targetNode.remove(child: nameNode)
         }
@@ -96,21 +98,21 @@ public class CodeGrid: Identifiable, Equatable {
         self.nameNode = node
     }
     
-    func hideName() {
+    public func hideName() {
         nameNode?.hideNode()
     }
     
-    func showName() {
+    public func showName() {
         nameNode?.showNode()
     }
     
     @discardableResult
-    func removeBackground() -> CodeGrid {
+    public func removeBackground() -> CodeGrid {
         rootNode.remove(child: gridBackground)
         return self
     }
     
-    func updateBackground() {
+    public func updateBackground() {
         let size = targetNode.contentBounds
         gridBackground.size = LFloat2(x: size.width, y: size.height)
         
@@ -120,12 +122,12 @@ public class CodeGrid: Identifiable, Equatable {
             .setFront(back - 1)
     }
     
-    func addChildGrid(_ other: CodeGrid) {
+    public func addChildGrid(_ other: CodeGrid) {
         childGrids.append(other)
         rootNode.add(child: other.rootNode)
     }
     
-    func removeChildGrid(_ other: CodeGrid) {
+    public func removeChildGrid(_ other: CodeGrid) {
         childGrids.removeAll(where: { $0.id == other.id })
         rootNode.remove(child: other.rootNode)
     }
@@ -246,7 +248,7 @@ extension CodeGrid: Measures {
     }
 }
 
-extension CodeGrid {
+public extension CodeGrid {
     
     @discardableResult
     func zeroedPosition() -> CodeGrid {

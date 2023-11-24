@@ -1,6 +1,6 @@
 import Foundation
 
-typealias BackgroundClosure = () -> Void
+public typealias BackgroundClosure = () -> Void
 
 open class BackgroundWorker: NSObject {
     private var started = false
@@ -11,17 +11,17 @@ open class BackgroundWorker: NSObject {
         return newThread
     }()
 
-    func start() {
+    public func start() {
         guard !started else { return }
         started.toggle()
         workerThread.start()
     }
 
-    func stop() {
+    public func stop() {
         workerThread.cancel()
     }
 
-    func run(_ block: @escaping BackgroundClosure) {
+    public func run(_ block: @escaping BackgroundClosure) {
         start()
 
         perform(#selector(execute),

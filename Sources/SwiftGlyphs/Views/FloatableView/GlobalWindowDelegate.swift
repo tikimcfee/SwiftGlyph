@@ -8,6 +8,7 @@
 import SwiftUI
 import BitHandling
 
+#if os(macOS)
 // TODO: just use the WindowGroup API..
 public class GlobablWindowDelegate: NSObject, NSWindowDelegate {
     public static let instance = GlobablWindowDelegate()
@@ -71,3 +72,4 @@ public class GlobablWindowDelegate: NSObject, NSWindowDelegate {
         }
     }
 }
+#endif
