@@ -11,14 +11,12 @@ import BitHandling
 import SwiftSyntax
 
 public class GlobalNodeController {
-    public func focus(_ node: GlyphNode, in grid: CodeGrid) {
-        node.position.translateBy(dZ: 8)
-        node.instanceConstants?.addedColor += LFloat4(0.05, 0.09, 0.09, 1)
+    public func focus(_ node: GlyphNode) {
+        node.instanceConstants?.addedColor += LFloat4(0.2, 0.2, 0.2, 1)
     }
     
-    public func unfocus(_ node: GlyphNode, in grid: CodeGrid) {
-        node.position.translateBy(dZ: -8)
-        node.instanceConstants?.addedColor -= LFloat4(0.05, 0.09, 0.09, 1)
+    public func unfocus(_ node: GlyphNode) {
+        node.instanceConstants?.addedColor -= LFloat4(0.2, 0.2, 0.2, 1)
     }
 }
 
@@ -54,15 +52,16 @@ public class CodeGridSelectionController: ObservableObject {
         state.trackedGridSelections[grid] = selectionSet
         
         let update = isSelectedAfterToggle
-            ? nodeController.focus(_: in:)
-            : nodeController.unfocus(_: in:)
+            ? nodeController.focus
+            : nodeController.unfocus
         
+
         var totalBounds = Bounds.forBaseComputing
         grid.semanticInfoMap
             .walkFlattened(from: id, in: tokenCache) { info, nodes in
                 for node in nodes {
-                    update(node, grid)
                     totalBounds.union(with: node.worldBounds)
+                    update(node)
                 }
             }
         return totalBounds

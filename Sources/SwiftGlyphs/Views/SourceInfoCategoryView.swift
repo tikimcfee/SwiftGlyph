@@ -90,18 +90,13 @@ public struct SourceInfoCategoryView: View {
     @ViewBuilder
     func participantView(_ snapshotParticipant: GlobalSemanticParticipant) -> some View {
         VStack(alignment: .leading) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(snapshotParticipant.sourceGrid.fileName)
-                    .font(.headline)
-                    
-                if let path = snapshotParticipant.sourceGrid.sourcePath?.path {
-                    Text(path)
-                        .font(.subheadline)
-                        .padding([.top], 4)
-                }
+            Text(snapshotParticipant.sourceGrid.fileName)
+                .font(.headline)
+                
+            if let path = snapshotParticipant.sourceGrid.sourcePath?.path {
+                Text(path)
+                    .font(.caption2)
             }
-            .padding([.top, .bottom], 8)
-            .padding([.trailing], 8)
             
             // TODO: Use a tab view for categories, they're enumerable.
             if interactions.isExpanded(grid: snapshotParticipant.sourceGrid.id) {
@@ -114,7 +109,6 @@ public struct SourceInfoCategoryView: View {
             }
         }
         .background(.gray.opacity(0.5))
-        .padding(4.0)
         .onTapGesture {
             interactions.toggle(grid: snapshotParticipant.sourceGrid.id)
         }
@@ -152,19 +146,27 @@ public struct SourceInfoCategoryView: View {
             .padding(4)
             .overlay(Rectangle().stroke(Color.gray))
             .onTapGesture {
-                let nodeBounds = GlobalInstances.gridStore
+                var nodeBounds = GlobalInstances.gridStore
                     .nodeFocusController
                     .selected(id: info.syntaxId, in: grid)
                 
-                let position = LFloat3(
-                    x: nodeBounds.width,
-                    y: nodeBounds.top - 16,
-                    z: nodeBounds.front + 64
-                )
+                let position = nodeBounds.leadingTopFront
+                    .translated(
+                        dX: nodeBounds.width / 8.0,
+                        dZ: 48
+                    )
+                
+                nodeBounds.min.x -= 16
+                nodeBounds.max.x += 16
+                nodeBounds.min.y -= 4
+                nodeBounds.max.y += 4
+                nodeBounds.min.z += 8
+                nodeBounds.max.z += 96
                 
                 GlobalInstances.debugCamera.interceptor.resetPositions()
                 GlobalInstances.debugCamera.position = position
                 GlobalInstances.debugCamera.rotation = .zero
+                GlobalInstances.debugCamera.scrollBounds = nodeBounds
             }
     }
 }

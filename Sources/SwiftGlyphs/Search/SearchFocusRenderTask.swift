@@ -164,7 +164,7 @@ private extension SearchFocusRenderTask {
 
 private extension SearchFocusRenderTask {
     var focusAddition: LFloat4 { LFloat4(0.04, 0.08, 0.12, 0.0) }
-    var matchAddition: LFloat4 { LFloat4(0.20, 0.00, 0.00, 0.0) }
+    var matchAddition: LFloat4 { LFloat4(0.20, 0.40, 0.40, 0.0) }
     var focusPosition: LFloat3 { LFloat3(0.0, 0.0, 1.5) }
     
     func focusNodesForSemanticInfo(
@@ -179,9 +179,10 @@ private extension SearchFocusRenderTask {
                 try self.throwIfCancelled()
                 if info.syntaxId == matchingSemanticInfo {
                     node.instanceConstants?.addedColor += self.matchAddition
-                } else {
-                    node.instanceConstants?.addedColor += self.focusAddition
                 }
+//                else {
+//                    node.instanceConstants?.addedColor += self.focusAddition
+//                }
                 node.instanceConstants?.modelMatrix.translate(vector: self.focusPosition)
             }
         }
