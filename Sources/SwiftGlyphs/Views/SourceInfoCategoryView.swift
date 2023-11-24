@@ -100,12 +100,10 @@ public struct SourceInfoCategoryView: View {
             
             // TODO: Use a tab view for categories, they're enumerable.
             if interactions.isExpanded(grid: snapshotParticipant.sourceGrid.id) {
-                VStack(alignment: .leading) {
-                    makeInfoRowGroup(
-                        for: snapshotParticipant.queryCategories,
-                        in: snapshotParticipant.sourceGrid
-                    )
-                }
+                CategoryTabsView(
+                    sourceGrid: snapshotParticipant.sourceGrid,
+                    sourceCategories: snapshotParticipant.queryCategories
+                )
             }
         }
         .background(.gray.opacity(0.5))
@@ -113,6 +111,28 @@ public struct SourceInfoCategoryView: View {
             interactions.toggle(grid: snapshotParticipant.sourceGrid.id)
         }
    }
+}
+
+struct CategoryTabsView: View {
+    let sourceGrid: CodeGrid
+    let sourceCategories: [SemanticInfoMap.Category]
+    
+    init(
+        sourceGrid: CodeGrid,
+        sourceCategories: [SemanticInfoMap.Category]
+    ) {
+        self.sourceGrid = sourceGrid
+        self.sourceCategories = sourceCategories
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            makeInfoRowGroup(
+                for: sourceCategories,
+                in: sourceGrid
+            )
+        }
+    }
     
     func makeInfoRowGroup(
         for categories: [SemanticInfoMap.Category],
@@ -156,8 +176,8 @@ public struct SourceInfoCategoryView: View {
                         dZ: 48
                     )
                 
-                nodeBounds.min.x -= 16
-                nodeBounds.max.x += 16
+                nodeBounds.min.x -= 8
+                nodeBounds.max.x += 8
                 nodeBounds.min.y -= 4
                 nodeBounds.max.y += 4
                 nodeBounds.min.z += 8

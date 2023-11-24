@@ -55,7 +55,6 @@ public class CodeGridSelectionController: ObservableObject {
             ? nodeController.focus
             : nodeController.unfocus
         
-
         var totalBounds = Bounds.forBaseComputing
         grid.semanticInfoMap
             .walkFlattened(from: id, in: tokenCache) { info, nodes in
