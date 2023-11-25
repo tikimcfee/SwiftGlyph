@@ -114,8 +114,11 @@ public class ConvertCompute: MetalLinkReader {
     // MARK: NOTE / TAKE CARE / BE AWARE [Buffer size]
     // Check it out the length is div 4 so the end buffer is
     private func makeOutputBuffer(from inputBuffer: MTLBuffer) throws -> MTLBuffer {
-        let outputBufferSize = (max(1, inputBuffer.length / 4)) * MemoryLayout<GlyphMapKernelOut>.stride
-        guard let outputBuffer = device.makeBuffer(length: outputBufferSize, options: [])
+//        let inputBasedSize = Int(ceil(inputBuffer.length.float / 4.float))
+//        let safeSize = max(1, inputBasedSize)
+        let safeSize = max(1, inputBuffer.length)
+        let safeOutputBufferSize = safeSize * MemoryLayout<GlyphMapKernelOut>.stride
+        guard let outputBuffer = device.makeBuffer(length: safeOutputBufferSize, options: [])
         else { throw ComputeError.bufferCreationFailed }
         return outputBuffer
     }
@@ -158,7 +161,6 @@ public class ConvertCompute: MetalLinkReader {
         commandBuffer.waitUntilCompleted()
 
         // Houston we have a buffer.
-        print("Output Buffer: \(outputUTF32ConversionBuffer)")
         return outputUTF32ConversionBuffer
     }
     
