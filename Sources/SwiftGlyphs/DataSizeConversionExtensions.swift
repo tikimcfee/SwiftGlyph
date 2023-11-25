@@ -7,18 +7,18 @@
 
 import Foundation
 
-extension Int {
+public extension Int {
     var kb: Float { return Float(self) / 1024 }
     var mb: Float { return kb / 1024 }
 }
 
-extension Data {
+public extension Data {
     var kb: Float { return Float(count) / 1024 }
     var mb: Float { return kb / 1024 }
     var nsData: NSData { return self as NSData }
 }
 
-extension NSData {
+public extension NSData {
     var kb: Float { return Float(count) / 1024 }
     var mb: Float { return kb / 1024 }
     var swiftData: Data { return self as Data }

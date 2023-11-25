@@ -8,106 +8,38 @@ import MetalKit
 import MetalLink
 import MetalLinkHeaders
 
-extension GlyphCollectionSyntaxConsumer {
-    func ___BRING_THE_METAL__(_ fileURL: URL) {
-        // Read the file into a Data object
-        
-//        let data: NSData
-//        do {
-//            data = try NSData(contentsOf: fileURL, options: .alwaysMapped)
-//        } catch {
-//            data = NSData()
-//            print("Failed to read \(fileURL), returning empty data")
-//        }
-        
-        let data = "🇵🇷".data!.nsData
-        
-//        let data = String(
-//            RAW_ATLAS_STRING_.prefix(60_000)
-//        ).data!.nsData
+public class GlyphCompute {
+//    func ___BRING_THE_METAL__(_ fileURL: URL) {
+////        let data: NSData
+////        do {
+////            data = try NSData(contentsOf: fileURL, options: .alwaysMapped)
+////        } catch {
+////            data = NSData()
+////            print("Failed to read \(fileURL), returning empty data")
+////        }
 //        
-//        let data = RAW_ATLAS_STRING_.data!.nsData
-        
-        // Setup Metal
-        let device = GlobalInstances.defaultLink.device
-        
-        // Create a Metal buffer from the Data object
-        guard let metalBuffer = device.makeBuffer(
-            bytes: data.bytes,
-            length: data.count,
-            options: []
-        ) else {
-            fatalError("Unable to create Metal buffer")
-        }
-        print("have a new buffer I thinK: ", metalBuffer)
-        
-        runComputeKernel32(on: metalBuffer)
-    }
+//        let data = "🇵🇷".data!.nsData
+//        
+////        let data = String(
+////            RAW_ATLAS_STRING_.prefix(60_000)
+////        ).data!.nsData
+////
+////        let data = RAW_ATLAS_STRING_.data!.nsData
+//    }
     
-    func runComputeKernel32(on metalBuffer: MTLBuffer) {
-        let defaultLibrary = GlobalInstances.defaultLink.defaultLibrary
-        let device = GlobalInstances.defaultLink.device
-        let commandQueue = GlobalInstances.defaultLink.commandQueue
+    func runComputeKernel32(on data: NSData, writer: GlyphCollectionWriter) {
+//        let defaultLibrary = GlobalInstances.defaultLink.defaultLibrary
+//        let device = GlobalInstances.defaultLink.device
+//        let commandQueue = GlobalInstances.defaultLink.commandQueue
         
-        // Use the new kernel function name
-        guard let kernelFunction = defaultLibrary.makeFunction(name: "utf8ToUtf32Kernel"),
-              let computePipelineState = try? device.makeComputePipelineState(function: kernelFunction)
+        guard let outputBuffer = try? ConvertCompute(
+            link: GlobalInstances.defaultLink
+        ).execute(inputData: data)
         else {
-            print("Unable to create compute pipeline state")
+            print("It broke =(")
             return
         }
-
-        // Create a command buffer
-        guard let commandBuffer = commandQueue.makeCommandBuffer(),
-              let computeCommandEncoder = commandBuffer.makeComputeCommandEncoder() else {
-            print("Unable to create command buffer or encoder")
-            return
-        }
-
-        // Create an output buffer matching the GlyphMapKernelOut structure
-        let outputBufferSize = metalBuffer.length * MemoryLayout<GlyphMapKernelOut>.stride
-        guard let outputBuffer = device.makeBuffer(length: outputBufferSize, options: []) else {
-            print("Unable to create output buffer")
-            return
-        }
-
-        // Set the compute kernel's parameters
-        computeCommandEncoder.setBuffer(metalBuffer, offset: 0, index: 0)
-        computeCommandEncoder.setBuffer(outputBuffer, offset: 0, index: 1)
         
-        // Pass the size of the UTF-8 buffer as a constant
-        var utf8BufferSize = metalBuffer.length
-        computeCommandEncoder.setBytes(&utf8BufferSize, length: MemoryLayout<Int>.size, index: 2)
-        computeCommandEncoder.setComputePipelineState(computePipelineState)
-
-        // Calculate the number of threads and threadgroups
-        let threadGroupSize = MTLSize(
-            width: computePipelineState.threadExecutionWidth,
-            height: 1,
-            depth: 1
-        )
-        
-        let threadGroupsWidth = (metalBuffer.length + threadGroupSize.width - 1) / threadGroupSize.width
-        let threadGroups = MTLSize(
-            width: threadGroupsWidth,
-            height: 1,
-            depth: 1
-        )
-
-        // Dispatch the compute kernel
-        computeCommandEncoder.dispatchThreadgroups(
-            threadGroups,
-            threadsPerThreadgroup: threadGroupSize
-        )
-
-        // Finalize encoding and commit the command buffer
-        computeCommandEncoder.endEncoding()
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
-
-        // Here you can read back the data from 'outputBuffer' if needed
-        print("Output Buffer: \(outputBuffer)")
-
         // Get a pointer to the data in the buffer. calculate the number of elements
         let contents = outputBuffer.contents()
         let numberOfElements = outputBuffer.length / MemoryLayout<GlyphMapKernelOut>.stride
@@ -140,3 +72,123 @@ extension GlyphCollectionSyntaxConsumer {
         print("The atlas has been filled")
     }
 }
+
+extension GlyphCollectionSyntaxConsumer {
+    func ___BRING_THE_METAL__(_ fileURL: URL) {
+        GlyphCompute().runComputeKernel32(
+            on: try! NSData(contentsOf: fileURL),
+            writer: writer
+        )
+    }
+}
+
+public enum ComputeError: Error {
+    case missingFunction(String)
+    case bufferCreationFailed
+    case startupFailure
+}
+
+public class ConvertCompute: MetalLinkReader {
+    public let link: MetalLink
+    public init(link: MetalLink) { self.link = link }
+    
+    private let name = "utf8ToUtf32Kernel"
+    private lazy var kernelFunction = library.makeFunction(name: name)
+    private lazy var commandBuffer = commandQueue.makeCommandBuffer()
+    private lazy var computeCommandEncoder = commandBuffer?.makeComputeCommandEncoder()
+    
+    // Create a pipeline state from the kernel function, using the default name
+    private func makePipelineState() throws -> MTLComputePipelineState {
+        guard let kernelFunction else { throw ComputeError.missingFunction(name) }
+        return try device.makeComputePipelineState(function: kernelFunction)
+    }
+    
+    // Create a Metal buffer from the Data object
+    private func makeInputBuffer(_ data: NSData) throws -> MTLBuffer {
+        guard let metalBuffer = device.makeBuffer(bytes: data.bytes, length: data.count, options: [] )
+        else { throw ComputeError.bufferCreationFailed }
+        return metalBuffer
+    }
+    
+    // Create an output buffer matching the GlyphMapKernelOut structure
+    // MARK: NOTE / TAKE CARE / BE AWARE [Buffer size]
+    // Check it out the length is div 4 so the end buffer is
+    private func makeOutputBuffer(from inputBuffer: MTLBuffer) throws -> MTLBuffer {
+        let outputBufferSize = (max(1, inputBuffer.length / 4)) * MemoryLayout<GlyphMapKernelOut>.stride
+        guard let outputBuffer = device.makeBuffer(length: outputBufferSize, options: [])
+        else { throw ComputeError.bufferCreationFailed }
+        return outputBuffer
+    }
+
+    // Give me .utf8 text data and I'll do weird things to a buffer and give it back.
+    public func execute(
+        inputData: NSData
+    ) throws -> MTLBuffer {
+        guard let computeCommandEncoder, let commandBuffer
+        else { throw ComputeError.startupFailure }
+        
+        let inputUTF8TextDataBuffer = try makeInputBuffer(inputData)
+        let outputUTF32ConversionBuffer = try makeOutputBuffer(from: inputUTF8TextDataBuffer)
+        let computePipelineState = try makePipelineState()
+
+        // Set the compute kernel's parameters
+        computeCommandEncoder.setBuffer(inputUTF8TextDataBuffer, offset: 0, index: 0)
+        computeCommandEncoder.setBuffer(outputUTF32ConversionBuffer, offset: 0, index: 1)
+        
+        // Pass the size of the UTF-8 buffer as a constant
+        var utf8BufferSize = inputUTF8TextDataBuffer.length
+        computeCommandEncoder.setBytes(&utf8BufferSize, length: MemoryLayout<Int>.size, index: 2)
+        computeCommandEncoder.setComputePipelineState(computePipelineState)
+        
+        // Calculate the number of threads and threadgroups
+        // TODO: Explain why (boundsl, performance, et al), and make this better; this is probably off
+        let threadGroupSize = MTLSize(width: computePipelineState.threadExecutionWidth, height: 1, depth: 1)
+        let threadGroupsWidth = (inputUTF8TextDataBuffer.length + threadGroupSize.width - 1) / threadGroupSize.width
+        let threadGroupsPerGrid = MTLSize(width: threadGroupsWidth, height: 1, depth: 1)
+        
+        // Dispatch the compute kernel
+        computeCommandEncoder.dispatchThreadgroups(
+            threadGroupsPerGrid,
+            threadsPerThreadgroup: threadGroupSize
+        )
+
+        // Finalize encoding and commit the command buffer
+        computeCommandEncoder.endEncoding()
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+
+        // Houston we have a buffer.
+        print("Output Buffer: \(outputUTF32ConversionBuffer)")
+        return outputUTF32ConversionBuffer
+    }
+    
+    public func cast(
+        _ buffer: MTLBuffer
+    ) -> (UnsafeMutablePointer<GlyphMapKernelOut>, Int) {
+        let numberOfElements = buffer.length / MemoryLayout<GlyphMapKernelOut>.stride
+        return (
+            buffer.contents().bindMemory(to: GlyphMapKernelOut.self, capacity: numberOfElements),
+            numberOfElements
+        )
+            
+    }
+    
+    public func makeString(
+        from pointer: UnsafeMutablePointer<GlyphMapKernelOut>,
+        count: Int
+    ) -> String {
+        var scalarView = String.UnicodeScalarView()
+        for index in 0..<count {
+            let glyph = pointer[index] // Access each GlyphMapKernelOut
+            // Process 'glyph' as needed
+            guard glyph.sourceValue > 0,
+                  let scalar = UnicodeScalar(glyph.sourceValue)
+            else { continue }
+            scalarView.append(scalar)
+        }
+        let scalarString = String(scalarView)
+        return scalarString
+    }
+}
+
+
