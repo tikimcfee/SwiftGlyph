@@ -114,8 +114,6 @@ public class ConvertCompute: MetalLinkReader {
     // MARK: NOTE / TAKE CARE / BE AWARE [Buffer size]
     // Check it out the length is div 4 so the end buffer is
     private func makeOutputBuffer(from inputBuffer: MTLBuffer) throws -> MTLBuffer {
-//        let inputBasedSize = Int(ceil(inputBuffer.length.float / 4.float))
-//        let safeSize = max(1, inputBasedSize)
         let safeSize = max(1, inputBuffer.length)
         let safeOutputBufferSize = safeSize * MemoryLayout<GlyphMapKernelOut>.stride
         guard let outputBuffer = device.makeBuffer(length: safeOutputBufferSize, options: [])
@@ -146,8 +144,8 @@ public class ConvertCompute: MetalLinkReader {
         // Calculate the number of threads and threadgroups
         // TODO: Explain why (boundsl, performance, et al), and make this better; this is probably off
         let threadGroupSize = MTLSize(width: computePipelineState.threadExecutionWidth, height: 1, depth: 1)
-        let threadGroupsWidth = (inputUTF8TextDataBuffer.length + threadGroupSize.width - 1) / threadGroupSize.width
-        let threadGroupsPerGrid = MTLSize(width: threadGroupsWidth, height: 1, depth: 1)
+        let threadGroupsWidthCeil = (inputUTF8TextDataBuffer.length + threadGroupSize.width - 1) / threadGroupSize.width
+        let threadGroupsPerGrid = MTLSize(width: threadGroupsWidthCeil, height: 1, depth: 1)
         
         // Dispatch the compute kernel
         computeCommandEncoder.dispatchThreadgroups(
@@ -169,16 +167,19 @@ public class ConvertCompute: MetalLinkReader {
     ) -> (UnsafeMutablePointer<GlyphMapKernelOut>, Int) {
         let numberOfElements = buffer.length / MemoryLayout<GlyphMapKernelOut>.stride
         return (
-            buffer.contents().bindMemory(to: GlyphMapKernelOut.self, capacity: numberOfElements),
+            buffer.contents().bindMemory(
+                to: GlyphMapKernelOut.self,
+                capacity: numberOfElements
+            ),
             numberOfElements
         )
-            
     }
     
     public func makeString(
         from pointer: UnsafeMutablePointer<GlyphMapKernelOut>,
         count: Int
     ) -> String {
+        // TODO: Is there a safe way to initialize with a starting block size?
         var scalarView = String.UnicodeScalarView()
         for index in 0..<count {
             let glyph = pointer[index] // Access each GlyphMapKernelOut
