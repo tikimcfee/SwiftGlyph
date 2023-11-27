@@ -140,9 +140,7 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         _ writtenNodeSet: inout CodeGridNodes
     ) {
         for newCharacter in string {
-//            let glyphKey = GlyphCacheKey(source: newCharacter, color)
-            
-            let glyphKey = GlyphCacheKey.fromCache(source: newCharacter, color)
+            let glyphKey = GlyphCacheKey(source: newCharacter, color)
             if let node = writer.writeGlyphToState(glyphKey) {
                 node.meta.syntaxID = nodeID
                 writtenNodeSet.append(node)
