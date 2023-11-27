@@ -8,78 +8,10 @@ import MetalKit
 import MetalLink
 import MetalLinkHeaders
 
-public class GlyphCompute {
-//    func ___BRING_THE_METAL__(_ fileURL: URL) {
-////        let data: NSData
-////        do {
-////            data = try NSData(contentsOf: fileURL, options: .alwaysMapped)
-////        } catch {
-////            data = NSData()
-////            print("Failed to read \(fileURL), returning empty data")
-////        }
-//        
-//        let data = "🇵🇷".data!.nsData
-//        
-////        let data = String(
-////            RAW_ATLAS_STRING_.prefix(60_000)
-////        ).data!.nsData
-////
-////        let data = RAW_ATLAS_STRING_.data!.nsData
-//    }
-    
-    func runComputeKernel32(on data: NSData, writer: GlyphCollectionWriter) {
-//        let defaultLibrary = GlobalInstances.defaultLink.defaultLibrary
-//        let device = GlobalInstances.defaultLink.device
-//        let commandQueue = GlobalInstances.defaultLink.commandQueue
-        
-        guard let outputBuffer = try? ConvertCompute(
-            link: GlobalInstances.defaultLink
-        ).execute(inputData: data)
-        else {
-            print("It broke =(")
-            return
-        }
-        
-        // Get a pointer to the data in the buffer. calculate the number of elements
-        let contents = outputBuffer.contents()
-        let numberOfElements = outputBuffer.length / MemoryLayout<GlyphMapKernelOut>.stride
-
-        // Bind the memory to the correct type
-        let pointer = contents.bindMemory(
-            to: GlyphMapKernelOut.self,
-            capacity: numberOfElements
-        )
-
-        var scalarView = String.UnicodeScalarView()
-        for i in 0..<numberOfElements {
-            let glyph = pointer[i]
-            guard glyph.sourceValue > 0, // Assert not a terminator
-                  let scalar = UnicodeScalar(glyph.sourceValue)
-            else { continue }
-
-            scalarView.append(scalar)
-            
-            let pairOut = writer.addGlyphToAtlas(scalar)
-            if let pair = pairOut.0 {
-                pointer[i].textureDescriptorU = pair.u
-                pointer[i].textureDescriptorV = pair.v
-            }
-            if let bundle = pairOut.1 {
-                pointer[i].textureSize = bundle.texture.simdSize
-            }
-        }
-        
-        print("The atlas has been filled")
-    }
-}
-
 extension GlyphCollectionSyntaxConsumer {
-    func ___BRING_THE_METAL__(_ fileURL: URL) {
-        GlyphCompute().runComputeKernel32(
-            on: try! NSData(contentsOf: fileURL),
-            writer: writer
-        )
-    }
+//    func ___BRING_THE_METAL__(_ fileURL: URL) {
+//
+//    }
 }
 
 public enum ComputeError: Error {

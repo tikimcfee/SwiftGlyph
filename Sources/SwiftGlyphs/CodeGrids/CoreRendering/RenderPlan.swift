@@ -66,6 +66,8 @@ struct RenderPlan {
             return {
                 cacheGrids()
                 doGridLayout()
+                
+                GlobalInstances.defaultAtlas.save()
             }
         case .cacheOnly:
             return {

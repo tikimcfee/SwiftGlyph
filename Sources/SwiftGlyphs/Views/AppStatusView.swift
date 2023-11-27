@@ -34,6 +34,18 @@ public struct AppStatusView: View {
             } else {
                 progressLabel
             }
+            
+            Divider()
+            
+            HStack {
+                Button("Save Glyph Atlas") {
+                    GlobalInstances.defaultAtlas.save()
+                }
+                
+                Button("Load glyph Atlas") {
+                    GlobalInstances.defaultAtlas.load()
+                }
+            }
         }
     }
     

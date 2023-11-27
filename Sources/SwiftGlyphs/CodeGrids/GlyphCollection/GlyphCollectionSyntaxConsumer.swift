@@ -31,38 +31,38 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
             return __asyncConsume(url: url)
         }
         
-        // MARK: --- BRING THE METAL ---
-        ___BRING_THE_METAL__(url)
-        // MARK: --- :horns: -----------
+//        // MARK: --- BRING THE METAL ---
+//        ___BRING_THE_METAL__(url)
+//        // MARK: --- :horns: -----------
         
-//        guard let fileSource = loadSourceUrl(url) else {
-//            return consumeText(textPath: url)
-//        }
-//        let size = fileSource.root.allText.count + 512
-//        
-//        guard size < 1_000_000 else {
-//            print("Yo dude that's just like too many letters and stuff: \(url)")
-//            
-//            var trashNodes = CodeGridNodes()
-//            write(
-//                "This file's just too big right now: \(size)",
-//                "raw-text-\(UUID().uuidString)",
-//                .green,
-//                &trashNodes
-//            )
-//            targetGrid.rootNode.setRootMesh()
-//            return targetGrid
-//        }
-//        
-//        try? targetGrid
-//            .rootNode
-//            .instanceState
-//            .constants
-//            .expandBuffer(nextSize: size, force: true)
-//        
-//        print("starting consume: \(url.lastPathComponent)")
-//        consume(rootSyntaxNode: Syntax(fileSource))
-//        print("completed consume: \(url.lastPathComponent)")
+        guard let fileSource = loadSourceUrl(url) else {
+            return consumeText(textPath: url)
+        }
+        let size = fileSource.root.allText.count + 512
+        
+        guard size < 1_000_000 else {
+            print("Yo dude that's just like too many letters and stuff: \(url)")
+            
+            var trashNodes = CodeGridNodes()
+            write(
+                "This file's just too big right now: \(size)",
+                "raw-text-\(UUID().uuidString)",
+                .green,
+                &trashNodes
+            )
+            targetGrid.rootNode.setRootMesh()
+            return targetGrid
+        }
+        
+        try? targetGrid
+            .rootNode
+            .instanceState
+            .constants
+            .expandBuffer(nextSize: size, force: true)
+        
+        print("starting consume: \(url.lastPathComponent)")
+        consume(rootSyntaxNode: Syntax(fileSource))
+        print("completed consume: \(url.lastPathComponent)")
         
         return targetGrid
     }
