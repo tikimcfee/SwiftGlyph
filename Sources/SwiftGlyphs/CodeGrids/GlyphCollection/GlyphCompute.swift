@@ -120,6 +120,19 @@ public class ConvertCompute: MetalLinkReader {
         else { throw ComputeError.bufferCreationFailed }
         return outputBuffer
     }
+    
+    public func makeGraphemeAtlasBuffer(
+        size: Int = 1_000_512
+    ) throws -> (MTLBuffer, UnsafeMutablePointer<GlyphMapKernelAtlasIn>) {
+        guard let metalBuffer = device.makeBuffer(
+            length: size * MemoryLayout<GlyphMapKernelAtlasIn>.stride,
+            options: [ /*.cpuCacheModeWriteCombined*/ ] // TODO: is this a safe performance trick?
+        ) else { throw ComputeError.bufferCreationFailed }
+        return (
+            metalBuffer,
+            metalBuffer.boundPointer(as: GlyphMapKernelAtlasIn.self, count: 1_000_512)
+        )
+    }
 
     // Give me .utf8 text data and I'll do weird things to a buffer and give it back.
     public func execute(
