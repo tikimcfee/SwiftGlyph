@@ -50,7 +50,11 @@ public extension GlobalInstances {
     static let rootCustomMTKView: CustomMTKView = makeRootCustomMTKView()
     static let defaultLink: MetalLink = makeDefaultLink()
     static let defaultRenderer: MetalLinkRenderer = makeDefaultRenderer()
-    static let defaultAtlas: MetalLinkAtlas = makeDefaultAtlas()
+    static private(set) var defaultAtlas: MetalLinkAtlas = makeDefaultAtlas()
+    
+    public static func recreateAtlas() {
+        defaultAtlas = makeDefaultAtlas()
+    }
     
     private static func makeRootCustomMTKView() -> CustomMTKView {
         CustomMTKView(frame: .zero, device: MTLCreateSystemDefaultDevice())
