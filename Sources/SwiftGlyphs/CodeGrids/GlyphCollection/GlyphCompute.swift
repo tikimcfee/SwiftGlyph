@@ -192,6 +192,27 @@ public class ConvertCompute: MetalLinkReader {
         let scalarString = String(scalarView)
         return scalarString
     }
+    
+    public func makeGraphemeBasedString(
+        from pointer: UnsafeMutablePointer<GlyphMapKernelOut>,
+        count: Int
+    ) -> String {
+        let allUnicodeScalarsInView: String.UnicodeScalarView =
+            (0..<count)
+                .lazy
+                .map { pointer[$0].allSequentialScalars }
+                .filter { !$0.isEmpty }
+                .map { scalarList in
+                    scalarList.lazy.map { scalar in
+                        UnicodeScalar(scalar)!
+                    }
+                }
+                .reduce(into: String.UnicodeScalarView()) { view, scalars in
+                    view.append(contentsOf: scalars)
+                }
+        let manualGraphemeString = String(allUnicodeScalarsInView)
+        return manualGraphemeString
+    }
 }
 
 
