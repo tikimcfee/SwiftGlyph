@@ -30,23 +30,26 @@ public class ConvertCompute: MetalLinkReader {
     private let atlasRenderName = "utf8ToUtf32KernelAtlasMapped"
     private lazy var atlasRenderkernelFunction = library.makeFunction(name: atlasRenderName)
     
-    private lazy var commandBuffer = commandQueue.makeCommandBuffer()
-    private lazy var computeCommandEncoder = commandBuffer?.makeComputeCommandEncoder()
-    
     // Create a pipeline state from the kernel function, using the default name
     private func makeRawRenderPipelineState() throws -> MTLComputePipelineState {
-        guard let rawRenderkernelFunction else { throw ComputeError.missingFunction(rawRenderName) }
+        guard let rawRenderkernelFunction 
+        else { throw ComputeError.missingFunction(rawRenderName) }
         return try device.makeComputePipelineState(function: rawRenderkernelFunction)
     }
     
     private func makeAtlasRenderPipelineState() throws -> MTLComputePipelineState {
-        guard let atlasRenderkernelFunction else { throw ComputeError.missingFunction(atlasRenderName) }
+        guard let atlasRenderkernelFunction 
+        else { throw ComputeError.missingFunction(atlasRenderName) }
         return try device.makeComputePipelineState(function: atlasRenderkernelFunction)
     }
     
     // Create a Metal buffer from the Data object
     private func makeInputBuffer(_ data: NSData) throws -> MTLBuffer {
-        guard let metalBuffer = device.makeBuffer(bytes: data.bytes, length: data.count, options: [] )
+        guard let metalBuffer = device.makeBuffer(
+            bytes: data.bytes, 
+            length: data.count,
+            options: []
+        )
         else { throw ComputeError.bufferCreationFailed }
         return metalBuffer
     }
@@ -76,6 +79,8 @@ public class ConvertCompute: MetalLinkReader {
     public func execute(
         inputData: NSData
     ) throws -> MTLBuffer {
+        let commandBuffer = commandQueue.makeCommandBuffer()
+        let computeCommandEncoder = commandBuffer?.makeComputeCommandEncoder()
         guard let computeCommandEncoder, let commandBuffer
         else { throw ComputeError.startupFailure }
         
@@ -118,6 +123,8 @@ public class ConvertCompute: MetalLinkReader {
         inputData: NSData,
         atlasBuffer: MTLBuffer
     ) throws -> MTLBuffer {
+        let commandBuffer = commandQueue.makeCommandBuffer()
+        let computeCommandEncoder = commandBuffer?.makeComputeCommandEncoder()
         guard let computeCommandEncoder, let commandBuffer
         else { throw ComputeError.startupFailure }
         
