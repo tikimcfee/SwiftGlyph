@@ -17,8 +17,6 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
     public let targetCollection: GlyphCollection
     public var writer: GlyphCollectionWriter
     
-    private static let __TEST_ASYNC__ = false
-    
     public init(targetGrid: CodeGrid) {
         self.targetGrid = targetGrid
         self.targetCollection = targetGrid.rootNode
@@ -27,14 +25,6 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
   
     @discardableResult
     public func consume(url: URL) -> CodeGrid {
-        guard !Self.__TEST_ASYNC__ else {
-            return __asyncConsume(url: url)
-        }
-        
-//        // MARK: --- BRING THE METAL ---
-//        ___BRING_THE_METAL__(url)
-//        // MARK: --- :horns: -----------
-        
         guard let fileSource = loadSourceUrl(url) else {
             return consumeText(textPath: url)
         }
@@ -64,16 +54,6 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         consume(rootSyntaxNode: Syntax(fileSource))
         print("completed consume: \(url.lastPathComponent)")
         
-        return targetGrid
-    }
-    
-    private func __asyncConsume(url: URL) -> CodeGrid {
-        let sem = DispatchSemaphore(value: 0)
-        Task(priority: .userInitiated) {
-            await acceleratedConsume(url: url)
-            sem.signal()
-        }
-        sem.wait()
         return targetGrid
     }
     
@@ -150,85 +130,4 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
             }
         }
     }
-    
-    
-    public func acceleratedConsume(
-        url: URL
-    ) async {
-        let reader = SplittingFileReader(targetURL: url)
-        let stream = reader.indexingAsyncLineStream()
-        
-        let id = "raw-text-\(UUID().uuidString)"
-        
-        let glyphKey = GlyphCacheKey(source: "\n", .white)
-        guard let lineBreakNode = writer.writeGlyphToState(glyphKey) else {
-            return
-        }
-        let lineBreakSize = lineBreakNode.quadSize
-        
-        var made = [[GlyphNode]]()
-        for await (line, lineOffset) in stream {
-            let result = targetCollection.renderer.insertLineRaw(
-                line: line,
-                lineOffset: lineOffset,
-                lineOffsetSize: lineBreakSize,
-                writer: writer,
-                rawId: id
-            )
-            made.append(result)
-        }
-//        targetGrid.tokenCache[id] = made.flatMap { $0 }
-        targetGrid.updateBackground()
-        targetCollection.setRootMesh()
-    }
 }
-
-/* MARK: - slow-stuff
- Observation:
-    - linearly advancing characters is slow to render
-    - we rely on the order of nodes to render one by one
-    - each token contains an absolute position and a length
-    - it may be possible to render the text, then associate each utf index with the cached syntax
-    -- so: split lines, for each character, get index (map it?)
-    -- maybe the splitter needs to emit utf indices per line, and I map them
- ** token.position.utf8Offset
- 
- let lineReader = LineReader()
- for line in lineReader {
-    renderLine() // <--- 'rendering' in this case is just building out the glyphs; capture glyphs?
-                 // Each line could be a separately managed item... meh... JSON kills that.
-                 // Indexing in seems correct, but I have to parse and to render at the same time.
-                 // I want to do both at the same time for performance but...
-                 // maybe I just don't right now, and just deal with rendering.
- }
- 
- -- 'consumeSyntax'
- The trick here is that I'm directly mapping the syntax token to the result set of nodes.
- However, since I can get the UTF index out of the line reader (probably), I can map each index
- to the corresponding node instead:
-    0: 'i' -> Token(import statement) -> Node(x)
-    1: 'm' -> Token(import statement) -> Node(x+1)
-    2: 'p' -> Token(import statement) -> Node(x+2)
-    3: 'o' -> Token(import statement) -> Node(x+3)
-    4: 'r' -> Token(import statement) -> Node(x+5)
-    5: 't' -> Token(import statement) -> Node(x+6)
- 
- So...
- In parallel:
-    splitting reader -> split lines -> async kickoff per line
-        -> generate [UTF8Index: GlyphNode] (another map, hooray, lol)
-        -> RETURN the map, and then merge together at the end - avoid locking if possible
- 
- In parallel(??):
-    run syntax parser
-        -> iterate over tokens (this gives us the correct syntanctic ordering; tree-sitter can sit here
-        -> blit the token and the index into a map; the index is the start, soo..
- 
- After both:
-    combine result maps:
-        -> splitting reader has all glyphs; syntax parser has all node position starts
-        -> iterate over *syntax tokens* and collect *glyphs*
-            --> for each token, get the start index, and check the count
-            --> for each next token, look up the node and combine into the current set of nodes
-            --> stick the result into `tokenCache'
- */

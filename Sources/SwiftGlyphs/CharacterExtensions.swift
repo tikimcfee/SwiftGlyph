@@ -37,16 +37,6 @@ public extension Character {
     }
 }
 
-public extension Character {
-    var glyphComputeHash: UInt64 {
-        let prime: UInt64 = 31;
-        return unicodeScalars.reduce(into: 0) { hash, scalar in
-            hash = (hash * prime + UInt64(scalar.value)) % 1_000_000
-        }
-    }
-}
-
-
 public extension CharacterSet {
     func containsUnicodeScalars(of character: Character) -> Bool {
         return character.unicodeScalars.allSatisfy(contains(_:))
