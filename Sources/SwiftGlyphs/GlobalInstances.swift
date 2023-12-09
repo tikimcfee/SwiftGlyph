@@ -117,10 +117,6 @@ public class GridStore {
         tokenCache: globalTokenCache
     )
     
-    public private(set) lazy var sharedLsp: SwiftGlyphLSPWrapper = {
-        SwiftGlyphLSPWrapper()
-    }()
-    
     public private(set) lazy var sharedConvert: ConvertCompute = {
         ConvertCompute(link: link)
     }()

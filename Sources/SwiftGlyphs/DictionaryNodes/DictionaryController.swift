@@ -217,19 +217,6 @@ extension DictionaryController {
         wordNode.glyphs.forEach { toUpdate in
             toUpdate.instanceConstants?.addedColor = self.focusedColor
         }
-        
-        if let graphNode = dictionary.graph.node(with: wordNode.sourceWord) {
-            for descendant in graphNode.descendantIDs {
-                if descendant == wordNode.sourceWord { continue }
-                
-                if let descendantNode = nodeMap[descendant] {
-                    descendantNode.scale = self.scaleVectorNested
-                    descendantNode.glyphs.forEach {
-                        $0.instanceConstants?.addedColor = self.descendantColor
-                    }
-                }
-            }
-        }
     }
     
     func defocusWord(
@@ -241,19 +228,6 @@ extension DictionaryController {
         wordNode.scale = self.inverseScaleVector
         wordNode.glyphs.forEach { toUpdate in
             toUpdate.instanceConstants?.addedColor = .zero
-        }
-        
-        if let graphNode = dictionary.graph.node(with: wordNode.sourceWord) {
-            for descendant in graphNode.descendantIDs {
-                if descendant == wordNode.sourceWord { continue }
-                
-                if let descendantNode = nodeMap[descendant] {
-                    descendantNode.scale = .one
-                    descendantNode.glyphs.forEach {
-                        $0.instanceConstants?.addedColor = .zero
-                    }
-                }
-            }
         }
     }
 }

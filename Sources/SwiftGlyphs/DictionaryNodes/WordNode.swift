@@ -8,7 +8,6 @@
 import Foundation
 import MetalLink
 import MetalLinkHeaders
-import SwiftNodes
 
 public class WordNode: MetalLinkNode {
     public let sourceWord: String

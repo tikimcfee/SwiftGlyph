@@ -94,10 +94,6 @@ public extension TwoETimeRoot {
                         )
                     }
                 }
-                
-                let graphLayout = WordGraphLayout()
-                graphLayout.doIt(controller: controller)
-                
                 chunkGroup.leave()
             }
             chunkGroup.wait()

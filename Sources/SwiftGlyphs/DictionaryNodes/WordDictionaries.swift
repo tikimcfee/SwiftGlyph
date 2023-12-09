@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftNodes
 
 enum PartOfSpeech: String, Codable, Equatable, Hashable {
     case noun
@@ -97,47 +96,19 @@ extension String {
     }
 }
 
-extension WordGraph {
-    mutating func addWeightBetween(source: String, target: String) {
-        insert(target)
-        add(
-            0.1,
-            toEdgeWith: WordGraph.Edge(
-                from: source,
-                to: target
-            ).id
-        )
-    }
-}
-
-public typealias WordGraph = Graph<String, String, Float>
-
 public struct WordDictionary {
     public var words: [String: [String]]
-    public var graph: WordGraph
     
     var orderedWords: [String: [[String]]] = [:]
     
     public init() {
         self.words = .init()
-        self.graph = .init()
     }
     
     init(
-        words: [String: [String]],
-        graph: WordGraph? = nil
+        words: [String: [String]]
     ) {
         self.words = words
-        
-        var graph = graph ?? WordGraph()
-        words.forEach { (sourceWord, definitionWords) in
-            graph.insert(sourceWord)
-            
-            for definitionWord in definitionWords {
-                graph.addWeightBetween(source: sourceWord, target: definitionWord)
-            }
-        }
-        self.graph = graph
     }
     
     init(file: URL) {
@@ -165,7 +136,6 @@ public struct WordDictionary {
         
         self.orderedWords = orderedDefinitionWords
         self.words = [:]
-        self.graph = .init()
     }
 }
 
