@@ -192,19 +192,13 @@ private extension RenderPlan {
                 }
             )
 
-            let group = DispatchGroup()
             for collectionResult in allMappedAtlasResults {
-                group.enter()
-                WorkerPool.shared.nextWorker().async {
-                    self.cacheCollectionAsGrid(from: collectionResult)
-                    self.statusObject.update {
-                        $0.message = "Completed grid creation: \(collectionResult.sourceURL.lastPathComponent)"
-                        $0.currentValue += 1
-                    }
-                    group.leave()
+                cacheCollectionAsGrid(from: collectionResult)
+                statusObject.update {
+                    $0.message = "Completed grid creation: \(collectionResult.sourceURL.lastPathComponent)"
+                    $0.currentValue += 1
                 }
             }
-            group.wait()
             
         } catch {
             fatalError("Crash for now, my man: \(error)")
@@ -263,8 +257,7 @@ private extension RenderPlan {
                 .removeBackground()
             
             let group = CodeGridGroup(globalRootGrid: grid)
-            grid.rootNode.pausedInvalidate = true
-            
+//            grid.rootNode.pausedInvalidate = true
             state.directoryGroups[directoryURL] = group
         }
         
