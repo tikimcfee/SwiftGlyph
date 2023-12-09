@@ -65,7 +65,28 @@ extension TwoETimeRoot {
         camera.position = LFloat3(0, 0, 300)
         
         var lastPlan: RenderPlan?
-        directoryAddPipeline(doAddFilePath(_:))
+        directoryAddPipeline { url in
+            GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
+//            GlobalInstances.rootCustomMTKView.isPaused = true
+//            GlobalInstances.defaultRenderer.paused = true
+            
+            DispatchQueue.global().asyncAfter(deadline: .now().advanced(by: .milliseconds(500))) {
+                doAddFilePath(url)
+            }
+        }
+        
+        func doAddFilePath(_ url: URL) {
+            RenderPlan(
+                mode: .cacheAndLayout,
+                rootPath: url,
+                queue: DispatchQueue.global(qos: .userInitiated),
+                builder: self.builder,
+                editor: self.editor,
+                focus: self.focus,
+                hoverController: GlobalInstances.gridStore.nodeHoverController
+            )
+            .startRender(onRenderComplete)
+        }
         
         func onRenderComplete(_ plan: RenderPlan) {
             if let lastPlan {
@@ -77,8 +98,12 @@ extension TwoETimeRoot {
             
             self.root.add(child: plan.targetParent)
             lastPlan = plan
+            
+            GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = false
+//            GlobalInstances.rootCustomMTKView.isPaused = false
+//            GlobalInstances.defaultRenderer.paused = false
                         
-            self.lockZoomToBounds(of: plan.targetParent)
+//            self.lockZoomToBounds(of: plan.targetParent)
             
 //                var time = 0.0.float
 //                QuickLooper(interval: .milliseconds(30)) {
@@ -86,19 +111,6 @@ extension TwoETimeRoot {
 //                    plan.targetParent.position.x = sin(time) * 10.0
 //                    time += Float.pi / 180
 //                }.runUntil { false }
-        }
-        
-        func doAddFilePath(_ url: URL) {
-            RenderPlan(
-                rootPath: url,
-                queue: DispatchQueue.global(),
-                builder: self.builder,
-                editor: self.editor,
-                focus: self.focus,
-                hoverController: GlobalInstances.gridStore.nodeHoverController,
-                mode: .cacheAndLayout
-            )
-            .startRender(onRenderComplete)
         }
     }
     

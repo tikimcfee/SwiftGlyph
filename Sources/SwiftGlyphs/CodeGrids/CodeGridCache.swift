@@ -42,7 +42,7 @@ public class GridCache {
     public func setCache(_ key: URL, _ requester: String = #function) -> CodeGrid {
         let newGrid: CodeGrid
         if key.isDirectory {
-            print("[\(requester)] Creating directory: \(key)")
+//            print("[\(requester)] Creating directory: \(key)")
             newGrid = createNewGrid()
         } else {
             newGrid = renderGrid(key) ?? {

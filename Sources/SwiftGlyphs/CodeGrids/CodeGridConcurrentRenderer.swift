@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BitHandling
 
 public class ConcurrentGridRenderer {
     private let cache: GridCache

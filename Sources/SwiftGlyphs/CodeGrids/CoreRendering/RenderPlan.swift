@@ -11,109 +11,93 @@ import OrderedCollections
 import MetalLink
 import BitHandling
 
-struct RenderPlan {
-    let rootPath: URL
-    let queue: DispatchQueue
-    
+class RenderPlan {
     var statusObject: AppStatus { GlobalInstances.appStatus }
     var compute: ConvertCompute { GlobalInstances.gridStore.sharedConvert }
-    
-    let builder: CodeGridGlyphCollectionBuilder
-    
-    let editor: WorldGridEditor
-    let focus: WorldGridFocusController
-    let hoverController: MetalLinkHoverController
-    
     let targetParent = MetalLinkNode()
     
     class State {
-        /// Maps the file or directory URL to its contained.
-        /// It's either the parent, or one of its children.
-//        var directoryGroups = [URL: CodeGridGroup]()
-//        
-        var directoryGroups = ConcurrentDictionary<URL, CodeGridGroup>()
+        var directoryGroups = [URL: CodeGridGroup]()
     }
-    var state = State()
-
+    let state = State()
     
-    let mode: Mode
     enum Mode {
         case cacheOnly
         case layoutOnly
         case cacheAndLayout
+    }
+    let mode: Mode
+    
+    let rootPath: URL
+    let queue: DispatchQueue
+    let builder: CodeGridGlyphCollectionBuilder
+    let editor: WorldGridEditor
+    let focus: WorldGridFocusController
+    let hoverController: MetalLinkHoverController
+    
+    init(
+        mode: Mode,
+        rootPath: URL,
+        queue: DispatchQueue,
+        builder: CodeGridGlyphCollectionBuilder,
+        editor: WorldGridEditor,
+        focus: WorldGridFocusController,
+        hoverController: MetalLinkHoverController
+    ) {
+        self.mode = mode
+        self.rootPath = rootPath
+        self.queue = queue
+        self.builder = builder
+        self.editor = editor
+        self.focus = focus
+        self.hoverController = hoverController
     }
     
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
         queue.async {
-            statusObject.resetProgress()
-            
-            WatchWrap.startTimer("\(rootPath.fileName)")
-            renderTaskForMode()
-            WatchWrap.stopTimer("\(rootPath.fileName)")
-            
-            statusObject.update {
-                $0.message = "Render complete!"
-                $0.currentValue = statusObject.progress.totalValue
-            }
-            
+            self.onStart()
             onComplete(self)
         }
     }
     
-    private var renderTaskForMode: () -> Void {
-        switch mode {
-        case .cacheAndLayout:
-            return {
-                cacheGrids_V2()
-                doGridLayout()
-                
-//                GlobalInstances.defaultAtlas.save()
-            }
-        case .cacheOnly:
-            return {
-                cacheGrids_V2()
-            }
-        case .layoutOnly:
-            return {
-                doGridLayout()
-            }
+    private func onStart() {
+        statusObject.resetProgress()
+        
+        statusObject.update {
+            $0.totalValue += 1 // pretend there's at least one unfinished task
+            $0.message = "Your computer is about to explode <3"
+        }
+        
+        WatchWrap.startTimer("\(rootPath.fileName)")
+        renderTaskForMode()
+        WatchWrap.stopTimer("\(rootPath.fileName)")
+        
+        statusObject.update {
+            $0.message = "Render complete!"
+            $0.currentValue = $0.totalValue
         }
     }
 }
 
 private extension RenderPlan {
-    func doGridLayout() {
-        justShowMeCodePlease()
+    func renderTaskForMode() {
+        switch mode {
+        case .cacheAndLayout:
+            cacheGrids_V2()
+            doGridLayout()
+
+        case .cacheOnly:
+            cacheGrids_V2()
+            
+        case .layoutOnly:
+            doGridLayout()
+        }
     }
     
-    func justShowMeCodePlease() {
+    func doGridLayout() {
         guard rootPath.isDirectory else { return }
-        
-//        var count = 0
-//        var last: CodeGrid?
-//        for grid in builder.sharedGridCache.cachedGrids.values {
-//            if grid.sourcePath?.isFileURL == true,
-//               let parent = grid.parent,
-//               grid.parent != targetParent
-//            {
-//                parent.remove(child: grid.rootNode)
-//            }
-//            
-//            if let last {
-//                grid.setTrailing(last.trailing)
-//                    .setTop(last.top)
-//                    .setFront(last.back - 32)
-//                targetParent.add(child: grid.rootNode)
-//            } else {
-//                targetParent.add(child: grid.rootNode)
-//            }
-//            
-//            last = grid
-//            count += 1
-//        }
-//        print("added: \(count)")
         
         state.directoryGroups[rootPath]?.applyAllConstraints()
         state.directoryGroups[rootPath]?.addLines(targetParent)
@@ -126,11 +110,6 @@ private extension RenderPlan {
     }
     
     func computeAllTheGrids() {
-        statusObject.update {
-            $0.totalValue += 1 // pretend there's at least one unfinished task
-            $0.message = "Your GPU is about to explode <3"
-        }
-        
         // Gather all the files and directories at once.
         // Threads. Heh.
         var allFileURLs = [URL]()
@@ -166,13 +145,94 @@ private extension RenderPlan {
             return
         }
         
-        // First render all directories...
-        for directoryURL in allDirectoryURLs {
-            launchDirectoryGridBuild(directoryURL)
+        statusObject.update {
+            $0.message = "Found \(allFileURLs.count) files to render."
+        }
+        
+        // Setup all the directory relationships first
+        cacheCodeGroups(for: allDirectoryURLs)
+        
+        if !rootIsFile {
+            // Now look for root group. Big problems if we miss it.
+            guard let rootGroup = state.directoryGroups[rootPath] else {
+                fatalError("But where did the root go")
+            }
+            targetParent.add(child: rootGroup.globalRootGrid.rootNode)
+        }
+        
+        // Then ask kindly of the gpu to go 'ham'
+        do {
+            let allMappedAtlasResults = try compute.executeManyWithAtlas(
+                sources: allFileURLs,
+                atlas: builder.atlas
+            )
+            for collectionResult in allMappedAtlasResults {
+                cacheCollectionAsGrid(from: collectionResult)
+            }
+        } catch {
+            fatalError("Crash for now, my man: \(error)")
+        }
+    }
+    
+    // MARK: - Encode result processing
+    
+    func cacheCollectionAsGrid(from result: EncodeResult) {
+        switch result.collection {
+        case .built(let collection):
+            CodeGrid(
+                rootNode: collection,
+                tokenCache: builder.sharedTokenCache
+            )
+            .withSourcePath(result.sourceURL)
+            .withFileName(result.sourceURL.lastPathComponent)
+            .applyName()
+            .applying {
+                if result.sourceURL == rootPath {
+                    print("<Found source grid url>")
+                    targetParent.add(child: $0.rootNode)
+                } else {
+                    guard let parentGroup = state.directoryGroups[
+                        result
+                            .sourceURL
+                            .deletingLastPathComponent()
+                    ] else {
+                        fatalError("YOU WERE THE CHOSEN ONE")
+                    }
+                    
+                    parentGroup.addChildGrid($0)
+                    builder.sharedGridCache.insertGrid($0)
+                    hoverController.attachPickingStream(to: $0)
+                    $0.updateBackground()
+                }
+            }
+            
+        case .notBuilt:
+            break
+        }
+    }
+}
+
+// MARK: - Code group
+
+private extension RenderPlan {
+    func cacheCodeGroups(for directories: [URL]) {
+        // Double pass; build out groups...
+        for directoryURL in directories {
+            let grid = builder.sharedGridCache
+                .setCache(directoryURL)
+                .withSourcePath(directoryURL)
+                .withFileName(directoryURL.fileName)
+                .applyName()
+                .removeBackground()
+            
+            let group = CodeGridGroup(globalRootGrid: grid)
+            grid.rootNode.pausedInvalidate = true
+            
+            state.directoryGroups[directoryURL] = group
         }
         
         // .. then set up their relationships. I like loops.
-        for directoryURL in allDirectoryURLs {
+        for directoryURL in directories {
             guard let group = group(for: directoryURL),
                   let parent = parentGroup(for: directoryURL)
             else {
@@ -188,122 +248,6 @@ private extension RenderPlan {
             }
             parent.addChildGroup(group)
         }
-        
-        if !rootIsFile {
-            // Now look for root group. Big problems if we miss it.
-            guard let rootGroup = state.directoryGroups[rootPath] else {
-                fatalError("But where did the root go")
-            }
-            targetParent.add(child: rootGroup.globalRootGrid.rootNode)
-        }
-        
-        // Then ask kindly of the gpu to go 'ham'
-        
-        do {
-            let allMappedAtlasResults = try compute.executeManyWithAtlas(
-                sources: allFileURLs,
-                atlas: builder.atlas
-            )
-            for collectionResult in allMappedAtlasResults {
-                doGridStore(from: collectionResult)
-            }
-        } catch {
-            fatalError("Crash for now, my man: \(error)")
-        }
-        
-        func doGridStore(from result: EncodeResult) {
-            switch result.collection {
-            case .built(let collection):
-                CodeGrid(
-                    rootNode: collection,
-                    tokenCache: builder.sharedTokenCache
-                )
-                .withSourcePath(result.sourceURL)
-                .withFileName(result.sourceURL.lastPathComponent)
-                .applyName()
-                .applying {
-                    if result.sourceURL == rootPath {
-                        print("<Found source grid url>")
-                        targetParent.add(child: $0.rootNode)
-                    } else {
-                        guard let parentGroup = state.directoryGroups[
-                            result
-                                .sourceURL
-                                .deletingLastPathComponent()
-                        ] else {
-                            fatalError("YOU WERE THE CHOSEN ONE")
-                        }
-                        
-                        parentGroup.addChildGrid($0)
-                        builder.sharedGridCache.insertGrid($0)
-                        hoverController.attachPickingStream(to: $0)
-                        $0.updateBackground()
-                    }
-                }
-                
-            case .notBuilt:
-                break
-            }
-        }
-    }
-    
-    func cacheGrids_V1() {
-        statusObject.update {
-            $0.totalValue += 1 // pretend there's at least one unfinished task
-            $0.message = "Starting grid cache..."
-        }
-        
-        let dispatchGroup = DispatchGroup()
-        
-        guard rootPath.isDirectory else {
-            let rootGrid = launchFileGridBuildSync(rootPath)
-            targetParent.add(child: rootGrid.rootNode)
-            return
-        }
-        
-        let rootGrid = builder.sharedGridCache
-            .setCache(rootPath)
-            .withSourcePath(rootPath)
-            .withFileName(rootPath.fileName)
-            .applyName()
-        
-        rootGrid.removeBackground()
-        
-        let rootGroup = CodeGridGroup(globalRootGrid: rootGrid)
-        state.directoryGroups[rootPath] = rootGroup
-        targetParent.add(child: rootGrid.rootNode)
-        
-        FileBrowser.recursivePaths(rootPath).forEach { childPath in
-            if FileBrowser.isSupportedFileType(childPath) {
-                launchFileGridBuild(dispatchGroup, childPath)
-            } else if childPath.isDirectory {
-                launchDirectoryGridBuild(childPath)
-            } else {
-                print("Skipping file: \(childPath.fileName)")
-            }
-        }
-        dispatchGroup.wait()
-        
-        FileBrowser.recursivePaths(rootPath).forEach { childPath in
-            if FileBrowser.isSupportedFileType(childPath) {
-                let grid = builder
-                    .sharedGridCache
-                    .get(childPath)!
-                
-                let group = state
-                    .directoryGroups[childPath.deletingLastPathComponent()]!
-                
-                group.addChildGrid(grid)
-            } else if childPath.isDirectory,
-                   let group = group(for: childPath),
-                   let parent = parentGroup(for: childPath) {
-                guard group.globalRootGrid.parent == nil else {
-                    print("Skip attach \(group.globalRootGrid.fileName) to \(parent.globalRootGrid.fileName)")
-                    return
-                }
-                parent.addChildGroup(group)
-            }
-        }
     }
     
     func group(for url: URL) -> CodeGridGroup? {
@@ -312,83 +256,6 @@ private extension RenderPlan {
     
     func parentGroup(for url: URL) -> CodeGridGroup? {
         state.directoryGroups[url.deletingLastPathComponent()]
-    }
-    
-    func launchDirectoryGridBuild(
-        _ childPath: URL
-    ) {
-        let grid = builder.sharedGridCache
-            .setCache(childPath)
-            .withSourcePath(childPath)
-            .withFileName(childPath.fileName)
-            .applyName()
-            .removeBackground()
-        
-        let group = CodeGridGroup(globalRootGrid: grid)
-        state.directoryGroups[childPath] = group
-    }
-    
-    func launchFileGridBuild(
-        _ dispatchGroup: DispatchGroup,
-        _ childPath: URL
-    ) {
-        var worker: DispatchQueue { WorkerPool.shared.nextWorker() }
-        
-        dispatchGroup.enter()
-        statusObject.update {
-            $0.totalValue += 1
-            $0.detail = "File: \(childPath.lastPathComponent)"
-        }
-        
-        worker.async {
-            let grid = builder
-                .createConsumerForNewGrid()
-                .consume(url: childPath)
-                .withFileName(childPath.lastPathComponent)
-                .withSourcePath(childPath)
-                .applyName()
-            
-            builder.sharedGridCache.cachedFiles[childPath] = grid.id
-            hoverController.attachPickingStream(to: grid)
-            
-            statusObject.update {
-                $0.currentValue += 1
-                $0.detail = "File Complete: \(childPath.lastPathComponent)"
-            }
-            dispatchGroup.leave()
-        }
-    }
-    
-    @discardableResult
-    func launchFileGridBuildSync(
-        _ childPath: URL
-    ) -> CodeGrid {
-        var worker: DispatchQueue { WorkerPool.shared.nextWorker() }
-        
-        statusObject.update {
-            $0.totalValue += 1
-            $0.detail = "File: \(childPath.lastPathComponent)"
-        }
-        
-        let codeGrid: CodeGrid = worker.sync {
-            let grid = builder
-                .createConsumerForNewGrid()
-                .consume(url: childPath)
-                .withFileName(childPath.lastPathComponent)
-                .withSourcePath(childPath)
-                .applyName()
-            
-            builder.sharedGridCache.cachedFiles[childPath] = grid.id
-            hoverController.attachPickingStream(to: grid)
-            
-            statusObject.update {
-                $0.currentValue += 1
-                $0.detail = "File Complete: \(childPath.lastPathComponent)"
-            }
-            
-            return grid
-        }
-        return codeGrid
     }
 }
 

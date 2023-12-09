@@ -1,5 +1,6 @@
 import Foundation
 import MultipeerConnectivity
+import BitHandling
 
 //MARK: - External controls
 extension MultipeerStreamController {
