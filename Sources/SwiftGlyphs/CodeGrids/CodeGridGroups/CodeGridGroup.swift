@@ -56,8 +56,12 @@ class CodeGridGroup {
         for childGroup in childGroups {
             let line = MetalLinkLine(globalRootGrid.rootNode.link)
             line.setColor(LFloat4(1.0, 0.0, 0.5, 1.0))
-            line.appendSegment(about: globalRootGrid.rootNode.worldPosition)
-            line.appendSegment(about: childGroup.globalRootGrid.rootNode.worldPosition)
+            line.appendSegment(about: globalRootGrid.rootNode.worldPosition.translated(dX: -8, dY: 8, dZ: 4))
+            line.appendSegment(about: LFloat3(childGroup.globalRootGrid.rootNode.worldPosition.x,
+                                              globalRootGrid.rootNode.worldPosition.y + 8,
+                                              globalRootGrid.rootNode.worldPosition.z + 4))
+            line.appendSegment(about: childGroup.globalRootGrid.rootNode.worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: childGroup.globalRootGrid.rootNode.worldPosition.translated(dX: -2))
             root.add(child: line)
             
             childGroup.addLines(root)
@@ -66,8 +70,9 @@ class CodeGridGroup {
         for grid in childGrids {
             let line = MetalLinkLine(globalRootGrid.rootNode.link)
             line.setColor(LFloat4(0.2, 0.2, 0.8, 1.0))
-            line.appendSegment(about: globalRootGrid.rootNode.worldPosition)
-            line.appendSegment(about: grid.rootNode.worldPosition)
+            line.appendSegment(about: globalRootGrid.rootNode.worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: grid.rootNode.worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: grid.rootNode.worldPosition.translated(dX: -2))
             root.add(child: line)
         }
     }

@@ -29,7 +29,6 @@ class RenderPlan {
     let mode: Mode
     
     let rootPath: URL
-    let queue: DispatchQueue
     let builder: CodeGridGlyphCollectionBuilder
     let editor: WorldGridEditor
     let focus: WorldGridFocusController
@@ -38,7 +37,6 @@ class RenderPlan {
     init(
         mode: Mode,
         rootPath: URL,
-        queue: DispatchQueue,
         builder: CodeGridGlyphCollectionBuilder,
         editor: WorldGridEditor,
         focus: WorldGridFocusController,
@@ -46,7 +44,6 @@ class RenderPlan {
     ) {
         self.mode = mode
         self.rootPath = rootPath
-        self.queue = queue
         self.builder = builder
         self.editor = editor
         self.focus = focus
@@ -56,7 +53,7 @@ class RenderPlan {
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
-        queue.async {
+        WorkerPool.shared.nextConcurrentWorker().async {
             self.onStart()
             onComplete(self)
         }
@@ -99,7 +96,17 @@ private extension RenderPlan {
     func doGridLayout() {
         guard rootPath.isDirectory else { return }
         
+        statusObject.update {
+            $0.totalValue += 1
+            $0.message = "Starting layout.. this is the slow part."
+        }
         state.directoryGroups[rootPath]?.applyAllConstraints()
+        
+        statusObject.update {
+            $0.currentValue += 1
+            $0.totalValue += 1
+            $0.message = "Jump in the line..."
+        }
         state.directoryGroups[rootPath]?.addLines(targetParent)
     }
 }
@@ -164,11 +171,41 @@ private extension RenderPlan {
         do {
             let allMappedAtlasResults = try compute.executeManyWithAtlas(
                 sources: allFileURLs,
-                atlas: builder.atlas
+                atlas: builder.atlas,
+                onEvent: { [statusObject] event in
+                    statusObject.update {
+                        switch event {
+                        case .bufferMapped(let string):
+                            $0.totalValue += 1
+                            $0.message = "File mapped to data: \(string)"
+                            
+                        case .layoutEncoded(let string):
+                            $0.message = "Atlas layout encoded: \(string)"
+                            
+                        case .copyEncoded(let string):
+                            $0.message = "Preparing glyph copy: \(string)"
+                            
+                        case .collectionReady(let string):
+                            $0.message = "Collection made ready: \(string)"
+                        }
+                    }
+                }
             )
+
+            let group = DispatchGroup()
             for collectionResult in allMappedAtlasResults {
-                cacheCollectionAsGrid(from: collectionResult)
+                group.enter()
+                WorkerPool.shared.nextWorker().async {
+                    self.cacheCollectionAsGrid(from: collectionResult)
+                    self.statusObject.update {
+                        $0.message = "Completed grid creation: \(collectionResult.sourceURL.lastPathComponent)"
+                        $0.currentValue += 1
+                    }
+                    group.leave()
+                }
             }
+            group.wait()
+            
         } catch {
             fatalError("Crash for now, my man: \(error)")
         }

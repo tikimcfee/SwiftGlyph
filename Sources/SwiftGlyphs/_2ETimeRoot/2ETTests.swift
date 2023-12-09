@@ -67,19 +67,16 @@ extension TwoETimeRoot {
         var lastPlan: RenderPlan?
         directoryAddPipeline { url in
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
-//            GlobalInstances.rootCustomMTKView.isPaused = true
-//            GlobalInstances.defaultRenderer.paused = true
+            GlobalInstances.rootCustomMTKView.isPaused = true
+            GlobalInstances.defaultRenderer.paused = true
             
-            DispatchQueue.global().asyncAfter(deadline: .now().advanced(by: .milliseconds(500))) {
-                doAddFilePath(url)
-            }
+            doAddFilePath(url)
         }
         
         func doAddFilePath(_ url: URL) {
             RenderPlan(
                 mode: .cacheAndLayout,
                 rootPath: url,
-                queue: DispatchQueue.global(qos: .userInitiated),
                 builder: self.builder,
                 editor: self.editor,
                 focus: self.focus,
@@ -100,8 +97,8 @@ extension TwoETimeRoot {
             lastPlan = plan
             
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = false
-//            GlobalInstances.rootCustomMTKView.isPaused = false
-//            GlobalInstances.defaultRenderer.paused = false
+            GlobalInstances.rootCustomMTKView.isPaused = false
+            GlobalInstances.defaultRenderer.paused = false
                         
 //            self.lockZoomToBounds(of: plan.targetParent)
             

@@ -67,9 +67,7 @@ public class TwoETimeRoot: MetalLinkReader {
 //        try setupDictionaryTest()
 //        try setupFastGraphTest()
         
-//        DispatchQueue.main.async {
-            GlobalInstances.defaultAtlas.load()
-//        }
+        GlobalInstances.defaultAtlas.load()
     }
     
     func delegatedEncode(in sdp: inout SafeDrawPass) {
