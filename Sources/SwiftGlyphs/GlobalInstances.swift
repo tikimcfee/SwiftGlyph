@@ -31,7 +31,7 @@ public class GlobalInstances {
 // ______________________________________________________________
 public extension GlobalInstances {
     static let appStatus = AppStatus()
-    static let _2ETRoot = try! TwoETimeRoot(link: defaultLink)
+    static let swiftGlyphsRoot = try! SwiftGlyphsRoot(link: defaultLink)
 }
 
 

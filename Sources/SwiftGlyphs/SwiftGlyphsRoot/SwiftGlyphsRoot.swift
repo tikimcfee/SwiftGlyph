@@ -1,5 +1,5 @@
 //
-//  2ETRoot.swift
+//  SwiftGlyphsRoot.swift
 //  MetalSimpleInstancing
 //
 //  Created by Ivan Lugo on 8/6/22.
@@ -17,13 +17,13 @@ import SwiftSyntax
 import MetalLink
 import BitHandling
 
-extension TwoETimeRoot: MetalLinkRendererDelegate {
+extension SwiftGlyphsRoot: MetalLinkRendererDelegate {
     public func performDelegatedEncode(with pass: inout SafeDrawPass) {
         delegatedEncode(in: &pass)
     }
 }
 
-public class TwoETimeRoot: MetalLinkReader {
+public class SwiftGlyphsRoot: MetalLinkReader {
     public let link: MetalLink
     
     var bag = Set<AnyCancellable>()
@@ -55,17 +55,8 @@ public class TwoETimeRoot: MetalLinkReader {
         
         camera.interceptor.onNewFileOperation = handleDirectory
         camera.interceptor.onNewFocusChange = handleFocus
-        
-//        try setupNodeChildTest()
-//        try setupNodeBackgroundTest()
-//        try setupBackgroundTest()
+
         try setupRenderPlanTest()
-//        try setupTriangleStripTest()
-//        try setupWordWare()
-//        try setupWordWareSentence()
-//        try setupWordWarePLA()
-//        try setupDictionaryTest()
-//        try setupFastGraphTest()
         
         GlobalInstances.defaultAtlas.load()
     }
