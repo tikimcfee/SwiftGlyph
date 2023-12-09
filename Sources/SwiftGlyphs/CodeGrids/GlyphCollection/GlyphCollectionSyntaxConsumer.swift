@@ -22,7 +22,7 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         self.targetCollection = targetGrid.rootNode
         self.writer = GlyphCollectionWriter(target: targetCollection)
     }
-  
+    
     @discardableResult
     public func consume(url: URL) -> CodeGrid {
         guard let fileSource = loadSourceUrl(url) else {

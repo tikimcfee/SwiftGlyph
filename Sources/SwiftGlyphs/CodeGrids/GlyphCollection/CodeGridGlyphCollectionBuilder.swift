@@ -28,8 +28,6 @@ public class CodeGridGlyphCollectionBuilder {
         self.sharedSemanticMap = semanticMap
         self.sharedTokenCache = tokenCache
         self.sharedGridCache = gridCache
-        
-        
     }
     
     public func getCollection(bufferSize: Int = BackingBufferDefaultSize) -> GlyphCollection {

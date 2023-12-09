@@ -50,10 +50,13 @@ public extension GlobalInstances {
     static let rootCustomMTKView: CustomMTKView = makeRootCustomMTKView()
     static let defaultLink: MetalLink = makeDefaultLink()
     static let defaultRenderer: MetalLinkRenderer = makeDefaultRenderer()
-    static private(set) var defaultAtlas: MetalLinkAtlas = makeDefaultAtlas()
+    static let gridStore = GridStore(link: defaultLink)
+    static let debugCamera = DebugCamera(link: defaultLink)
     
-    public static func recreateAtlas() {
-        defaultAtlas = makeDefaultAtlas()
+    static private(set) var defaultAtlas: MetalLinkAtlas = makeDefaultAtlas(compute: gridStore.sharedConvert)
+    
+    static func recreateAtlas() {
+        defaultAtlas = makeDefaultAtlas(compute: gridStore.sharedConvert)
     }
     
     private static func makeRootCustomMTKView() -> CustomMTKView {
@@ -64,8 +67,10 @@ public extension GlobalInstances {
         return try! MetalLink(view: rootCustomMTKView)
     }
     
-    private static func makeDefaultAtlas() -> MetalLinkAtlas {
-        return try! MetalLinkAtlas(defaultLink)
+    private static func makeDefaultAtlas(
+        compute: ConvertCompute
+    ) -> MetalLinkAtlas {
+        return try! MetalLinkAtlas(defaultLink, compute: compute)
     }
     
     private static func makeDefaultRenderer() -> MetalLinkRenderer {
@@ -81,22 +86,12 @@ public extension GlobalInstances {
     }
 }
 
-
-// MARK: - Grids
-// ______________________________________________________________
-public extension GlobalInstances {
-    static let gridStore = GridStore()
-}
-
-// MARK: - Debug
-public extension GlobalInstances {
-    static let debugCamera = DebugCamera(link: defaultLink)
-}
-
 // MARK: - Shared Workers and caches
 // ______________________________________________________________
 public class GridStore {
-    private var link: MetalLink { GlobalInstances.defaultLink }
+    private var link: MetalLink
+    internal init(link: MetalLink) { self.link = link }
+    
     public private(set) lazy var globalTokenCache: CodeGridTokenCache = CodeGridTokenCache()
     public private(set) lazy var globalSemanticMap: SemanticInfoMap = SemanticInfoMap()
     
@@ -124,5 +119,9 @@ public class GridStore {
     
     public private(set) lazy var sharedLsp: SwiftGlyphLSPWrapper = {
         SwiftGlyphLSPWrapper()
+    }()
+    
+    public private(set) lazy var sharedConvert: ConvertCompute = {
+        ConvertCompute(link: link)
     }()
 }

@@ -34,6 +34,9 @@ public class GridCache {
     
     public func insertGrid(_ key: CodeGrid) {
         cachedGrids[key.id] = key
+        if let source = key.sourcePath {
+            cachedFiles[source] = key.id
+        }
     }
     
     public func setCache(_ key: URL, _ requester: String = #function) -> CodeGrid {
