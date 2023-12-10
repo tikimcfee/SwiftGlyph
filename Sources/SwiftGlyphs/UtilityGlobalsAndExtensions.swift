@@ -39,15 +39,15 @@ public class QuickLooper {
     
     public func runUntil(
         onStop: (() -> Void)? = nil,
-        _ stopCondition: @escaping () -> Bool
+        stopIf: @escaping () -> Bool
     ) {
-        guard !stopCondition() else {
+        guard !stopIf() else {
             onStop?()
             return
         }
         loop()
         queue.asyncAfter(deadline: nextDispatch) {
-            self.runUntil(onStop: onStop, stopCondition)
+            self.runUntil(onStop: onStop, stopIf: stopIf)
         }
     }
 }

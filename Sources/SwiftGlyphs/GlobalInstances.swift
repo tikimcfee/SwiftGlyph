@@ -53,10 +53,10 @@ public extension GlobalInstances {
     static let gridStore = GridStore(link: defaultLink)
     static let debugCamera = DebugCamera(link: defaultLink)
     
-    static private(set) var defaultAtlas: MetalLinkAtlas = makeDefaultAtlas(compute: gridStore.sharedConvert)
+    static let defaultAtlas: MetalLinkAtlas = makeDefaultAtlas(compute: gridStore.sharedConvert)
     
-    static func recreateAtlas() {
-        defaultAtlas = makeDefaultAtlas(compute: gridStore.sharedConvert)
+    static func resetAtlas() {
+        defaultAtlas.reset(gridStore.sharedConvert)
     }
     
     private static func makeRootCustomMTKView() -> CustomMTKView {

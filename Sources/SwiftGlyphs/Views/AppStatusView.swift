@@ -20,37 +20,34 @@ public struct AppStatusView: View {
             .padding()
     }
     
+    var statusText: String {
+        status.progress.isReportedProgressActive
+             ? "AppStatus: active, reported"
+             : status.progress.isActive
+             ? "AppStatus: active, flag"
+             : "AppStatus: not active"
+    }
+    
     @ViewBuilder
     var mainView: some View {
-        VStack {
-            Text(status.progress.isReportedProgressActive
-                 ? "AppStatus: active, reported"
-                 : status.progress.isActive
-                 ? "AppStatus: active, flag"
-                 : "AppStatus: not active")
+        VStack(alignment: .leading) {
+            Text(statusText)
+                .font(.headline)
+            
+            Text(status.progress.message)
+                .font(.subheadline)
+            
+            Spacer().frame(height: 8)
+            
+            Text(status.progress.detail)
             
             if status.progress.isActive {
                 clampedProgressViewLabel
-            } else {
                 progressLabel
+                    .padding(.bottom)
             }
             
             Divider()
-            
-            if GlobalInstances.defaultAtlas.builder.cacheRef.map.isEmpty {
-                Button("Preload Glyph Atlas") {
-                    GlobalInstances.defaultAtlas.preload()
-                }
-            } else {
-                Button("Save Glyph Atlas") {
-                    GlobalInstances.defaultAtlas.save()
-                }
-            }
-            
-            Button("Delete atlas") {
-                AppFiles.delete(fileUrl: AppFiles.atlasSerializationURL)
-                AppFiles.delete(fileUrl: AppFiles.atlasTextureURL)
-            }
         }
     }
     
@@ -60,23 +57,19 @@ public struct AppStatusView: View {
             min(status.progress.currentValue, status.progress.totalValue),
             max(status.progress.currentValue, status.progress.totalValue)
         )
-        ProgressView(
-            value: safeValue,
-            total: safeTotal,
-            label: { progressLabel }
-        )
+        
+        VStack {
+            ProgressView(
+                value: safeValue,
+                total: safeTotal,
+                label: { EmptyView() }
+            )
+        }
     }
     
     @ViewBuilder
     var progressLabel: some View {
-        HStack(alignment: .lastTextBaseline) {
-            VStack(alignment: .leading) {
-                Text(status.progress.message)
-                Text("\(status.progress.roundedCurrent) / \(status.progress.roundedTotal)")
-            }
-            Spacer()
-            Text(status.progress.detail)
-        }
+        Text("\(status.progress.roundedCurrent) / \(status.progress.roundedTotal)")
     }
 }
 
@@ -87,19 +80,30 @@ public class AppStatus: ObservableObject {
         var totalValue: Double = 0
         var currentValue: Double = 0
         var isActive: Bool = false
-        var isReportedProgressActive: Bool { currentValue < totalValue }
         
-        var roundedTotal: Int { Int(totalValue) }
-        var roundedCurrent: Int { Int(currentValue) }
+        var isReportedProgressActive: Bool {
+            currentValue < totalValue
+        }
+        
+        var roundedTotal: Int {
+            Int(totalValue)
+        }
+        
+        var roundedCurrent: Int {
+            Int(currentValue)
+        }
     }
     
     @Published private(set) var progress = AppProgress()
+    @Published private(set) var history = [AppProgress]()
     
     func update(_ receiver: @escaping (inout AppProgress) -> Void) {
         DispatchQueue.main.async {
             var current = self.progress
             receiver(&current)
             self.progress = current
+            
+            self.history = self.history.suffix(24) + [current]
         }
     }
     
@@ -126,27 +130,39 @@ struct AppStatusView_Previews: PreviewProvider {
     static var status: AppStatus {
         let status = AppStatus()
         status.update {
+            $0.currentValue = 0
             $0.isActive = true
             $0.message = "Loading grids..."
             $0.totalValue = 15
         }
 
-        QuickLooper(
-            interval: .milliseconds(100),
-            loop: {
-                status.update {
-                    $0.currentValue += 1
-                    $0.detail = testDetails.randomElement()!
+        status.update { _ in
+            QuickLooper(
+                interval: .milliseconds(1000),
+                loop: {
+                    status.update {
+                        $0.currentValue += 1
+                        $0.detail = testDetails.randomElement()!
+                    }
                 }
-            }
-        ).runUntil(onStop: {
-            status.update { $0.message = "Done!" }
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
-                status.update { $0.isActive = false }
-            }
-        }) {
-            status.progress.currentValue >= status.progress.totalValue
+            ).runUntil(
+                onStop: {
+                    status.update {
+                        $0.message = "Done!"
+                        $0.currentValue = $0.totalValue
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
+                        status.update {
+                            $0.isActive = false
+                        }
+                    }
+                },
+                stopIf: {
+                    status.progress.currentValue >= status.progress.totalValue
+                }
+            )
         }
+        
         return status
     }
     static var previews: some View {

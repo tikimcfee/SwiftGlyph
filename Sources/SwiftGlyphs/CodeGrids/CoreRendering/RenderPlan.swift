@@ -65,6 +65,7 @@ class RenderPlan {
         statusObject.update {
             $0.totalValue += 1 // pretend there's at least one unfinished task
             $0.message = "Your computer is about to explode <3"
+            $0.isActive = true
         }
         
         WatchWrap.startTimer("\(rootPath.fileName)")
@@ -74,6 +75,7 @@ class RenderPlan {
         statusObject.update {
             $0.message = "Render complete!"
             $0.currentValue = $0.totalValue
+            $0.isActive = false
         }
     }
 }
