@@ -17,7 +17,6 @@ public struct AppStatusView: View {
     public var body: some View {
         mainView
             .padding()
-            .frame(width: 640.0)
     }
     
     @ViewBuilder
@@ -37,13 +36,13 @@ public struct AppStatusView: View {
             
             Divider()
             
-            HStack {
+            if GlobalInstances.defaultAtlas.builder.cacheRef.map.isEmpty {
+                Button("Preload Glyph Atlas") {
+                    GlobalInstances.defaultAtlas.preload()
+                }
+            } else {
                 Button("Save Glyph Atlas") {
                     GlobalInstances.defaultAtlas.save()
-                }
-                
-                Button("Load glyph Atlas") {
-                    GlobalInstances.defaultAtlas.load()
                 }
             }
         }
