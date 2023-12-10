@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import BitHandling
 
 public struct AppStatusView: View {
     @ObservedObject var status: AppStatus
@@ -44,6 +45,11 @@ public struct AppStatusView: View {
                 Button("Save Glyph Atlas") {
                     GlobalInstances.defaultAtlas.save()
                 }
+            }
+            
+            Button("Delete atlas") {
+                AppFiles.delete(fileUrl: AppFiles.atlasSerializationURL)
+                AppFiles.delete(fileUrl: AppFiles.atlasTextureURL)
             }
         }
     }
