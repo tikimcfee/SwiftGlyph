@@ -166,6 +166,9 @@ struct AppStatusView_Previews: PreviewProvider {
         return status
     }
     static var previews: some View {
-        AppStatusView(status: status)
+        VStack {
+            AppStatusView(status: status)
+            Button("Lol Some big stuff ") { }
+        }
     }
 }
