@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MetalLink
 
 class CodeGridColors {
     static let defaultText   = color(0.20, 0.20, 0.20, 1.00)

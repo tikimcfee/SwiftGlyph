@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftSyntax
+import MetalLink
 
 public struct SemanticInfo: Hashable, CustomStringConvertible {
     public let node: Syntax

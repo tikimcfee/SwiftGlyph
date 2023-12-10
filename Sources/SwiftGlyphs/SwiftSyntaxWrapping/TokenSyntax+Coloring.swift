@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftSyntax
+import MetalLink
 
 public extension TokenSyntax {
     static let languageKeywords = NSUIColor(displayP3Red: 0.8, green: 0.2, blue: 0.2, alpha: 1.0)
