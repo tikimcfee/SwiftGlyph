@@ -16,9 +16,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
+        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
+        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
         .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
-        .package(path: "../MetalLink"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
