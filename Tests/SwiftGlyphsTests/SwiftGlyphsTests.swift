@@ -1,7 +1,7 @@
 import XCTest
-@testable import SwiftGlyphs
+@testable import SwiftGlyph
 
-final class SwiftGlyphsTests: XCTestCase {
+final class SwiftGlyphTests: XCTestCase {
     func testExample() throws {
         // XCTest Documentation
         // https://developer.apple.com/documentation/xctest

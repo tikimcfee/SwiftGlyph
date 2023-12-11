@@ -1,5 +1,5 @@
 //
-//  SwiftGlyphsTests.swift
+//  SwiftGlyphTests.swift
 //  LookAtThat_AppKit
 //
 //  Created by Ivan Lugo on 1/28/23.
@@ -13,7 +13,7 @@ import SwiftSyntax
 import MetalLink
 import BitHandling
 
-extension SwiftGlyphsRoot {
+extension SwiftGlyphRoot {
     
     func setupRenderPlanTest() throws {
         camera.position = LFloat3(0, 0, 300)
@@ -84,7 +84,7 @@ extension SwiftGlyphsRoot {
 
 // MARK: - Test load pipeline
 
-extension SwiftGlyphsRoot {
+extension SwiftGlyphRoot {
     func basicGridPipeline(_ childPath: URL) -> GlyphCollectionSyntaxConsumer {
         let consumer = builder.createConsumerForNewGrid()
         consumer.consume(url: childPath)

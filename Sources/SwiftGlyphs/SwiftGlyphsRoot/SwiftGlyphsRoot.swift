@@ -1,5 +1,5 @@
 //
-//  SwiftGlyphsRoot.swift
+//  SwiftGlyphRoot.swift
 //  MetalSimpleInstancing
 //
 //  Created by Ivan Lugo on 8/6/22.
@@ -17,13 +17,13 @@ import SwiftSyntax
 import MetalLink
 import BitHandling
 
-extension SwiftGlyphsRoot: MetalLinkRendererDelegate {
+extension SwiftGlyphRoot: MetalLinkRendererDelegate {
     public func performDelegatedEncode(with pass: inout SafeDrawPass) {
         delegatedEncode(in: &pass)
     }
 }
 
-public class SwiftGlyphsRoot: MetalLinkReader {
+public class SwiftGlyphRoot: MetalLinkReader {
     public let link: MetalLink
     
     var bag = Set<AnyCancellable>()

@@ -11,8 +11,8 @@ let package = Package(
     ],
     products: [
         .library(
-            name: "SwiftGlyphs",
-            targets: ["SwiftGlyphs"]
+            name: "SwiftGlyph",
+            targets: ["SwiftGlyph"]
         ),
     ],
     dependencies: [
@@ -24,7 +24,7 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SwiftGlyphs",
+            name: "SwiftGlyph",
             dependencies: [
                 "BitHandling",
                 "MetalLink",
@@ -33,9 +33,9 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "SwiftGlyphsTests",
+            name: "SwiftGlyphTests",
             dependencies: [
-                "SwiftGlyphs",
+                "SwiftGlyph",
                 "BitHandling",
             ]
         ),
