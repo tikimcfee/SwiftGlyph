@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftGlyphs",
+    name: "SwiftGlyph",
     platforms: [
         .iOS(.v16),
         .macOS(.v13),
