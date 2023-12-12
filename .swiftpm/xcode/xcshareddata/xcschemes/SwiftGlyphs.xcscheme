@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SwiftGlyphs"
-               BuildableName = "SwiftGlyphs"
-               BlueprintName = "SwiftGlyphs"
+               BlueprintIdentifier = "SwiftGlyph"
+               BuildableName = "SwiftGlyph"
+               BlueprintName = "SwiftGlyph"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,15 +46,6 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "SwiftGlyphs"
-            BuildableName = "SwiftGlyphs"
-            BlueprintName = "SwiftGlyphs"
-            ReferencedContainer = "container:">
-         </BuildableReference>
-      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

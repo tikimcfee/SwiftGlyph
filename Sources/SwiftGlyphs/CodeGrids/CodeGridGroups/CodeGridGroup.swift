@@ -44,11 +44,8 @@ class CodeGridGroup {
     
     func applyAllConstraints() {
         for childGroup in childGroups {
-//            childGroup.globalRootGrid.rootNode.pausedInvalidate = false
             childGroup.applyAllConstraints()
         }
-        
-//        globalRootGrid.rootNode.pausedInvalidate = false
         controller.applyConsecutiveConstraints()
     }
     

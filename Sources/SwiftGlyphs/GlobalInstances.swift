@@ -94,10 +94,17 @@ public class GridStore {
     
     public private(set) lazy var globalTokenCache: CodeGridTokenCache = CodeGridTokenCache()
     public private(set) lazy var globalSemanticMap: SemanticInfoMap = SemanticInfoMap()
+    public private(set) lazy var builder = try! CodeGridGlyphCollectionBuilder(
+        link: link,
+        sharedAtlas: GlobalInstances.defaultAtlas,
+        sharedSemanticMap: globalSemanticMap,
+        sharedTokenCache: globalTokenCache
+    )
     
-    public private(set) lazy var gridCache: GridCache = GridCache(tokenCache: globalTokenCache)
-    public private(set) lazy var concurrentRenderer: ConcurrentGridRenderer = ConcurrentGridRenderer(cache: gridCache)
+    public private(set) lazy var gridCache: GridCache = GridCache(builder: builder)
     public private(set) lazy var globalSemantics: CodeGridGlobalSemantics = CodeGridGlobalSemantics(source: gridCache)
+    
+    
     
     public private(set) lazy var searchContainer: SearchContainer = SearchContainer(gridCache: gridCache)
     public private(set) lazy var nodeHoverController: MetalLinkHoverController = MetalLinkHoverController(link: link)

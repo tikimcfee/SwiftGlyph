@@ -6,7 +6,6 @@
 //
 
 import Combine
-import SwiftSyntax
 import SwiftUI
 import MetalLink
 import MetalLinkHeaders

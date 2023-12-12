@@ -5,7 +5,6 @@
 //  Created by Ivan Lugo on 5/21/22.
 //
 
-import SwiftSyntax
 import Foundation
 import OrderedCollections
 import MetalLink
@@ -14,6 +13,10 @@ import BitHandling
 class RenderPlan {
     var statusObject: AppStatus { GlobalInstances.appStatus }
     var compute: ConvertCompute { GlobalInstances.gridStore.sharedConvert }
+    var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
+    var gridCache: GridCache { GlobalInstances.gridStore.gridCache }
+    var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
+    
     let targetParent = MetalLinkNode()
     
     class State {
@@ -29,25 +32,19 @@ class RenderPlan {
     let mode: Mode
     
     let rootPath: URL
-    let builder: CodeGridGlyphCollectionBuilder
     let editor: WorldGridEditor
     let focus: WorldGridFocusController
-    let hoverController: MetalLinkHoverController
     
     init(
         mode: Mode,
         rootPath: URL,
-        builder: CodeGridGlyphCollectionBuilder,
         editor: WorldGridEditor,
-        focus: WorldGridFocusController,
-        hoverController: MetalLinkHoverController
+        focus: WorldGridFocusController
     ) {
         self.mode = mode
         self.rootPath = rootPath
-        self.builder = builder
         self.editor = editor
         self.focus = focus
-        self.hoverController = hoverController
     }
     
     func startRender(
@@ -212,32 +209,30 @@ private extension RenderPlan {
     func cacheCollectionAsGrid(from result: EncodeResult) {
         switch result.collection {
         case .built(let collection):
-            CodeGrid(
-                rootNode: collection,
-                tokenCache: builder.sharedTokenCache
-            )
-            .withSourcePath(result.sourceURL)
-            .withFileName(result.sourceURL.lastPathComponent)
-            .applyName()
-            .applying {
-                if result.sourceURL == rootPath {
-                    print("<Found source grid url>")
-                    targetParent.add(child: $0.rootNode)
-                } else {
-                    guard let parentGroup = state.directoryGroups[
-                        result
-                            .sourceURL
-                            .deletingLastPathComponent()
-                    ] else {
-                        fatalError("YOU WERE THE CHOSEN ONE")
+            builder
+                .createGrid(around: collection)
+                .withSourcePath(result.sourceURL)
+                .withFileName(result.sourceURL.lastPathComponent)
+                .applyName()
+                .applying {
+                    if result.sourceURL == rootPath {
+                        print("<Found source grid url>")
+                        targetParent.add(child: $0.rootNode)
+                    } else {
+                        guard let parentGroup = state.directoryGroups[
+                            result
+                                .sourceURL
+                                .deletingLastPathComponent()
+                        ] else {
+                            fatalError("YOU WERE THE CHOSEN ONE")
+                        }
+                        
+                        parentGroup.addChildGrid($0)
+                        gridCache.insertGrid($0)
+                        hoverController.attachPickingStream(to: $0)
+                        $0.updateBackground()
                     }
-                    
-                    parentGroup.addChildGrid($0)
-                    builder.sharedGridCache.insertGrid($0)
-                    hoverController.attachPickingStream(to: $0)
-                    $0.updateBackground()
                 }
-            }
             
         case .notBuilt:
             break
@@ -251,7 +246,7 @@ private extension RenderPlan {
     func cacheCodeGroups(for directories: [URL]) {
         // Double pass; build out groups...
         for directoryURL in directories {
-            let grid = builder.sharedGridCache
+            let grid = gridCache
                 .setCache(directoryURL)
                 .withSourcePath(directoryURL)
                 .withFileName(directoryURL.fileName)
@@ -259,7 +254,6 @@ private extension RenderPlan {
                 .removeBackground()
             
             let group = CodeGridGroup(globalRootGrid: grid)
-//            grid.rootNode.pausedInvalidate = true
             state.directoryGroups[directoryURL] = group
         }
         

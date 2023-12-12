@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftSyntax
 import MetalLink
 
 public struct NodePickingState {

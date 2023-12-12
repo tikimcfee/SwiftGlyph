@@ -12,8 +12,6 @@
 import Combine
 import MetalKit
 import SwiftUI
-import SwiftParser
-import SwiftSyntax
 import MetalLink
 import BitHandling
 
@@ -29,13 +27,6 @@ public class SwiftGlyphRoot: MetalLinkReader {
     var bag = Set<AnyCancellable>()
     
     lazy var root = RootNode(camera)
-    
-    lazy var builder = try! CodeGridGlyphCollectionBuilder(
-        link: link,
-        sharedSemanticMap: GlobalInstances.gridStore.globalSemanticMap,
-        sharedTokenCache: GlobalInstances.gridStore.globalTokenCache,
-        sharedGridCache: GlobalInstances.gridStore.gridCache
-    )
     
     var camera: DebugCamera {
         GlobalInstances.debugCamera

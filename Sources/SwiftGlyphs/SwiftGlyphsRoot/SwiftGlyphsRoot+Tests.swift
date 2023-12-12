@@ -8,8 +8,6 @@
 import Combine
 import MetalKit
 import SwiftUI
-import SwiftParser
-import SwiftSyntax
 import MetalLink
 import BitHandling
 
@@ -31,10 +29,8 @@ extension SwiftGlyphRoot {
             RenderPlan(
                 mode: .cacheAndLayout,
                 rootPath: url,
-                builder: self.builder,
                 editor: self.editor,
-                focus: self.focus,
-                hoverController: GlobalInstances.gridStore.nodeHoverController
+                focus: self.focus
             )
             .startRender(onRenderComplete)
         }
@@ -86,7 +82,7 @@ extension SwiftGlyphRoot {
 
 extension SwiftGlyphRoot {
     func basicGridPipeline(_ childPath: URL) -> GlyphCollectionSyntaxConsumer {
-        let consumer = builder.createConsumerForNewGrid()
+        let consumer = GlobalInstances.gridStore.builder.createConsumerForNewGrid()
         consumer.consume(url: childPath)
         consumer.targetGrid.fileName = childPath.fileName
         
@@ -116,13 +112,14 @@ extension SwiftGlyphRoot {
     }
     
     func directoryAddPipeline(_ action: @escaping (URL) -> Void) {
+        let cache = GlobalInstances.gridStore.gridCache
         GlobalInstances.fileBrowser.$fileSelectionEvents.sink { event in
             switch event {
             case let .newMultiCommandRecursiveAllLayout(rootPath, _):
                 action(rootPath)
                 
             case let .newSingleCommand(url, .focusOnExistingGrid):
-                if let grid = self.builder.sharedGridCache.get(url) {
+                if let grid = cache.get(url) {
                     self.focus.state = .set(grid)
                 } else {
                     action(url)

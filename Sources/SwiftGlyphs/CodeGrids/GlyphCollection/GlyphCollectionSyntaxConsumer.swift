@@ -6,13 +6,12 @@
 //
 
 import Foundation
-import SwiftSyntax
 import MetalLink
 import MetalLinkHeaders
 import MetalKit
 import BitHandling
 
-public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
+public struct GlyphCollectionSyntaxConsumer {
     public let targetGrid: CodeGrid
     public let targetCollection: GlyphCollection
     public var writer: GlyphCollectionWriter
@@ -25,13 +24,17 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
     
     @discardableResult
     public func consume(url: URL) -> CodeGrid {
-        guard let fileSource = loadSourceUrl(url) else {
-            return consumeText(textPath: url)
+        return consumeText(textPath: url)
+    }
+    
+    public func consumeText(textPath: URL) -> CodeGrid {
+        guard let fullString = try? String(contentsOf: textPath) else {
+            return targetGrid
         }
-        let size = fileSource.root.allText.count + 512
+        let size = fullString.count + 512
         
         guard size < 1_000_000 else {
-            print("Yo dude that's just like too many letters and stuff: \(url)")
+            print("Yo dude that's just like too many letters and stuff: \(textPath)")
             
             var trashNodes = CodeGridNodes()
             write(
@@ -44,23 +47,6 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
             return targetGrid
         }
         
-        try? targetGrid
-            .rootNode
-            .instanceState
-            .constants
-            .expandBuffer(nextSize: size, force: true)
-        
-        print("starting consume: \(url.lastPathComponent)")
-        consume(rootSyntaxNode: Syntax(fileSource))
-        print("completed consume: \(url.lastPathComponent)")
-        
-        return targetGrid
-    }
-    
-    public func consumeText(textPath: URL) -> CodeGrid {
-        guard let fullString = try? String(contentsOf: textPath) else {
-            return targetGrid
-        }
         var nodes = CodeGridNodes()
         let id = "raw-text-path-\(UUID().uuidString)"
         write(fullString, id, NSUIColor.white, &nodes)
@@ -74,43 +60,6 @@ public struct GlyphCollectionSyntaxConsumer: SwiftSyntaxFileLoadable {
         write(fullString, id, NSUIColor.white, &nodes)
         targetGrid.tokenCache[id] = nodes
         return targetGrid
-    }
-    
-    // --> cmd+f 'slow-stuff'
-    public func consume(rootSyntaxNode: Syntax) {
-        FlatteningVisitor(
-            target: targetGrid.semanticInfoMap,
-            builder: targetGrid.semanticInfoBuilder
-        ).walkRecursiveFromSyntax(rootSyntaxNode)
-        
-        for token in rootSyntaxNode.tokens(viewMode: .all) {
-            consumeSyntaxToken(token)
-        }
-        
-        targetGrid.consumedRootSyntaxNodes.append(rootSyntaxNode)
-        targetGrid.updateBackground()
-        targetCollection.setRootMesh()
-    }
-    
-    private func consumeSyntaxToken(_ token: TokenSyntax) {
-        // Setup identifiers and build out token text
-        let tokenId = token.id
-        let tokenIdNodeName = tokenId.stringIdentifier
-        let triviaColor = CodeGridColors.trivia
-        let tokenColor = token.defaultColor
-        
-        // Combine all nodes into same set, colorize trivia differently
-        var allCharacterNodes = CodeGridNodes()
-        let leadingTrivia = token.leadingTrivia.stringified
-        let tokenText = token.text
-        let trailingTrivia = token.trailingTrivia.stringified
-        
-        write(leadingTrivia, tokenIdNodeName, triviaColor, &allCharacterNodes)
-        write(tokenText, tokenIdNodeName, tokenColor, &allCharacterNodes)
-        write(trailingTrivia, tokenIdNodeName, triviaColor, &allCharacterNodes)
-        
-        targetGrid.tokenCache[tokenIdNodeName] = allCharacterNodes
-        targetGrid.semanticInfoMap.insertNodeInfo(tokenIdNodeName, tokenId)
     }
     
     public func write(

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftSyntax
 
 // MARK: - Collection Updates
 
@@ -40,9 +39,6 @@ extension CodeGrid {
     
     @inline(__always)
     private func forAllNodesInCollection(_ operation: ((SemanticInfo, CodeGridNodes)) throws -> Void) rethrows {
-        for rootSyntaxNode in consumedRootSyntaxNodes {
-            let rootSyntaxId = rootSyntaxNode.id
-            try semanticInfoMap.doOnAssociatedNodes(rootSyntaxId, tokenCache, operation)
-        }
+        print("Warning: forAllNodes is disabled!")
     }
 }

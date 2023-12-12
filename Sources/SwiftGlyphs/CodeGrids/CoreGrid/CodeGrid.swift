@@ -7,7 +7,6 @@
 
 import Foundation
 import SceneKit
-import SwiftSyntax
 import MetalLink
 import MetalLinkHeaders
 

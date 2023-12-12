@@ -17,8 +17,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
+        .package(url: "https://github.com/ChimeHQ/Neon.git", branch: "main"),
+        .package(url: "https://github.com/alex-pinkus/tree-sitter-swift.git", branch: "with-generated-files"),
         .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
-        .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,8 +29,8 @@ let package = Package(
             dependencies: [
                 "BitHandling",
                 "MetalLink",
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
+                "Neon",
+                .product(name: "TreeSitterSwift", package: "tree-sitter-swift")
             ]
         ),
         .testTarget(
@@ -37,6 +38,7 @@ let package = Package(
             dependencies: [
                 "SwiftGlyph",
                 "BitHandling",
+                .product(name: "TreeSitterSwift", package: "tree-sitter-swift")
             ]
         ),
     ]

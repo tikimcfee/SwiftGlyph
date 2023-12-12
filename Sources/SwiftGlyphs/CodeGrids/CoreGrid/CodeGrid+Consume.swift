@@ -7,7 +7,6 @@
 
 import Foundation
 import SceneKit
-import SwiftSyntax
 import MetalLink
 
 class ColorGenerator {
@@ -92,22 +91,5 @@ extension CodeGrid {
         )
         rootNode.setRootMesh()
         return (self, nodes)
-    }
-}
-
-//MARK: -- Consume Syntax
-public extension CodeGrid {
-    @discardableResult
-    func consume(rootSyntaxNode: Syntax) -> CodeGrid {
-        doSyntaxConsume(rootSyntaxNode: rootSyntaxNode)
-        return self
-    }
-    
-    @discardableResult
-    private func doSyntaxConsume(rootSyntaxNode: Syntax) -> CodeGrid {
-        let consumer = GlyphCollectionSyntaxConsumer(targetGrid: self)
-        consumer.consume(rootSyntaxNode: rootSyntaxNode)
-        consumedRootSyntaxNodes.append(rootSyntaxNode)
-        return self
     }
 }

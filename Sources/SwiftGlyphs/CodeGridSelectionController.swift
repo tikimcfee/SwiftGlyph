@@ -8,7 +8,6 @@
 import Foundation
 import MetalLink
 import BitHandling
-import SwiftSyntax
 
 public class GlobalNodeController {
     public func focus(_ node: GlyphNode) {

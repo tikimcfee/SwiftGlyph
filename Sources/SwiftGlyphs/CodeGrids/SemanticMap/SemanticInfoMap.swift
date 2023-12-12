@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SwiftSyntax
 import SceneKit
 import MetalLink
 
@@ -117,62 +116,6 @@ public extension SemanticInfoMap {
 // MARK: - Major Categories
 
 public extension SemanticInfoMap {
-    func category(
-        for syntax: DeclSyntaxProtocol,
-        _ action: (inout AssociatedSyntaxMap) -> Void)
-    {
-        switch syntax.syntaxNodeType {
-        case is ProtocolDeclSyntax.Type:
-            action(&protocols)
-        case is TypeAliasDeclSyntax.Type:
-            action(&typeAliases)
-        case is VariableDeclSyntax.Type:
-            action(&variables)
-        case is ClassDeclSyntax.Type:
-            action(&classes)
-        case is EnumDeclSyntax.Type:
-            action(&enumerations)
-        case is ExtensionDeclSyntax.Type:
-            action(&extensions)
-        case is FunctionDeclSyntax.Type:
-            action(&functions)
-        case is StructDeclSyntax.Type:
-            action(&structs)
-        case is SwitchExprSyntax.Type:
-            action(&switches)
-        default:
-            break
-        }
-    }
-    
-    func category(
-        for syntaxEnum: SyntaxEnum,
-        _ action: (inout AssociatedSyntaxMap) -> Void)
-    {
-        switch syntaxEnum {
-        case .protocolDecl:
-            action(&protocols)
-        case .typeAliasDecl:
-            action(&typeAliases)
-        case .variableDecl:
-            action(&variables)
-        case .classDecl:
-            action(&classes)
-        case .enumDecl:
-            action(&enumerations)
-        case .extensionDecl:
-            action(&extensions)
-        case .functionDecl:
-            action(&functions)
-        case .structDecl:
-            action(&structs)
-        case .switchExpr:
-            action(&switches)
-        default:
-            break
-        }
-    }
-    
     var isEmpty: Bool {
         semanticsLookupBySyntaxId.isEmpty
         && syntaxIDLookupByNodeId.isEmpty
