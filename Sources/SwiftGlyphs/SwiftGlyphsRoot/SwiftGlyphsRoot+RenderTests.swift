@@ -26,6 +26,10 @@ extension SwiftGlyphRoot {
         }
         
         func doAddFilePath(_ url: URL) {
+            GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
+            GlobalInstances.rootCustomMTKView.isPaused = true
+            GlobalInstances.defaultRenderer.paused = true
+            
             RenderPlan(
                 mode: .cacheAndLayout,
                 rootPath: url,
@@ -86,7 +90,8 @@ extension SwiftGlyphRoot {
         consumer.consume(url: childPath)
         consumer.targetGrid.fileName = childPath.fileName
         
-        GlobalInstances.gridStore.nodeHoverController
+        GlobalInstances.gridStore
+            .nodeHoverController
             .attachPickingStream(to: consumer.targetGrid)
         
         return consumer

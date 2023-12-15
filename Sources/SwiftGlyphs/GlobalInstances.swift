@@ -43,6 +43,12 @@ public extension GlobalInstances {
     static let fileEventStream = fileBrowser.$fileSelectionEvents.share().eraseToAnyPublisher()
 }
 
+// MARK: - LSP
+// ______________________________________________________________
+public extension GlobalInstances {
+    static let lspServer = GlyphServer()
+}
+
 
 // MARK: - Metal
 // ______________________________________________________________

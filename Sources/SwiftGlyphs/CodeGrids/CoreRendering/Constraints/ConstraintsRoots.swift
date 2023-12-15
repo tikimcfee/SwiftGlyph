@@ -6,7 +6,6 @@
 import SwiftUI
 import MetalLink
 import MetalLinkHeaders
-import MetalLinkResources
 
 protocol BasicConstraint {
     func apply()
