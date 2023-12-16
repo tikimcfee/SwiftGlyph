@@ -8,9 +8,11 @@
 import Foundation
 import OrderedCollections
 import MetalLink
+import MetalKit
 import BitHandling
 
-class RenderPlan {
+class RenderPlan: MetalLinkReader {
+    var link: MetalLink { GlobalInstances.defaultLink }
     var statusObject: AppStatus { GlobalInstances.appStatus }
     var compute: ConvertCompute { GlobalInstances.gridStore.sharedConvert }
     var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
@@ -167,7 +169,12 @@ private extension RenderPlan {
         }
         
         // Then ask kindly of the gpu to go 'ham'
+        
+        
+        
         do {
+            onDebugStart()
+            
             let allMappedAtlasResults = try compute.executeManyWithAtlas(
                 sources: allFileURLs,
                 atlas: builder.atlas,
@@ -199,8 +206,27 @@ private extension RenderPlan {
                 }
             }
             
+            onDebugStop()
         } catch {
             fatalError("Crash for now, my man: \(error)")
+        }
+    }
+    
+    
+    private func onDebugStart(_ captureManager: MTLCaptureManager = .shared()) {
+        do {
+            let captureDescriptor = MTLCaptureDescriptor()
+            captureDescriptor.captureObject = commandQueue
+            captureDescriptor.destination = .developerTools
+            try captureManager.startCapture(with: captureDescriptor)
+        } catch {
+            print(error)
+        }
+    }
+    
+    private func onDebugStop(_ captureManager: MTLCaptureManager = .shared()) {
+        if captureManager.isCapturing {
+            captureManager.stopCapture()
         }
     }
     

@@ -8,6 +8,16 @@
 import SwiftUI
 import BitHandling
 
+extension AppStatusView {
+    var statusText: String {
+        status.progress.isReportedProgressActive
+             ? "AppStatus: active, reported"
+             : status.progress.isActive
+             ? "AppStatus: active, flag"
+             : "AppStatus: not active"
+    }
+}
+
 public struct AppStatusView: View {
     @ObservedObject var status: AppStatus
     
@@ -17,37 +27,31 @@ public struct AppStatusView: View {
     
     public var body: some View {
         mainView
-            .padding()
-    }
-    
-    var statusText: String {
-        status.progress.isReportedProgressActive
-             ? "AppStatus: active, reported"
-             : status.progress.isActive
-             ? "AppStatus: active, flag"
-             : "AppStatus: not active"
+            .padding(32)
     }
     
     @ViewBuilder
     var mainView: some View {
         VStack(alignment: .leading) {
-            Text(statusText)
-                .font(.headline)
-            
-            Text(status.progress.message)
-                .font(.subheadline)
-            
-            Spacer().frame(height: 8)
-            
-            Text(status.progress.detail)
-            
-            if status.progress.isActive {
+            HStack(alignment: .top) {
+                VStack (alignment: .leading) {
+                    Text(statusText)
+                        .font(.headline)
+                        .frame(minWidth: 240, alignment: .leading)
+                    
+                    Text(status.progress.message)
+                        .font(.subheadline)
+                        .frame(minWidth: 240, alignment: .leading)
+                        .lineLimit(2, reservesSpace: true)
+                }
+                
                 clampedProgressViewLabel
-                progressLabel
-                    .padding(.bottom)
+                    .padding(.trailing, 8)
             }
             
-            Divider()
+            Spacer().frame(height: 16)
+            
+            Text(status.progress.detail)
         }
     }
     
@@ -58,18 +62,14 @@ public struct AppStatusView: View {
             max(status.progress.currentValue, status.progress.totalValue)
         )
         
-        VStack {
-            ProgressView(
-                value: safeValue,
-                total: safeTotal,
-                label: { EmptyView() }
-            )
-        }
-    }
-    
-    @ViewBuilder
-    var progressLabel: some View {
-        Text("\(status.progress.roundedCurrent) / \(status.progress.roundedTotal)")
+        ProgressView(
+            value: safeValue,
+            total: safeTotal,
+            label: { EmptyView() }
+        )
+        .labelsHidden()
+        .progressViewStyle(.circular)
+        .opacity(status.progress.isActive ? 1 : 0)
     }
 }
 
@@ -127,6 +127,17 @@ struct AppStatusView_Previews: PreviewProvider {
         "Narfling the Garthok..."
     ]
     
+    static let testSubDetails = [
+        "A once of the dunce can munch lunch",
+        "Sometimes the things do",
+        "How come but like maybe how",
+        "Did you ever see the did",
+        "Whenever you can you can",
+        "Whenever can you can you",
+        "Fun fun bun bun",
+        "If you apply a long series of glyphs into a line and then separate the glyphs with not glyphs you end up with words and then you if you use the same glyphs and spaces over and over again sometimes the words becomes real.",
+    ]
+    
     static var status: AppStatus {
         let status = AppStatus()
         status.update {
@@ -138,10 +149,11 @@ struct AppStatusView_Previews: PreviewProvider {
 
         status.update { _ in
             QuickLooper(
-                interval: .milliseconds(1000),
+                interval: .milliseconds(100),
                 loop: {
                     status.update {
                         $0.currentValue += 1
+                        $0.message = testSubDetails.randomElement()!
                         $0.detail = testDetails.randomElement()!
                     }
                 }
@@ -168,7 +180,6 @@ struct AppStatusView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             AppStatusView(status: status)
-            Button("Lol Some big stuff ") { }
         }
     }
 }

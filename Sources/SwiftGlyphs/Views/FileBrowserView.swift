@@ -114,8 +114,8 @@ public struct FileBrowserView: View {
                         hoveredScope = nil
                     }
                 }
-                Divider().opacity(0.75)
             }
+            .listRowSeparator(.hidden)
         }
         #if os(macOS)
         .listStyle(.plain)
