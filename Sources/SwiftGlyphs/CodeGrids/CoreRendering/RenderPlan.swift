@@ -173,8 +173,8 @@ private extension RenderPlan {
         
         
         do {
-            onDebugStart()
             
+            onDebugStart()
             let allMappedAtlasResults = try compute.executeManyWithAtlas(
                 sources: allFileURLs,
                 atlas: builder.atlas,
@@ -205,8 +205,8 @@ private extension RenderPlan {
                     $0.currentValue += 1
                 }
             }
-            
             onDebugStop()
+            
         } catch {
             fatalError("Crash for now, my man: \(error)")
         }
@@ -214,20 +214,20 @@ private extension RenderPlan {
     
     
     private func onDebugStart(_ captureManager: MTLCaptureManager = .shared()) {
-        do {
-            let captureDescriptor = MTLCaptureDescriptor()
-            captureDescriptor.captureObject = commandQueue
-            captureDescriptor.destination = .developerTools
-            try captureManager.startCapture(with: captureDescriptor)
-        } catch {
-            print(error)
-        }
+//        do {
+//            let captureDescriptor = MTLCaptureDescriptor()
+//            captureDescriptor.captureObject = commandQueue
+//            captureDescriptor.destination = .developerTools
+//            try captureManager.startCapture(with: captureDescriptor)
+//        } catch {
+//            print(error)
+//        }
     }
     
     private func onDebugStop(_ captureManager: MTLCaptureManager = .shared()) {
-        if captureManager.isCapturing {
-            captureManager.stopCapture()
-        }
+//        if captureManager.isCapturing {
+//            captureManager.stopCapture()
+//        }
     }
     
     // MARK: - Encode result processing

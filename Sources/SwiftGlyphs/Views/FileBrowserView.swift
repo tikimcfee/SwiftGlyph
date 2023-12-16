@@ -277,18 +277,19 @@ struct FileBrowserView_Previews: PreviewProvider {
     
     static let testState: FileBrowserViewState = {
         let state = FileBrowserViewState()
-//        state.files = testFiles
+        GlobalInstances.fileStream
+        state.files = testFiles
         return state
     }()
     
     static var previews: some View {
         FileBrowserView(browserState: testState)
             .onAppear {
-                for file in testFiles {
-                    DispatchQueue.main.async {
-                        GlobalInstances.fileBrowser.onScopeSelected(file)
-                    }
-                }
+//                for file in testFiles {
+//                    DispatchQueue.main.async {
+//                        GlobalInstances.fileBrowser.onScopeSelected(file)
+//                    }
+//                }
             }
     }
 }

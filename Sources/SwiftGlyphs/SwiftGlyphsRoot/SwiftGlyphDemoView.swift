@@ -63,12 +63,16 @@ public struct SwiftGlyphDemoView : View {
     }
     
     private var rootView: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack(alignment: .topTrailing) {
             GlobalInstances.createDefaultMetalView()
             
             #if os(macOS)
-            VStack {
+            HStack {
                 topSafeAreaContent
+                Spacer()
+            }
+            
+            VStack {
                 Spacer()
                 bottomSafeAreaContent
             }
@@ -98,15 +102,19 @@ public struct SwiftGlyphDemoView : View {
         switch screen {
         case .fileBrowser:
             fileBrowserContentView
+                .zIndex(1)
             
         case .showActions:
             actionsContent
+                .zIndex(2)
             
         case .showGitFetch:
             GitHubClientView()
+                .zIndex(3)
             
         case .root:
             EmptyView()
+                .zIndex(4)
         }
     }
     
@@ -115,12 +123,12 @@ public struct SwiftGlyphDemoView : View {
             screenViewBottom
                 .padding(.leading)
                 .transition(.move(edge: .trailing))
-                .zIndex(1)
+                .zIndex(5)
 
             HStack {
                 controlsButton
                 showFileBrowserButton
-            }.zIndex(2)
+            }.zIndex(6)
         }
         .padding(.vertical)
         .padding(.horizontal)
@@ -158,17 +166,13 @@ public struct SwiftGlyphDemoView : View {
             .contentShape(Rectangle())
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .onTapGesture {
-                withAnimation(.snappy(duration: 0.333)) {
-                    setScreen(.showActions)
-                }
+                setScreen(.showActions)
             }
     }
     
     var showFileBrowserButton: some View {
         button(fileButtonName, "") {
-            withAnimation(.snappy(duration: 0.333)) {
-                setScreen(.fileBrowser)
-            }
+            setScreen(.fileBrowser)
         }
     }
     
@@ -231,17 +235,6 @@ public struct SwiftGlyphDemoView : View {
     }
 }
 
-#if DEBUG
-struct ContentView_Previews : PreviewProvider {
-    static var previews: some View {
-        VStack {
-            SwiftGlyphDemoView()
-        }
-            
-    }
-}
-#endif
-
 #if os(macOS)
 private extension SwiftGlyphDemoView {
     private static var window: NSWindow?
@@ -280,6 +273,16 @@ private extension SwiftGlyphDemoView {
         window.center()
         window.setFrameAutosaveName("Main Window")
         return window
+    }
+}
+#endif
+
+
+#if DEBUG
+struct ContentView_Previews : PreviewProvider {
+    static var previews: some View {
+        SwiftGlyphDemoView()
+            .frame(width: 1024, height: 800)
     }
 }
 #endif
