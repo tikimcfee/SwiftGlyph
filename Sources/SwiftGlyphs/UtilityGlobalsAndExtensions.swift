@@ -29,9 +29,11 @@ public class QuickLooper {
     public var interval: DispatchTimeInterval
     public var nextDispatch: DispatchTime { .now() + interval }
     
-    public init(interval: DispatchTimeInterval = .seconds(1),
-         loop: @escaping () -> Void,
-         queue: DispatchQueue = .main) {
+    public init(
+        interval: DispatchTimeInterval = .seconds(1),
+        queue: DispatchQueue = .main,
+        loop: @escaping () -> Void
+    ) {
         self.interval = interval
         self.loop = loop
         self.queue = queue

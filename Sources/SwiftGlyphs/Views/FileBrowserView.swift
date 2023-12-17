@@ -46,7 +46,7 @@ public class FileBrowserViewState: ObservableObject {
             }
             .store(in: &bag)
         
-        $filterText.sink { [weak self] _ in
+        $filterText.receive(on: DispatchQueue.main).sink { [weak self] _ in
             guard let self = self else { return }
             self.files = self.filter(files: self.selectedfiles)
         }.store(in: &bag)
