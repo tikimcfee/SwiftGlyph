@@ -8,26 +8,21 @@
 import SwiftUI
 import BitHandling
 
-extension AppStatusView {
-    var statusText: String {
-        status.progress.isReportedProgressActive
-             ? "AppStatus: active, reported"
-             : status.progress.isActive
-             ? "AppStatus: active, flag"
-             : "AppStatus: not active"
-    }
-}
 
 public struct AppStatusView: View {
     @ObservedObject var status: AppStatus
+    let textWidth = 320.0
     
     public init(status: AppStatus) {
         self.status = status
     }
     
     public var body: some View {
-        mainView
-            .padding(32)
+        if status.progress.isActive {
+            mainView
+                .zIndex(1)
+                .transition(.move(edge: .top))
+        }
     }
     
     @ViewBuilder
@@ -37,24 +32,35 @@ public struct AppStatusView: View {
                 VStack (alignment: .leading) {
                     Text(statusText)
                         .font(.headline)
-                        .frame(minWidth: 240, alignment: .leading)
+                        .frame(width: textWidth, alignment: .leading)
                     
                     Text(status.progress.message)
                         .font(.subheadline)
-                        .frame(minWidth: 240, alignment: .leading)
+                        .frame(width: textWidth, alignment: .leading)
                         .lineLimit(2, reservesSpace: true)
                 }
-                
-                clampedProgressViewLabel
-                    .padding(.trailing, 8)
             }
             
-            Spacer().frame(height: 16)
+            clampedProgressViewLabel
             
             Text(status.progress.detail)
+            
+            countView
         }
+        
     }
     
+    @ViewBuilder
+    var countView: some View {
+        Text(
+            String(format: "%.f/%.f",
+                    status.progress.currentValue,
+                    status.progress.totalValue)
+        )
+        .font(.subheadline)
+        .lineLimit(1, reservesSpace: true)
+    }
+        
     @ViewBuilder
     var clampedProgressViewLabel: some View {
         let (safeValue, safeTotal) = (
@@ -68,48 +74,27 @@ public struct AppStatusView: View {
             label: { EmptyView() }
         )
         .labelsHidden()
-        .progressViewStyle(.circular)
+        .frame(maxWidth: textWidth)
         .opacity(status.progress.isActive ? 1 : 0)
     }
 }
 
-public class AppStatus: ObservableObject {
-    public struct AppProgress {
-        var message: String = ""
-        var detail: String = ""
-        var totalValue: Double = 0
-        var currentValue: Double = 0
-        var isActive: Bool = false
-        
-        var isReportedProgressActive: Bool {
-            currentValue < totalValue
-        }
-        
-        var roundedTotal: Int {
-            Int(totalValue)
-        }
-        
-        var roundedCurrent: Int {
-            Int(currentValue)
-        }
+extension AppStatusView {
+    var statusText: String {
+        status.progress.isReportedProgressActive
+             ? "AppStatus: active, reported"
+             : status.progress.isActive
+             ? "AppStatus: active, flag"
+             : "AppStatus: not active"
     }
-    
-    @Published private(set) var progress = AppProgress()
-    @Published private(set) var history = [AppProgress]()
-    
-    func update(_ receiver: @escaping (inout AppProgress) -> Void) {
-        DispatchQueue.main.async {
-            var current = self.progress
-            receiver(&current)
-            self.progress = current
-            
-            self.history = self.history.suffix(24) + [current]
-        }
-    }
-    
-    func resetProgress() {
-        DispatchQueue.main.async {
-            self.progress = AppProgress()
+}
+
+private extension View {
+    func disableAnimation(_ shouldDisable: Bool) -> some View {
+        transaction {
+            if shouldDisable {
+                $0.animation = nil
+            }
         }
     }
 }

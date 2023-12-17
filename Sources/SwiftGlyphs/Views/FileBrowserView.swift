@@ -277,7 +277,6 @@ struct FileBrowserView_Previews: PreviewProvider {
     
     static let testState: FileBrowserViewState = {
         let state = FileBrowserViewState()
-        GlobalInstances.fileStream
         state.files = testFiles
         return state
     }()

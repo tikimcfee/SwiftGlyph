@@ -96,40 +96,6 @@ public class DictionaryController: ObservableObject {
     
     public func doWordChunking(using builder: CodeGridGlyphCollectionBuilder) {
         fatalError("you moved everything yo")
-//        let wordContainerGrid = builder.createGrid(
-//            bufferSize: 15_500_000
-//        )
-//        wordContainerGrid.removeBackground()
-//        
-//        func consume(word: String) {
-//            guard nodeMap[word] == nil else { return }
-//            
-//            let (_, sourceGlyphs) = wordContainerGrid.consume(text: word)
-//            let sourceNode = WordNode(
-//                sourceWord: word,
-//                glyphs: sourceGlyphs,
-//                parentGrid: wordContainerGrid
-//            )
-//            self.nodeMap[word] = sourceNode
-//        }
-//        
-//        let chunkGroup = DispatchGroup()
-//        for chunk in sortedDictionary.sorted.chunks(ofCount: 10_000) {
-//            chunkGroup.enter()
-//            WorkerPool.shared.nextWorker().async {
-//                for (word, definitionPieces) in chunk {
-//                    consume(word: word)
-//                    
-//                    for piece in definitionPieces {
-//                        consume(word: piece)
-//                    }
-//                }
-//                chunkGroup.leave()
-//            }
-//        }
-//        chunkGroup.wait()
-//        
-//        print("[\(#fileID)] Chunked \(nodeMap.count) words")
     }
 }
 

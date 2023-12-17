@@ -52,7 +52,7 @@ class RenderPlan: MetalLinkReader {
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
-        WorkerPool.shared.nextConcurrentWorker().async {
+        WorkerPool.shared.nextWorker().async {
             self.onStart()
             onComplete(self)
         }
@@ -169,11 +169,7 @@ private extension RenderPlan {
         }
         
         // Then ask kindly of the gpu to go 'ham'
-        
-        
-        
         do {
-            
             onDebugStart()
             let allMappedAtlasResults = try compute.executeManyWithAtlas(
                 sources: allFileURLs,

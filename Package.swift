@@ -31,6 +31,9 @@ let package = Package(
                 "MetalLink",
                 "Neon",
                 .product(name: "TreeSitterSwift", package: "tree-sitter-swift")
+            ],
+            resources: [
+                .process("Resources/Assets.xcassets")
             ]
         ),
         .testTarget(

@@ -5,133 +5,187 @@ import SwiftUI
 import MetalLink
 import BitHandling
 
-private extension SwiftGlyphDemoView {
-    var receiver: DefaultInputReceiver { DefaultInputReceiver.shared }
-}
+private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
-public struct SwiftGlyphDemoView : View {
-    public enum Tab {
+public extension SwiftGlyphDemoView {
+    enum Tab {
         case metalView
         case actions
     }
     
-    public enum Screen {
+    enum Screen {
         case fileBrowser
         case showActions
         case showGitFetch
         case root
     }
+}
+
+private extension SwiftGlyphDemoView {
+    var receiver: DefaultInputReceiver { DefaultInputReceiver.shared }
     
+    var fileButtonName: String {
+        let name = "\(browserState.files.first?.path.lastPathComponent ?? "No Directory")"
+        if screen == .fileBrowser {
+            return "[\(name)] - Hide"
+        } else {
+            return name
+        }
+    }
+    
+    func setScreen(_ new: Screen) {
+        withAnimation(.easeOut(duration: 0.333)) {
+            self.screen = screen == new
+                ? .root
+                : new
+        }
+    }
+}
+
+public struct SwiftGlyphDemoView : View {
     @State var screen: Screen = .root
-    @State var tab: Tab = .metalView
-    
+    @State var showBottomControls = false
     @StateObject var browserState = FileBrowserViewState()
     
     public init() {
         
     }
     
-    func setScreen(_ new: Screen) {
-        withAnimation(.snappy(duration: 0.333)) {
-            self.screen = screen == new
-                ? .root
-                : new
-        }
-    }
-    
     public var body: some View {
         rootView
             .environmentObject(MultipeerConnectionManager.shared)
-            .onAppear {
-                // Set initial state on appearance
-                GlobalInstances.fileBrowser.loadRootScopeFromDefaults()
-                GlobalInstances.gridStore.gridInteractionState.setupStreams()
-                GlobalInstances.defaultRenderer.renderDelegate = GlobalInstances.swiftGlyphRoot
-            }
-            .onDisappear {
-                // Stop accessing URLs safely to remain a good citizen.
-                URL.dumpAndDescopeAllKnownBookmarks()
-            }
     }
     
-    var fileButtonName: String {
-        if screen == .fileBrowser {
-            return "Hide"
+    
+    @ViewBuilder
+    private var previewSafeView: some View {
+        if IsPreview {
+            Spacer()
         } else {
-            return "\(browserState.files.first?.path.lastPathComponent ?? "No Files Selected")"
+            GlobalInstances.createDefaultMetalView()
+                .onAppear {
+                    // Set initial state on appearance
+                    GlobalInstances.fileBrowser.loadRootScopeFromDefaults()
+                    GlobalInstances.gridStore.gridInteractionState.setupStreams()
+                    GlobalInstances.defaultRenderer.renderDelegate = GlobalInstances.swiftGlyphRoot
+                }
+                .onDisappear {
+                    // Stop accessing URLs safely to remain a good citizen.
+                    URL.dumpAndDescopeAllKnownBookmarks()
+                }
         }
     }
     
     private var rootView: some View {
         ZStack(alignment: .topTrailing) {
-            GlobalInstances.createDefaultMetalView()
+            previewSafeView
             
             #if os(macOS)
             HStack {
                 topSafeAreaContent
+                    .padding()
                 Spacer()
             }
             
-            VStack {
+            VStack(alignment: .trailing) {
                 Spacer()
+                screenView
                 bottomSafeAreaContent
+                    .padding(.vertical)
+                    .padding(.horizontal)
             }
+            #else
+            VStack(alignment: .trailing) {
+                Spacer()
+                screenView
+                    .frame(maxHeight: 600)
+                    
+                HStack(alignment: .top) {
+                    Spacer()
+                    let image = showBottomControls
+                        ? "chevron.right"
+                        : "chevron.left"
+                    
+                    buttonImage(image).onTapGesture {
+                        withAnimation(.easeOut(duration: 0.333)) {
+                            showBottomControls.toggle()
+                        }
+                    }
+                    .padding([.leading, .bottom, .trailing], 24)
+                    
+                    if showBottomControls {
+                        bottomSafeAreaContent
+                            .padding([.trailing, .bottom], 24)
+                            .frame(maxWidth: .infinity)
+                            .transition(
+                                .move(edge: .trailing)
+                                    .combined(with: .slide)
+                            )
+                            .layoutPriority(1)
+                            .zIndex(1)
+                    }
+                }
+                .padding(.top)
+                .background(
+                    showBottomControls
+                        ? Color.gray.opacity(0.3)
+                        : Color.clear
+                )
+            }
+            .frame(maxWidth: .infinity)
             #endif
         }
         #if os(iOS)
         .ignoresSafeArea()
-        .safeAreaInset(edge: .bottom, alignment: .trailing) {
-            bottomSafeAreaContent
-        }
-        .safeAreaInset(edge: .top) {
+        .safeAreaInset(edge: .top, alignment: .leading) {
             topSafeAreaContent
+                .padding()
         }
         #endif
     }
     
     var topSafeAreaContent: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            AppStatusView(status: GlobalInstances.appStatus)
-        }
-        .padding(.vertical, 4)
-        .padding(.horizontal)
+        AppStatusView(status: GlobalInstances.appStatus)
     }
     
     @ViewBuilder
-    var screenViewBottom: some View {
-        switch screen {
-        case .fileBrowser:
-            fileBrowserContentView
-                .zIndex(1)
-            
-        case .showActions:
-            actionsContent
-                .zIndex(2)
-            
-        case .showGitFetch:
-            GitHubClientView()
-                .zIndex(3)
-            
-        case .root:
-            EmptyView()
-                .zIndex(4)
+    var screenView: some View {
+        Group {
+            switch screen {
+            case .fileBrowser:
+                fileBrowserContentView
+                    .zIndex(1)
+                
+            case .showActions:
+                actionsContent
+                    .padding(.horizontal)
+                    .zIndex(2)
+                
+            case .showGitFetch:
+                GitHubClientView()
+                    .zIndex(3)
+                
+            case .root:
+                EmptyView()
+                    .zIndex(4)
+            }
         }
+        .transition(.move(edge: .trailing))
+        .zIndex(5)
     }
     
     var bottomSafeAreaContent: some View {
-        VStack(alignment: .trailing) {
-            screenViewBottom
-                .padding(.leading)
-                .transition(.move(edge: .trailing))
-                .zIndex(5)
-
-            HStack {
-                controlsButton
+        HStack(alignment: .top) {
+            buttonImage("gearshape.fill").onTapGesture {
+                setScreen(.showActions)
+            }
+            Spacer()
+            VStack(alignment: .trailing) {
                 showFileBrowserButton
-            }.zIndex(6)
+                downloadFromGithubButton
+            }
         }
-        .padding(.vertical)
-        .padding(.horizontal)
+        .zIndex(6)
     }
     
     @ViewBuilder
@@ -140,34 +194,29 @@ public struct SwiftGlyphDemoView : View {
             FileBrowserView(browserState: browserState)
                 .frame(maxHeight: 640)
                 .padding(.top, 8)
-            
-            HStack {
-                downloadFromGithubButton
-            }
-            .padding(.top, 8)
         }
     }
 
-    
     var actionsContent: some View {
-        VStack {
+        VStack(alignment: .leading) {
             saveAtlasButton
             deleteAtlas
             preloadAtlasButton
         }
+        .buttonStyle(.bordered)
+        .padding()
+        .background(Color.primaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
-    var controlsButton: some View {
-        Image(systemName: "gearshape.fill")
+    func buttonImage(_ name: String) -> some View {
+        Image(systemName: name)
             .renderingMode(.template)
             .foregroundStyle(.red.opacity(0.8))
             .padding(6)
             .background(.blue.opacity(0.2))
             .contentShape(Rectangle())
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .onTapGesture {
-                setScreen(.showActions)
-            }
     }
     
     var showFileBrowserButton: some View {
@@ -178,7 +227,9 @@ public struct SwiftGlyphDemoView : View {
     
     var downloadFromGithubButton: some View {
         button(
-            "Download from GitHub",
+            screen == .showGitFetch
+                ? "Hide"
+                : "GitHub",
             "square.and.arrow.down.fill"
         ) {
             setScreen(.showGitFetch)
@@ -228,6 +279,7 @@ public struct SwiftGlyphDemoView : View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
+                .background(Color.primaryBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         )
@@ -249,17 +301,6 @@ private extension SwiftGlyphDemoView {
     
     func makeRootContentView() -> NSView {
         let contentView = SwiftGlyphDemoView()
-            .environmentObject(MultipeerConnectionManager.shared)
-            .onAppear {
-                // Set initial state on appearance
-                GlobalInstances.fileBrowser.loadRootScopeFromDefaults()
-                GlobalInstances.gridStore.gridInteractionState.setupStreams()
-                GlobalInstances.defaultRenderer.renderDelegate = GlobalInstances.swiftGlyphRoot
-            }
-            .onDisappear {
-                URL.dumpAndDescopeAllKnownBookmarks()
-            }
-        
         return NSHostingView(rootView: contentView)
     }
     
@@ -282,7 +323,6 @@ private extension SwiftGlyphDemoView {
 struct ContentView_Previews : PreviewProvider {
     static var previews: some View {
         SwiftGlyphDemoView()
-            .frame(width: 1024, height: 800)
     }
 }
 #endif
