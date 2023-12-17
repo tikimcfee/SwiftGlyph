@@ -15,7 +15,6 @@ public struct SyntaxIdentifier: TreeSitterConverting {
 public extension SyntaxIdentifier {
     // TODO: I may be able to be stupid if I switch to tree sitter
     // to compute the id as an instance map to UUIDs
-    // ----- wow that's been here a while. how the turn circle comes full table.
     // ----- wow that's been here a while. how the turn circle comes full tables.
     var stringIdentifier: String { "\(hashValue)" }
 }
@@ -27,12 +26,12 @@ public struct Syntax: TreeSitterConverting {
     public let leadingTrivia: Trivia = .TREE_SITTER_CONVERSION_EMPTY
     public let trailingTrivia: Trivia = .TREE_SITTER_CONVERSION_EMPTY
     
-//    public var children: [Syntax] = []
+    public var children: [Syntax] = []
     
     public var name: String? = nil
     public var text: String = ""
     
-    public var nodeSyntaxType: SyntaxNodeType = .unknown
+    public var nodeSyntaxType: SyntaxNodeType = .unknown(UUID().uuidString)
 }
 //
 public struct Trivia: TreeSitterConverting {
@@ -46,7 +45,7 @@ public struct Trivia: TreeSitterConverting {
 public enum SyntaxNodeType: TreeSitterConverting {
     public static let UNKNOWN_DECL_ID = "heyrememebrthatblazeit"
     
-    case unknown
+    case unknown(String)
     case variableDecl(VariableDecl)
     case extensionDecl(ExtensionDecl)
     case classDecl(ClassDecl)
@@ -61,8 +60,8 @@ public enum SyntaxNodeType: TreeSitterConverting {
     
     public var id: String {
         switch self {
-        case .unknown:
-            return Self.UNKNOWN_DECL_ID
+        case .unknown(let id):
+            return Self.UNKNOWN_DECL_ID + id
         case .variableDecl(let item):
             return item.id
         case .extensionDecl(let item):

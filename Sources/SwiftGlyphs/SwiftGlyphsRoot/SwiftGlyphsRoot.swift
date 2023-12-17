@@ -2,6 +2,7 @@
 //  SwiftGlyphRoot.swift
 //  MetalSimpleInstancing
 //
+//  `TwoETime` and `2ETRoot`
 //  Created by Ivan Lugo on 8/6/22.
 //  Copyright © 2022 Metal by Example. All rights reserved.
 //
