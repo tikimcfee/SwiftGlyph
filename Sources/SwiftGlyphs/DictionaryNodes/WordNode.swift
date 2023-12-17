@@ -38,6 +38,7 @@ public class WordNode: MetalLinkNode {
         
         var xOffset: Float = 0
         for glyph in glyphs {
+            // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
             glyph.instanceConstants?.useParentMatrix = .zero
             glyph.parent = self
             glyph.position = LFloat3(x: xOffset, y: 0, z: 0)
@@ -52,17 +53,5 @@ public class WordNode: MetalLinkNode {
     
     public override func render(in sdp: inout SafeDrawPass) {
         // Don't render me
-    }
-}
-
-
-public extension WordNode {
-    func hideNode() {
-        
-        
-    }
-    
-    func showNode() {
-        
     }
 }

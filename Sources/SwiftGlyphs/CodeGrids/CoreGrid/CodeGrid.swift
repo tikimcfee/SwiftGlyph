@@ -96,14 +96,6 @@ public class CodeGrid: Identifiable, Equatable {
         self.nameNode = node
     }
     
-    public func hideName() {
-        nameNode?.hideNode()
-    }
-    
-    public func showName() {
-        nameNode?.showNode()
-    }
-    
     @discardableResult
     public func removeBackground() -> CodeGrid {
         rootNode.remove(child: gridBackground)
@@ -202,9 +194,9 @@ extension CodeGrid: Measures {
         get {
             targetNode.worldPosition
         }
-        set {
-            targetNode.worldPosition = newValue
-        }
+//        set {
+//            targetNode.worldPosition = newValue
+//        }
     }
     
     public var rotation: LFloat3 {
