@@ -70,7 +70,6 @@ public struct GitHubClientView: View {
         HStack(alignment: .top) {
             VStack {
                 repoInfoCaptureView
-                repoDownloadStateView
                 
                 ProgressWrapperView(progress: progress)
                     .id(UUID()) // SwiftUI doesn't like `progress` equality checks
