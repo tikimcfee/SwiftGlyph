@@ -16,6 +16,7 @@ public extension SyntaxIdentifier {
     // TODO: I may be able to be stupid if I switch to tree sitter
     // to compute the id as an instance map to UUIDs
     // ----- wow that's been here a while. how the turn circle comes full table.
+    // ----- wow that's been here a while. how the turn circle comes full tables.
     var stringIdentifier: String { "\(hashValue)" }
 }
 
