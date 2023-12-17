@@ -49,6 +49,7 @@ public class SwiftGlyphRoot: MetalLinkReader {
         camera.interceptor.onNewFocusChange = handleFocus
 
         try setupRenderPlanTest()
+        try setupRenderStreamTest()
         
         GlobalInstances.defaultAtlas.load()
     }
