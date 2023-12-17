@@ -23,28 +23,46 @@ public struct GitHubClientView: View {
     @ViewBuilder
     public var body: some View {
         rootBodyView
-            .padding()
             .background(Color.primaryBackground)
             .onReceive(clientState.$progress) { progress in
                 self.progress = progress
             }
-            #if os(macOS)
-            .frame(maxWidth: 800, maxHeight: 480)
-            #endif
     }
     
 #if os(iOS)
     @ViewBuilder
     var rootBodyView: some View {
-        VStack(alignment: .leading) {
-            repoListView
-            repoInfoCaptureView
-                .border(.gray, width: 1.0)
-            repoDownloadStateView
-            if let progress = clientState.progress {
-                ProgressWrapperView(progress: progress)
+        repoListView
+            .overlay(alignment: .bottomTrailing) {
+                Button("Download") {
+                    clientState.showDownloadView = true
+                }
+                .buttonStyle(.bordered)
+                .padding()
             }
-        }
+            .sheet(isPresented: $clientState.showDownloadView) {
+                VStack(alignment: .trailing, spacing: 16) {
+                    repoInfoCaptureView
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    if let progress = progress {
+                        ProgressWrapperView(progress: progress)
+                            .background(Color.primaryBackground.opacity(0.5))
+                            .id(UUID()) // SwiftUI doesn't like `progress` equality checks
+                    }
+                    
+                    repoDownloadButtonView
+
+                    repoDownloadErrorView
+                }
+                .padding()
+                .presentationDetents([.medium])
+                .interactiveDismissDisabled(progress != nil)
+                .presentationDragIndicator(.visible)
+                .background(Color.primaryBackground)
+            }
     }
 #elseif os(macOS)
     @ViewBuilder
@@ -59,44 +77,58 @@ public struct GitHubClientView: View {
             }
             repoListView
         }
+        .frame(maxWidth: 800, maxHeight: 480)
     }
 #endif
     
     @ViewBuilder
     var repoInfoCaptureView: some View {
         VStack(alignment: .leading) {
-            Text("Repository Download")
-            TextField("Name", text: $clientState.repoName)
-            TextField("Owner", text: $clientState.owner)
+            TextField("GitHub Repository", text: $clientState.repoName)
+                .padding()
+                .lineLimit(1)
+                .autocorrectionDisabled()
+                .underline(clientState.repoName.isEmpty)
+            
+            TextField("Owner Name", text: $clientState.owner)
+                .padding()
+                .lineLimit(1)
+                .autocorrectionDisabled()
+                .underline(clientState.owner.isEmpty)
+            
             TextField("Branch (optional)", text: $clientState.branch)
+                .padding()
+                .lineLimit(1)
+                .autocorrectionDisabled()
+                .underline(clientState.branch.isEmpty)
+        }
+        .foregroundStyle(Color.primaryForeground)
+    }
+    
+    @ViewBuilder
+    var repoDownloadButtonView: some View {
+        if clientState.progressTask != nil {
+            Button("Cancel") {
+                clientState.resetDownload()
+            }
+            .buttonStyle(.bordered)
+            .foregroundColor(.red)
+        } else {
+            Button("Download Repo") {
+                clientState.doRepositoryDownload()
+            }
+            .disabled(!clientState.enabled)
+            .buttonStyle(.bordered)
         }
     }
     
     @ViewBuilder
-    var repoDownloadStateView: some View {
-        VStack {
-            if let task = clientState.progressTask {
-                Button("Cancel") {
-                    task.cancel()
-                }
-            } else {
-                Button("Download Repo") {
-                    clientState.doRepositoryDownload()
-                }
-                .disabled(!clientState.enabled)
-                .buttonStyle(.bordered)
-            }
-            
-            if let error = clientState.error {
-                VStack {
-                    Text("Download error")
-                    Text("\(error.localizedDescription)")
-                        .lineLimit(32)
-                        .frame(maxWidth: 240)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+    var repoDownloadErrorView: some View {
+        if let error = clientState.error {
+            Text("\(error.localizedDescription)")
+                .lineLimit(2, reservesSpace: true)
+                .frame(maxWidth: .infinity, alignment: .center)
                 .foregroundColor(.red)
-            }
         }
     }
     
@@ -157,15 +189,24 @@ struct GitHubClientView_Preview: PreviewProvider {
             URL(fileURLWithPath: "/var/users/some-lib/Bob/A Very Lengthy Name with Stuff"),
             URL(fileURLWithPath: "/var/users/some-lib/DannyFrank/liblol")
         ]
-//        state.progressTask = URLSessionDownloadTask()
-//        state.progressTask?.progress.totalUnitCount = 64
-//        state.progressTask?.progress.completedUnitCount = 31
+        
+        state.progressTask = URLSessionDownloadTask()
+        state.progressTask?.progress.totalUnitCount = 64
+        state.progressTask?.progress.completedUnitCount = 31
+        state.progressTask?.progress.fileTotalCount = 33
+        state.progressTask?.progress.fileCompletedCount = 99
+        state.progressTask?.progress.estimatedTimeRemaining = 1000
+        state.progress = state.progressTask?.progress
+        
+        state.error = NSError(domain: "Wut", code: 3)
+        
         return state
     }()
     
     static var previews: some View {
         VStack {
             GitHubClientView(clientState: sampleState)
+                .padding()
         }
             
     }

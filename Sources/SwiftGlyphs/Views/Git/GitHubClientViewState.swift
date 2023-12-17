@@ -11,6 +11,7 @@ public class GitHubClientViewState: NSObject, ObservableObject {
     @Published var repoUrls: [URL] = []
     
     @Published var enabled: Bool = true
+    @Published var showDownloadView = false
     
     @Published var repoName: String = "" { didSet { evalInput() }}
     @Published var owner: String = "" { didSet { evalInput() }}
@@ -68,6 +69,19 @@ public class GitHubClientViewState: NSObject, ObservableObject {
         repoUrls.remove(at: index)
     }
     
+    func resetDownload() {
+        progressTask?.cancel()
+        progressTask = nil
+        progress = nil
+        downloadArgs = nil
+        
+        self.showDownloadView = false
+        self.enabled = true
+        self.downloadArgs = nil
+        self.progress = nil
+        self.progressTask = nil
+    }
+    
     private func onRepositoryDownloaded(_ downloadResult: Result<URL, Error>) {
         switch downloadResult {
         case .success(let url):
@@ -78,10 +92,7 @@ public class GitHubClientViewState: NSObject, ObservableObject {
             self.error = error
         }
         
-        self.enabled = true
-        self.downloadArgs = nil
-        self.progress = nil
-        self.progressTask = nil
+        resetDownload()
     }
 }
 
@@ -128,7 +139,11 @@ extension GitHubClientViewState: URLSessionDownloadDelegate {
         }
     }
     
-    public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        print("xxxx")
+    public func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didCompleteWithError error: Error?
+    ) {
+        
     }
 }
