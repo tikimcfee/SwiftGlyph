@@ -51,7 +51,7 @@ public class WordNode: MetalLinkNode {
         set { glyphs = newValue as? [MetalLinkGlyphNode] ?? glyphs }
     }
     
-    public override func render(in sdp: inout SafeDrawPass) {
+    public override func render(in sdp: SafeDrawPass) {
         // Don't render me
     }
 }

@@ -16,8 +16,8 @@ import MetalLink
 import BitHandling
 
 extension SwiftGlyphRoot: MetalLinkRendererDelegate {
-    public func performDelegatedEncode(with pass: inout SafeDrawPass) {
-        delegatedEncode(in: &pass)
+    public func performDelegatedEncode(with pass: SafeDrawPass) {
+        delegatedEncode(in: pass)
     }
 }
 
@@ -52,12 +52,12 @@ public class SwiftGlyphRoot: MetalLinkReader {
         GlobalInstances.defaultAtlas.load()
     }
     
-    func delegatedEncode(in sdp: inout SafeDrawPass) {
+    func delegatedEncode(in sdp: SafeDrawPass) {
         let dT =  1.0 / Float(link.view.preferredFramesPerSecond)
         
         // TODO: Make update and render a single pass to avoid repeated child loops
         root.update(deltaTime: dT)
-        root.render(in: &sdp)
+        root.render(in: sdp)
     }
     
     func handleFocus(_ direction: SelfRelativeDirection) {
