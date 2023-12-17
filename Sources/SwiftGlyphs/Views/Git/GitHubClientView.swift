@@ -190,15 +190,14 @@ struct GitHubClientView_Preview: PreviewProvider {
             URL(fileURLWithPath: "/var/users/some-lib/DannyFrank/liblol")
         ]
         
-        state.progressTask = URLSessionDownloadTask()
-        state.progressTask?.progress.totalUnitCount = 64
-        state.progressTask?.progress.completedUnitCount = 31
-        state.progressTask?.progress.fileTotalCount = 33
-        state.progressTask?.progress.fileCompletedCount = 99
-        state.progressTask?.progress.estimatedTimeRemaining = 1000
-        state.progress = state.progressTask?.progress
-        
-        state.error = NSError(domain: "Wut", code: 3)
+//        state.progressTask = URLSessionDownloadTask()
+//        state.progressTask?.progress.totalUnitCount = 64
+//        state.progressTask?.progress.completedUnitCount = 31
+//        state.progressTask?.progress.fileTotalCount = 33
+//        state.progressTask?.progress.fileCompletedCount = 99
+//        state.progressTask?.progress.estimatedTimeRemaining = 1000
+//        state.progress = state.progressTask?.progress
+//        state.error = NSError(domain: "Wut", code: 3)
         
         return state
     }()

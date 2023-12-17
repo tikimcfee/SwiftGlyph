@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SceneKit
 import MetalLink
 
 class ColorGenerator {

@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import SceneKit
 import MetalLink
 
 public class WorldGridSnapping {
