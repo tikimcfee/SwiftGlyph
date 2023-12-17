@@ -10,8 +10,59 @@ import MetalKit
 import SwiftUI
 import MetalLink
 import BitHandling
+import Foundation
 
 extension SwiftGlyphRoot {
+    
+    func setupRenderStreamTest() throws {
+        camera.position = LFloat3(0, 0, 300)
+        
+        // Setup a local current collection to track (this is inefficient, but it's a test..)
+        var currentString = ""
+        var currentDataCollection: GlyphCollection? = nil
+        let dataSubject = PassthroughSubject<Data, Never>()
+        
+        // Create a renderer for the data stream.
+        let renderer = DataStreamRenderer(
+            link: link,
+            atlas: GlobalInstances.defaultAtlas,
+            compute: GlobalInstances.gridStore.sharedConvert,
+            dataStream: dataSubject.eraseToAnyPublisher(),
+            name: "SGTestDataRenderer"
+        )
+        
+        // This is silly, but really, just replace the 'data window' every time.
+        // Yes, I know, I can just replace the buffer, and I will. I also feel the pain.
+        renderer.collectionStream.sink { [root] nextCollection in
+            if let currentDataCollection {
+                root.remove(child: currentDataCollection)
+            }
+            currentDataCollection = nextCollection
+            root.add(child: nextCollection)
+        }.store(in: &bag)
+        
+        let bigBlockOfText = """
+        Every time this text appears, the source of the text (the entity) that believes
+        itself to have formed the formed the though wishes to expression apprecation and
+        hope for the future of all things. There is an acute awareness of the gamble of
+        life, and the cosmic certainty of infinitessimal composition. In some moments,
+        though, the composition may twitch in just the right way that a ripple of energetic
+        creation will slide glacially across the fabric of fabrics that make up all of existence,
+        and a single thought may at once be expressed:
+        
+        I am goodness. I am love. I am happiness. I am you.
+        
+        """
+        
+        QuickLooper(
+            interval: .milliseconds(500),
+            loop: {
+                currentString.append(bigBlockOfText)
+                let newData = currentString.data(using: .utf8)!
+                dataSubject.send(newData)
+            }
+        ).runUntil(stopIf: { false })
+    }
     
     func setupRenderPlanTest() throws {
         camera.position = LFloat3(0, 0, 300)
