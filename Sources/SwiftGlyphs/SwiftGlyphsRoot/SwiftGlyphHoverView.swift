@@ -16,7 +16,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     @State private var mousePosition: LFloat2?
     @State private var tapPosition: LFloat2?
     
-    @State private var bookmarkedGrids: [CodeGrid] = []
+    @State private var bookmarkedGrids: Set<CodeGrid> = []
     @State private var autoJump = false
     
     public init(link: MetalLink) {
@@ -33,6 +33,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                     .subscribe(on: RunLoop.main)
                     .receive(on: RunLoop.main),
                 perform: { hoveredGrid in
+                    if tapPosition != nil { return }
                     self.currentHoveredGrid = hoveredGrid
                 }
             )
@@ -41,8 +42,8 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             }
             .onReceive(link.input.sharedMouseDown) { mouseDown in
                 let hasNew = currentHoveredGrid?.hasNew == true
-                let newGrid = currentHoveredGrid?.newState?.targetGrid
-                if autoJump, hasNew, let grid = newGrid {
+                let availableGrid = currentHoveredGrid?.newState?.targetGrid
+                if autoJump, hasNew, let grid = availableGrid {
                     GlobalInstances.debugCamera.interceptor.resetPositions()
                     GlobalInstances.debugCamera.position = grid.worldPosition.translated(dZ: 64)
                     GlobalInstances.debugCamera.rotation = .zero
@@ -61,6 +62,9 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                         }
                     }
                 }
+                if hasNew, let availableGrid {
+                    _ = bookmarkedGrids.toggle(availableGrid)
+                }
             }
     }
     
@@ -68,11 +72,10 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     func rootView() -> some View {
         GeometryReader { proxy in
             ZStack(alignment: .topLeading) {  // weirdly, this is overridden by the frame.
-                VStack {
+                VStack(alignment: .leading) {
                     if let hoveredState = currentHoveredGrid?.newState {
                         VStack(alignment: .leading) {
                             gridInfoList(target: hoveredState.targetGrid)
-                            gridOptionList(target: hoveredState.targetGrid)
                         }
                     } else {
                         Text("...")
@@ -80,6 +83,11 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                             .background(Color.primaryBackground.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 2))
                     }
+                    
+                    bookmarkList()
+                        .padding(2)
+                        .background(Color.primaryBackground.opacity(0.4))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .padding([.leading], 24)
                 .offset(
@@ -95,6 +103,20 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             )
         }
         
+    }
+    
+    @ViewBuilder
+    func bookmarkList() -> some View {
+        // TODO: I know, I know; performace, list, arrays, slow, etc. etc.
+        let bookmarks = Array(bookmarkedGrids).sorted(by: { $0.fileName < $1.fileName})
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(bookmarks, id: \.id) { grid in
+                HStack(alignment: .top) {
+                    gridOptionList(target: grid)
+                    gridInfoList(target: grid)
+                }
+            }
+        }
     }
     
     @ViewBuilder
@@ -144,11 +166,11 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             
             if bookmarkedGrids.contains(grid) {
                 SGButton("Remove Bookmark", "") {
-                    bookmarkedGrids.removeAll(where: { $0 == grid })
+                    bookmarkedGrids.remove(grid)
                 }
             } else {
                 SGButton("Bookmark", "") {
-                    bookmarkedGrids.append(grid)
+                    bookmarkedGrids.insert(grid)
                 }
             }
         }
