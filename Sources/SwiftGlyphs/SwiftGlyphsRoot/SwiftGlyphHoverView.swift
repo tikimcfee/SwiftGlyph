@@ -50,6 +50,12 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                     if mouseDown.modifierFlags.contains(.command) {
                         if tapPosition != nil {
                             tapPosition = nil
+                            
+                            if mouseDown.modifierFlags.contains(.shift) {
+                                GlobalInstances.gridStore
+                                    .nodeHoverController
+                                    .lastGridEvent = .notFound
+                            }
                         } else {
                             tapPosition = mouseDown.locationInWindow.asSimd
                         }

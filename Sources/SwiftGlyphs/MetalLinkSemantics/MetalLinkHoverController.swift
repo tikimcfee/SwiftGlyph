@@ -20,8 +20,8 @@ public class MetalLinkHoverController: ObservableObject {
     public let link: MetalLink
     private var bag = Set<AnyCancellable>()
     
-    @Published private var lastGlyphEvent: NodePickingState.Event = .initial
-    @Published private var lastGridEvent: GridPickingState.Event = .initial
+    @Published public var lastGlyphEvent: NodePickingState.Event = .initial
+    @Published public var lastGridEvent: GridPickingState.Event = .initial
     
     public lazy var sharedGridEvent = $lastGridEvent.share().eraseToAnyPublisher()
     public lazy var sharedGlyphEvent = $lastGlyphEvent.share().eraseToAnyPublisher()
