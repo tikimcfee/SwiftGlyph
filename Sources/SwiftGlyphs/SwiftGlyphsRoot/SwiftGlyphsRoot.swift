@@ -47,11 +47,11 @@ public class SwiftGlyphRoot: MetalLinkReader {
         
         camera.interceptor.onNewFileOperation = handleDirectory
         camera.interceptor.onNewFocusChange = handleFocus
-
-        try setupRenderPlanTest()
-//        try setupRenderStreamTest()
         
         GlobalInstances.defaultAtlas.load()
+        
+        try setupRenderPlanTest()
+        try setupRenderStreamTest()
     }
     
     func delegatedEncode(in sdp: SafeDrawPass) {

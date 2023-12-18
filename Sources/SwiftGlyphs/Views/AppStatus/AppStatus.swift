@@ -4,7 +4,7 @@
 //  
 
 import SwiftUI
-
+import BitHandling
 
 public class AppStatus: ObservableObject {
     @Published private(set) var progress = AppProgress()
@@ -15,7 +15,7 @@ public class AppStatus: ObservableObject {
             var current = self.progress
             receiver(&current)
             
-            withAnimation(.easeOut(duration: 1.0 / 3.0)) {
+            withAnimation(.easeOut(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
                 self.progress = current
             }
             self.history = self.history.suffix(24) + [current]

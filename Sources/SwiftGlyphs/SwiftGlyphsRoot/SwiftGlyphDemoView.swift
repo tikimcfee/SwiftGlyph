@@ -34,7 +34,7 @@ private extension SwiftGlyphDemoView {
     }
     
     func setScreen(_ new: Screen) {
-        withAnimation(.easeOut(duration: 0.333)) {
+        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
             self.screen = screen == new
                 ? .root
                 : new
@@ -111,7 +111,7 @@ public struct SwiftGlyphDemoView : View {
                         : "chevron.left"
                     
                     buttonImage(image).onTapGesture {
-                        withAnimation(.easeOut(duration: 0.333)) {
+                        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
                             showBottomControls.toggle()
                         }
                     }

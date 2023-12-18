@@ -66,10 +66,14 @@ extension SwiftGlyphRoot {
         let testFile = ___RAW___SOURCE___
         let tree = parser.parse(testFile)!
         
-        let queryUrl = Bundle.main
-                      .resourceURL?
-                      .appendingPathComponent("TreeSitterSwift_TreeSitterSwift.bundle")
-                      .appendingPathComponent("Contents/Resources/queries/highlights.scm")
+        let names = ["highlights", "tags", "locals"].map { $0 + ".scm" }
+        
+        let queryRootUrl = Bundle.main.resourceURL?
+            .appendingPathComponent("TreeSitterSwift_TreeSitterSwift.bundle")
+            .appendingPathComponent("Contents/Resources/queries/")
+        
+        let queryUrl = queryRootUrl?
+            .appendingPathComponent(names[1])
         
         let query = try language.query(contentsOf: queryUrl!)
         let cursor = query.execute(node: tree.rootNode!, in: tree)
@@ -90,23 +94,16 @@ extension SwiftGlyphRoot {
                 addLine("\t\t\(capture.name ?? "<!> no name")")
             }
         }
-        var iterator = rawOutput.makeIterator()
-        var next = iterator.next()
+        let final = rawOutput.joined().data(using: .utf8)!
+        dataSubject.send(final)
         
-        QuickLooper(
-            interval: .milliseconds(10),
-            queue: .global()
-        ) {
-            guard let toAdd = next else { return }
-            next = iterator.next()
-            
-            let addData = toAdd.data(using: .utf8)!
-            currentStringData.append(addData)
-            
-            dataSubject.send(currentStringData)
-        }.runUntil(
-            stopIf: { next == nil }
-        )
+//        QuickLooper(
+//            interval: .milliseconds(10),
+//            queue: .global()
+//        ) {
+//        }.runUntil(
+//            stopIf: { true }
+//        )
     }
     
     func setupRenderPlanTest() throws {
