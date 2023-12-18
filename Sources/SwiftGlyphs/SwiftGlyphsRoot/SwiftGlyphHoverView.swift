@@ -71,8 +71,8 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 VStack {
                     if let hoveredState = currentHoveredGrid?.newState {
                         VStack(alignment: .leading) {
-                            gridOptionList(target: hoveredState.targetGrid)
                             gridInfoList(target: hoveredState.targetGrid)
+                            gridOptionList(target: hoveredState.targetGrid)
                         }
                     } else {
                         Text("...")
@@ -104,31 +104,31 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
         VStack(alignment: .leading) {
             Text(grid.fileName)
                 .font(.headline)
-                .foregroundStyle(Color.primaryForeground)
                 .bold()
             
-            if let path = grid.sourcePath {
-                let slices = path.pathComponents.suffix(10).slices(sliceSize: 5)
-                ForEach(slices, id: \.startIndex) { slice in
-                    HStack(spacing: 0) {
-                        ForEach(slice, id: \.self) { component in
-                            Text(component)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                            Text("/")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(2)
-                .background(Color.primaryBackground.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
+//            if let path = grid.sourcePath {
+//                let slices = path.pathComponents.suffix(10).slices(sliceSize: 5)
+//                ForEach(slices, id: \.startIndex) { slice in
+//                    HStack(spacing: 0) {
+//                        ForEach(slice, id: \.self) { component in
+//                            Text(component)
+//                                .font(.footnote)
+//                                .foregroundStyle(.secondary)
+//                            Text("/")
+//                                .font(.footnote)
+//                                .foregroundStyle(.secondary)
+//                        }
+//                    }
+//                }
+//                .padding(2)
+//                .background(Color.primaryBackground.opacity(0.1))
+//                .clipShape(RoundedRectangle(cornerRadius: 8))
+//            }
         }
         .padding(4)
         .background(Color.primaryBackground.opacity(0.8))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 2))
+        .padding()
     }
 
     @ViewBuilder
