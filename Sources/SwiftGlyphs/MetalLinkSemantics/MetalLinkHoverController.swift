@@ -51,7 +51,7 @@ private extension MetalLinkHoverController {
     }
     
     func doGlyphPicking(glyphID: InstanceIDType) {
-        guard let grid = lastGridEvent.latestState?.targetGrid else { return }
+        guard let grid = lastGridEvent.newState?.targetGrid else { return }
         
         lastGlyphEvent = Self.computeNodePickingEvent(
             in: grid,
@@ -86,17 +86,18 @@ private extension MetalLinkHoverController {
             let newState = GridPickingState(targetGrid: grid)
             
             // Return new event
-            if let oldState = lastGridEvent.latestState,
+            if let oldState = lastGridEvent.newState,
                oldState.targetGrid.backgroundID == gridID
             {
                 return .matchesLast(last: oldState, new: newState)
             } else {
                 print("Hovering \(grid.fileName)")
-                return .foundNew(last: lastGridEvent.latestState, new: newState)
+                return .foundNew(last: lastGridEvent.newState, new: newState)
             }
         }
         
-        return .useLast(last: lastGridEvent.latestState)
+        return .useLast(last: lastGridEvent.newState)
+//        return .notFound
     }
 }
 

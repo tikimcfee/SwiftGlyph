@@ -49,26 +49,42 @@ public struct GridPickingState {
     
     public enum Event {
         case initial
+        case notFound
         case useLast(last: GridPickingState?)
         case matchesLast(last: GridPickingState, new: GridPickingState)
         case foundNew(last: GridPickingState?, new: GridPickingState)
         
-        public var maybeLasteState: GridPickingState? {
+        public var hasNew: Bool {
+            switch self {
+            case .initial:
+                return false
+            case .notFound:
+                return false
+            case .useLast:
+                return false
+            case .matchesLast:
+                return true
+            case .foundNew:
+                return true
+            }
+        }
+        
+        public var lastState: GridPickingState? {
             switch self {
             case let .useLast(.some(last)),
-                let .matchesLast(last, _),
-                let .foundNew(.some(last), _):
+                 let .matchesLast(last, _),
+                 let .foundNew(.some(last), _):
                 return last
             default:
                 return nil
             }
         }
         
-        public var latestState: GridPickingState? {
+        public var newState: GridPickingState? {
             switch self {
             case let .useLast(.some(state)),
-                let .matchesLast(_, state),
-                let .foundNew(_, state):
+                 let .matchesLast(_, state),
+                 let .foundNew(_, state):
                 return state
             default:
                 return nil

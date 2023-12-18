@@ -80,6 +80,10 @@ public struct SwiftGlyphDemoView : View {
         ZStack(alignment: .topTrailing) {
             previewSafeView
             
+            SwiftGlyphHoverView(
+                link: GlobalInstances.defaultLink
+            )
+            
             #if os(macOS)
             HStack {
                 topSafeAreaContent
@@ -220,13 +224,13 @@ public struct SwiftGlyphDemoView : View {
     }
     
     var showFileBrowserButton: some View {
-        button(fileButtonName, "") {
+        SGButton(fileButtonName, "") {
             setScreen(.fileBrowser)
         }
     }
     
     var downloadFromGithubButton: some View {
-        button(
+        SGButton(
             screen == .showGitFetch
                 ? "Hide"
                 : "GitHub",
@@ -262,29 +266,29 @@ public struct SwiftGlyphDemoView : View {
                 .onNewFileOperation?(.openDirectory)
         }.keyboardShortcut("o", modifiers: .command)
     }
-    
-    func button(
-        _ text: String,
-        _ image: String,
-        _ action: @escaping () -> Void
-    ) -> some View {
-        Button(
-            action: action,
-            label: {
-                HStack {
-                    Text(text)
-                    if !image.isEmpty {
-                        Image(systemName: image)
-                    }
+}
+
+func SGButton(
+    _ text: String,
+    _ image: String,
+    _ action: @escaping () -> Void
+) -> some View {
+    Button(
+        action: action,
+        label: {
+            HStack {
+                Text(text)
+                if !image.isEmpty {
+                    Image(systemName: image)
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.primaryBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
             }
-        )
-        .buttonStyle(.plain)
-    }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.primaryBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    )
+    .buttonStyle(.plain)
 }
 
 #if os(macOS)
