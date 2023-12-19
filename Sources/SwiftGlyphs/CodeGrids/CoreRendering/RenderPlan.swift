@@ -94,7 +94,7 @@ private extension RenderPlan {
         }
     }
     
-    func doGridLayout() {
+    func doGridLayout() {        
         guard rootPath.isDirectory else { return }
         
         statusObject.update {
@@ -255,6 +255,14 @@ private extension RenderPlan {
                         $0.updateBackground()
                     }
                 }
+            do {
+                try GlobalInstances.colorizer.runColorizer(
+                    colorizerQuery: .highlights,
+                    on: collection
+                )
+            } catch {
+                print("lol internet")
+            }
             
         case .notBuilt:
             break

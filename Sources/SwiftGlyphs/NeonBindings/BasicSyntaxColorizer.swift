@@ -78,6 +78,12 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         var rebuiltString = Substring(stringLiteral: "")
         for index in (0..<count) {
             let instanceUnicodeData = pointer[index].unicodeHash
+            
+            if instanceUnicodeData == 10 {
+                rebuiltString.append("\n")
+                continue
+            }
+            
             let instanceKey = atlas.builder.cacheRef.unicodeMap[instanceUnicodeData]
             guard let instanceKey else {
                 continue
@@ -145,6 +151,10 @@ public class BasicSyntaxColorizer: MetalLinkReader {
                 // grab its color, and then write the color out to the entire buffer.
                 // This will get copied over into the
                 let matchedType = SyntaxType.fromComponents(capture.nameComponents)
+                if case .unknown = matchedType {
+                    continue
+                }
+                
                 let foregroundColor = matchedType.foregroundColor.vector
                 let newPointer = outputPointer.advanced(by: capture.range.lowerBound)
                 newPointer.update(

@@ -6,6 +6,10 @@
 enum SyntaxType {
     case unknown
     case comment
+    case rawString
+    case rawBoolean
+    case someLabel
+    case someRepeat
     case conditional(ConditionalType)
     case constructor(ConstructorType)
     case definition(DefinitionType)
@@ -44,8 +48,10 @@ enum SyntaxType {
         _ string: String
     ) -> SyntaxType {
         switch string {
-        case "spell", "comment":
+        case "spell": return .unknown
+        case "comment": /* "spell" // Ignoring 'spell'.. wth is it? */
             return .comment
+            
         case "include":
             return .include(.importInclude)
         case "keyword":
@@ -66,6 +72,18 @@ enum SyntaxType {
             return .method(.simple_identifier)
         case "conditional":
             return .conditional(.anyConditional)
+        case "string":
+            return .rawString
+        case "boolean":
+            return .rawBoolean
+        case "number":
+            return .number(.anyLiteral)
+        case "float":
+            return .number(.float)
+        case "label":
+            return .someLabel
+        case "repeat":
+            return .someRepeat
         default:
             print("unknown syntax type: \(string)")
             return .unknown
@@ -79,6 +97,8 @@ enum SyntaxType {
         switch (left, right) {
         case ("function", "call"):
             return .function(.call(.identifier))
+        case ("function", "macro"):
+            return .function(.macro(.directive))
         case ("keyword", "function"):
             return .keyword(.function(.funcType))
         case ("keyword", "operator"):
@@ -92,6 +112,7 @@ enum SyntaxType {
         case ("variable", "builtin"):
             return .variable(.builtin(.anyBuiltin))
         default:
+            print("unknown components: |\(left)| |\(right)|")
             return .unknown
         }
     }
@@ -192,7 +213,9 @@ enum NameType {
 }
 
 enum NumberType {
+    case anyLiteral
     case integer_literal
+    case float
 }
 
 enum OperatorType {

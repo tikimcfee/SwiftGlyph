@@ -10,6 +10,18 @@ import MetalLink
 extension SyntaxType {
     var foregroundColor: NSUIColor {
         switch self {
+        case .someRepeat:
+            return GlobalLiveConfig.Default.coloring.unknownToken
+            
+        case .someLabel:
+            return GlobalLiveConfig.Default.coloring.rawString
+            
+        case .rawString:
+            return GlobalLiveConfig.Default.coloring.rawString
+            
+        case .rawBoolean:
+            return GlobalLiveConfig.Default.coloring.rawBool
+            
         case .comment:
             return GlobalLiveConfig.Default.coloring.comment
             
@@ -129,6 +141,10 @@ extension SyntaxType {
             
         case .number(let type):
             switch type {
+            case .float:
+                return GlobalLiveConfig.Default.coloring.rawNumber
+            case .anyLiteral:
+                return GlobalLiveConfig.Default.coloring.rawNumber
             case .integer_literal:
                 return GlobalLiveConfig.Default.coloring.token
             }
