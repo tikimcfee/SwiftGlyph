@@ -43,10 +43,11 @@ public extension GlobalInstances {
     static let fileEventStream = fileBrowser.$fileSelectionEvents.share().eraseToAnyPublisher()
 }
 
-// MARK: - LSP
+// MARK: - Syntax
 // ______________________________________________________________
 public extension GlobalInstances {
     static let lspServer = GlyphServer()
+    static let colorizer = BasicSyntaxColorizer(link: defaultLink)
 }
 
 

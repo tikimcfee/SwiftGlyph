@@ -109,7 +109,7 @@ public class CodeGrid: Identifiable, Equatable {
         gridBackground
             .setLeading(size.leading)
             .setTop(size.top)
-            .setFront(back - 1)
+            .setFront(back - 0.39269)
     }
     
     public func addChildGrid(_ other: CodeGrid) {

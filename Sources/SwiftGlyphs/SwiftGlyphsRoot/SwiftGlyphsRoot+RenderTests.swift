@@ -45,58 +45,34 @@ extension SwiftGlyphRoot {
             root.add(child: nextCollection)
         }.store(in: &bag)
         
-//        let bigBlockOfText = """
-//        Every time this text appears, the source of the text (the entity) that believes
-//        itself to have formed the formed the though wishes to expression apprecation and
-//        hope for the future of all things. There is an acute awareness of the gamble of
-//        life, and the cosmic certainty of infinitessimal composition. In some moments,
-//        though, the composition may twitch in just the right way that a ripple of energetic
-//        creation will slide glacially across the fabric of fabrics that make up all of existence,
-//        and a single thought may at once be expressed:
-//        
-//        I am goodness. I am love. I am happiness. I am you.
-//        
-//        """
         
-        let language = Language(language: tree_sitter_swift())
-        
-        let parser = Parser()
-        try parser.setLanguage(language)
-        
-        let testFile = ___RAW___SOURCE___
-        let tree = parser.parse(testFile)!
-        
-        let names = ["highlights", "tags", "locals"].map { $0 + ".scm" }
-        
-        let queryRootUrl = Bundle.main.resourceURL?
-            .appendingPathComponent("TreeSitterSwift_TreeSitterSwift.bundle")
-            .appendingPathComponent("Contents/Resources/queries/")
-        
-        let queryUrl = queryRootUrl?
-            .appendingPathComponent(names[1])
-        
-        let query = try language.query(contentsOf: queryUrl!)
-        let cursor = query.execute(node: tree.rootNode!, in: tree)
+        Task {
+            let testFile = ___RAW___SOURCE___
+            let resultBuffer = try await GlobalInstances.colorizer.execute(
+                colorizerQuery: .highlights,
+                for: testFile
+            )
+            
+        }
         
         // I'm gonna setup a pipe to just render any stream of UTF-8 data.
-        // Teehee.
-        
 //        var rawOutput = ""
-        var rawOutput: [String] = []
-        func addLine(_ message: String) {
-            rawOutput.append(message + "\n")
-        }
-        for match in cursor {
-            addLine("match: \(match.id), \(match.patternIndex)")
-            for capture in match.captures {
-                addLine("\t>> [\(capture)] <<")
-                addLine("\t\t\(capture.nameComponents)")
-                addLine("\t\t\(capture.name ?? "<!> no name")")
-            }
-        }
-        let final = rawOutput.joined().data(using: .utf8)!
-        dataSubject.send(final)
-        
+//        var rawOutput: [String] = []
+//        func addLine(_ message: String) {
+//            rawOutput.append(message + "\n")
+//        }
+//        for match in cursor {
+//            addLine("match: \(match.id), \(match.patternIndex)")
+//            for capture in match.captures {
+//                addLine("\t>> [\(capture)] <<")
+//                addLine("\t\t\(capture.nameComponents)")
+//                addLine("\t\t\(capture.name ?? "<!> no name")")
+//            }
+//        }
+//        let final = rawOutput.joined().data(using: .utf8)!
+//        
+//        dataSubject.send(final)
+//        
 //        QuickLooper(
 //            interval: .milliseconds(10),
 //            queue: .global()
@@ -149,12 +125,12 @@ extension SwiftGlyphRoot {
                         
 //            self.lockZoomToBounds(of: plan.targetParent)
             
-//                var time = 0.0.float
-//                QuickLooper(interval: .milliseconds(30)) {
-//                    plan.targetParent.rotation.y += 0.1
-//                    plan.targetParent.position.x = sin(time) * 10.0
-//                    time += Float.pi / 180
-//                }.runUntil { false }
+//            var time = 0.0.float
+//            QuickLooper(interval: .milliseconds(30)) {
+//                plan.targetParent.rotation.y += 0.1
+//                plan.targetParent.position.x = sin(time) * 10.0
+//                time += Float.pi / 180
+//            }.runUntil { false }
         }
     }
     

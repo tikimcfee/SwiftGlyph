@@ -84,15 +84,17 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                             .clipShape(RoundedRectangle(cornerRadius: 2))
                     }
                     
-                    bookmarkList()
-                        .padding(2)
-                        .background(Color.primaryBackground.opacity(0.4))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+//                    bookmarkList()
+//                        .padding(2)
+//                        .background(Color.primaryBackground.opacity(0.4))
+//                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .padding([.leading], 24)
                 .offset(
                     (tapPosition ?? mousePosition).map {
-                        CGSize(width: $0.x.cg, height: proxy.size.height - $0.y.cg)
+                        CGSize(
+                            width: $0.x.cg + 24,
+                            height: proxy.size.height - $0.y.cg - 24.0
+                        )
                     } ?? CGSizeZero
                 )
             }
@@ -128,29 +130,28 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 .font(.headline)
                 .bold()
             
-//            if let path = grid.sourcePath {
-//                let slices = path.pathComponents.suffix(10).slices(sliceSize: 5)
-//                ForEach(slices, id: \.startIndex) { slice in
-//                    HStack(spacing: 0) {
-//                        ForEach(slice, id: \.self) { component in
-//                            Text(component)
-//                                .font(.footnote)
-//                                .foregroundStyle(.secondary)
-//                            Text("/")
-//                                .font(.footnote)
-//                                .foregroundStyle(.secondary)
-//                        }
-//                    }
-//                }
-//                .padding(2)
-//                .background(Color.primaryBackground.opacity(0.1))
-//                .clipShape(RoundedRectangle(cornerRadius: 8))
-//            }
+            if let path = grid.sourcePath {
+                let slices = path.pathComponents.suffix(10).slices(sliceSize: 5)
+                ForEach(slices, id: \.startIndex) { slice in
+                    HStack(spacing: 0) {
+                        ForEach(slice, id: \.self) { component in
+                            Text(component)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                            Text("/")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .padding(2)
+                .background(Color.primaryBackground.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
         }
         .padding(4)
         .background(Color.primaryBackground.opacity(0.8))
         .clipShape(RoundedRectangle(cornerRadius: 2))
-        .padding()
     }
 
     @ViewBuilder

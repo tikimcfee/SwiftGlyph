@@ -51,7 +51,7 @@ public class SwiftGlyphRoot: MetalLinkReader {
         GlobalInstances.defaultAtlas.load()
         
         try setupRenderPlanTest()
-        try setupRenderStreamTest()
+//        try setupRenderStreamTest()
     }
     
     func delegatedEncode(in sdp: SafeDrawPass) {

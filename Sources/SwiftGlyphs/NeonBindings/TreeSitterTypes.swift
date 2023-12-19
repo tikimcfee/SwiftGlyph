@@ -3,8 +3,8 @@
 //  Created on 12/17/23.
 //  
 
-
 enum SyntaxType {
+    case unknown
     case comment
     case conditional(ConditionalType)
     case constructor(ConstructorType)
@@ -23,10 +23,84 @@ enum SyntaxType {
     case punctuation(PunctuationType)
     case type(TypeType)
     case variable(VariableType)
+    
+    static func fromComponents(_ components: [String]) -> SyntaxType {
+        switch components.count {
+        case 0:
+            return .unknown
+            
+        case 1:
+            return fromOne(components[0])
+            
+        case 2:
+            return fromTwo(components[0],
+                           components[1])
+        default:
+            return .unknown
+        }
+    }
+    
+    static func fromOne(
+        _ string: String
+    ) -> SyntaxType {
+        switch string {
+        case "spell", "comment":
+            return .comment
+        case "include":
+            return .include(.importInclude)
+        case "keyword":
+            return .keyword(.anyKeyword)
+        case "type":
+            return .type(.anyTypeIdentifier)
+        case "property":
+            return .property(.simple_identifier)
+        case "variable":
+            return .variable(.anyVariable)
+        case "constructor":
+            return .constructor(.initConstructor)
+        case "parameter":
+            return .parameter(.simple_identifier)
+        case "operator":
+            return .operatorType(.anyOperator)
+        case "method":
+            return .method(.simple_identifier)
+        case "conditional":
+            return .conditional(.anyConditional)
+        default:
+            print("unknown syntax type: \(string)")
+            return .unknown
+        }
+    }
+    
+    static func fromTwo(
+        _ left: String,
+        _ right: String
+    ) -> SyntaxType {
+        switch (left, right) {
+        case ("function", "call"):
+            return .function(.call(.identifier))
+        case ("keyword", "function"):
+            return .keyword(.function(.funcType))
+        case ("keyword", "operator"):
+            return .keyword(.operatorKeyword)
+        case ("keyword", "return"):
+            return .keyword(.returnKeyword)
+        case ("punctuation", "bracket"):
+            return .punctuation(.bracket(.anyBracket))
+        case ("punctuation", "delimiter"):
+            return .punctuation(.delimiter(.anyDelimiter))
+        case ("variable", "builtin"):
+            return .variable(.builtin(.anyBuiltin))
+        default:
+            return .unknown
+        }
+    }
 }
 
 enum ConditionalType {
+    case anyConditional
     case guardConditional
+    case ifConditional
 }
 
 enum ConstructorType {
@@ -50,7 +124,9 @@ enum FunctionDeclarationType {
     case simple_identifier
 }
 
-enum IdentifierType {}
+enum IdentifierType {
+    case identifier
+}
 
 enum PropertyDeclarationType {
     case class_declaration
@@ -62,7 +138,7 @@ enum FloatType {
 }
 
 enum FunctionType {
-    case call(SimpleIdentifierType)
+    case call(IdentifierType)
     case macro(MacroType)
 }
 
@@ -75,6 +151,9 @@ enum IncludeType {
 }
 
 enum KeywordType {
+    case anyKeyword
+    case returnKeyword
+    case operatorKeyword
     case classKeyword
     case elseKeyword
     case extensionKeyword
@@ -117,6 +196,7 @@ enum NumberType {
 }
 
 enum OperatorType {
+    case anyOperator
     case lessThan
     case equal
     case greaterThan
@@ -138,6 +218,7 @@ enum PunctuationType {
 }
 
 enum BracketType {
+    case anyBracket
     case roundOpen
     case roundClose
     case curlyOpen
@@ -147,23 +228,25 @@ enum BracketType {
 }
 
 enum DelimiterType {
+    case anyDelimiter
     case comma
     case period
     case colon
 }
 
 enum TypeType {
+    case anyTypeIdentifier
     case simple_identifier
     case type_identifier
 }
 
 enum VariableType {
+    case anyVariable
     case builtin(BuiltinType)
     case pattern
 }
 
 enum BuiltinType {
+    case anyBuiltin
     case self_expression
 }
-
-enum SimpleIdentifierType {}
