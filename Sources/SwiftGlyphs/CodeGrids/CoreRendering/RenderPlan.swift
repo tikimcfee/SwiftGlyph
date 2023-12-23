@@ -241,12 +241,9 @@ private extension RenderPlan {
                         print("<Found source grid url>")
                         targetParent.add(child: $0.rootNode)
                     } else {
-                        guard let parentGroup = state.directoryGroups[
-                            result
-                                .sourceURL
-                                .deletingLastPathComponent()
-                        ] else {
-                            fatalError("YOU WERE THE CHOSEN ONE")
+                        let parentUrl = result.sourceURL.deletingLastPathComponent()
+                        guard let parentGroup = state.directoryGroups[parentUrl] else {
+                            fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
                         }
                         
                         parentGroup.addChildGrid($0)
@@ -255,14 +252,14 @@ private extension RenderPlan {
                         $0.updateBackground()
                     }
                 }
-            do {
-                try GlobalInstances.colorizer.runColorizer(
-                    colorizerQuery: .highlights,
-                    on: collection
-                )
-            } catch {
-                print("lol internet")
-            }
+//            do {
+//                try GlobalInstances.colorizer.runColorizer(
+//                    colorizerQuery: .highlights,
+//                    on: collection
+//                )
+//            } catch {
+//                print("lol internet")
+//            }
             
         case .notBuilt:
             break
