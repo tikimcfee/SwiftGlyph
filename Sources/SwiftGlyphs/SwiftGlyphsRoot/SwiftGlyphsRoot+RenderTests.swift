@@ -48,7 +48,7 @@ extension SwiftGlyphRoot {
         
         Task {
             let testFile = ___RAW___SOURCE___
-            let resultBuffer = try await GlobalInstances.colorizer.execute(
+            _ = try GlobalInstances.colorizer.execute(
                 colorizerQuery: .highlights,
                 for: testFile
             )

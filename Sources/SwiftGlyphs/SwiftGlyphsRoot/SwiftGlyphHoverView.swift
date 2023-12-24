@@ -18,6 +18,7 @@ struct AtMousePositionModifier: ViewModifier {
     @State var mousePosition: LFloat2?
     
     func body(content: Content) -> some View {
+        #if os(macOS)
         content.onReceive(link.input.sharedMouse) { event in
             mousePosition = event.locationInWindow.asSimd
         }.offset(
@@ -28,6 +29,7 @@ struct AtMousePositionModifier: ViewModifier {
                 )
             } ?? CGSizeZero
         )
+        #endif
     }
 }
 
@@ -49,7 +51,10 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     
     @State private var mousePosition: LFloat2?
     @State private var tapPosition: LFloat2?
+    
+    #if os(macOS)
     @State private var modifiers = OSEvent.ModifierFlags()
+    #endif
 
     @State private var autoJump = false
     @State private var dragState = DragSizableViewState()
@@ -73,7 +78,9 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             )
             .onReceive(link.input.sharedMouse) { event in
                 mousePosition = event.locationInWindow.asSimd
+                #if os(macOS)
                 modifiers = event.modifierFlags
+                #endif
             }
             .onReceive(link.input.sharedMouseDown) { mouseDown in
                 let hasNew = currentHoveredGrid?.hasNew == true

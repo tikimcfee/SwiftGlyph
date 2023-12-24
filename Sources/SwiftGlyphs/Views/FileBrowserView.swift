@@ -13,8 +13,6 @@ import BitHandling
 let FileIcon = "📄"
 let FocusIcon = "👁️‍🗨️"
 let AddToOriginIcon = "🌐"
-//let DirectoryIconCollapsed = "📁"
-//let DirectoryIconExpanded = "📂"
 let DirectoryIconCollapsed = "􀆊"
 let DirectoryIconExpanded = "􀆈"
 
@@ -156,7 +154,6 @@ private extension FileBrowserView {
             if depth == 0 {
                 EmptyView()
             } else {
-//                RectangleDivider()
                 Spacer()
                     .frame(width: depth.cg * 8.0)
 //                    .padding(.leading, depth.cg * 16.0)
@@ -167,7 +164,9 @@ private extension FileBrowserView {
     @ViewBuilder
     func fileView(_ scope: FileBrowser.Scope, _ path: URL) -> some View {
         HStack(spacing: 4) {
-            Text(FileIcon)
+            Image(systemName: "doc")
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
                 .font(.footnote)
                 .padding(1)
             Text(path.lastPathComponent)
@@ -265,8 +264,7 @@ struct RectangleDivider: View {
 struct FileBrowserView_Previews: PreviewProvider {
     
     static let testPaths = [
-        "/Users/ivanlugo/rapiddev/_personal/LookAtThat/LookAtThatMobile",
-        "/Users/ivanlugo/rapiddev/_personal/LookAtThat/LookAtThatMobile/SampleFiles.bundle"
+        "/Users/ivanlugo/rapiddev/_personal/LatComponents/"
     ]
     
     static let testFiles = {
@@ -277,18 +275,19 @@ struct FileBrowserView_Previews: PreviewProvider {
     
     static let testState: FileBrowserViewState = {
         let state = FileBrowserViewState()
-        state.files = testFiles
+//        state.files = testFiles
         return state
     }()
     
     static var previews: some View {
         FileBrowserView(browserState: testState)
             .onAppear {
-//                for file in testFiles {
-//                    DispatchQueue.main.async {
-//                        GlobalInstances.fileBrowser.onScopeSelected(file)
-//                    }
-//                }
+                testState.files = testFiles
+                for file in testFiles {
+                    DispatchQueue.main.async {
+                        GlobalInstances.fileBrowser.onScopeSelected(file)
+                    }
+                }
             }
     }
 }
