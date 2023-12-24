@@ -8,12 +8,15 @@
 import Foundation
 import Combine
 import MetalLink
+import SwiftUI
 
+@Observable
 public class GridInteractionState {
     var bag = Set<AnyCancellable>()
     
     private var lockedNodeEvent: NodePickingState.Event = .initial
     private var lockedGridEvent: GridPickingState.Event = .initial
+    public var bookmarkedGrids: [CodeGrid] = []
     
     public let hoverController: MetalLinkHoverController
     public let input: DefaultInputReceiver
@@ -96,5 +99,22 @@ private extension GridInteractionState {
             ) { node, _ in
                 action(node)
             }
+    }
+}
+
+public extension Array where Element: CodeGrid {
+    enum Selection {
+        case addedToSet, removedFromSet
+    }
+    
+    mutating func toggle(_ toggled: Element) -> Selection {
+        let index = firstIndex(where: { $0.id == toggled.id })
+        if let index {
+            remove(at: index)
+            return .removedFromSet
+        } else {
+            append(toggled)
+            return .addedToSet
+        }
     }
 }

@@ -111,8 +111,6 @@ public class GridStore {
     public private(set) lazy var gridCache: GridCache = GridCache(builder: builder)
     public private(set) lazy var globalSemantics: CodeGridGlobalSemantics = CodeGridGlobalSemantics(source: gridCache)
     
-    
-    
     public private(set) lazy var searchContainer: SearchContainer = SearchContainer(gridCache: gridCache)
     public private(set) lazy var nodeHoverController: MetalLinkHoverController = MetalLinkHoverController(link: link)
     public private(set) lazy var gridInteractionState: GridInteractionState = GridInteractionState(

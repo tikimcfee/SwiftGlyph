@@ -109,7 +109,6 @@ private extension MetalLinkHoverController {
         glyphID: InstanceIDType,
         lastGlyphEvent: NodePickingState.Event
     ) -> NodePickingState.Event {
-        // Test we found a node in this grid before skipping
         guard let node = targetGrid.rootNode[glyphID] else {
             return .useLast(last: lastGlyphEvent.latestState)
         }
@@ -124,7 +123,8 @@ private extension MetalLinkHoverController {
         // Skip matching syntax ids; send last state to allow action on last node
         
         if let oldState = lastGlyphEvent.latestState,
-           oldState.parserSyntaxID == newState.parserSyntaxID
+//           oldState.parserSyntaxID == newState.parserSyntaxID
+           oldState.nodeID == newState.nodeID
         {
             return .matchesLast(last: oldState, new: newState)
         } else {

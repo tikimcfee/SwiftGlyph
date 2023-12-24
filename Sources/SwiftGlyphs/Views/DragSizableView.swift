@@ -42,13 +42,13 @@ public struct DragSizableModifer: ViewModifier {
                 guard state.contentBounds != $0 else { return }
                 state.contentBounds = $0
             }
-            dragBar.frame(maxWidth: state.contentBounds.width)
+//            dragBar.frame(maxWidth: state.contentBounds.width)
         }
     }
     
     var dragBar: some View {
-        Color.gray.opacity(0.8)
-            .frame(maxHeight: 16)
+        Color.gray.opacity(0.4)
+            .frame(maxHeight: 12)
             .highPriorityGesture(
                 DragGesture(
                     minimumDistance: 1.0,

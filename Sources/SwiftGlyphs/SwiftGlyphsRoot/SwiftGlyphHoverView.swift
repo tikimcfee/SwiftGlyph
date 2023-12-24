@@ -10,14 +10,49 @@ import SwiftUI
 import MetalLink
 import BitHandling
 
+struct AtMousePositionModifier: ViewModifier {
+    public let link: MetalLink
+    public let cursorOffset: CGFloat = 24.0
+    
+    var proxy: GeometryProxy
+    @State var mousePosition: LFloat2?
+    
+    func body(content: Content) -> some View {
+        content.onReceive(link.input.sharedMouse) { event in
+            mousePosition = event.locationInWindow.asSimd
+        }.offset(
+            mousePosition.map {
+                CGSize(
+                    width: $0.x.cg + cursorOffset,
+                    height: proxy.size.height - $0.y.cg - cursorOffset
+                )
+            } ?? CGSizeZero
+        )
+    }
+}
+
+extension View {
+    func attachedToMousePosition(
+        in parentProxy: GeometryProxy,
+        with link: MetalLink
+    ) -> some View {
+        modifier(AtMousePositionModifier(
+            link: link,
+            proxy: parentProxy
+        ))
+    }
+}
+
 public struct SwiftGlyphHoverView: View, MetalLinkReader {
     public let link: MetalLink
     @State private var currentHoveredGrid: GridPickingState.Event?
+    
     @State private var mousePosition: LFloat2?
     @State private var tapPosition: LFloat2?
-    
-    @State private var bookmarkedGrids: Set<CodeGrid> = []
+    @State private var modifiers = OSEvent.ModifierFlags()
+
     @State private var autoJump = false
+    @State private var dragState = DragSizableViewState()
     
     public init(link: MetalLink) {
         self.link = link
@@ -33,37 +68,23 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                     .subscribe(on: RunLoop.main)
                     .receive(on: RunLoop.main),
                 perform: { hoveredGrid in
-                    if tapPosition != nil { return }
                     self.currentHoveredGrid = hoveredGrid
                 }
             )
             .onReceive(link.input.sharedMouse) { event in
                 mousePosition = event.locationInWindow.asSimd
+                modifiers = event.modifierFlags
             }
             .onReceive(link.input.sharedMouseDown) { mouseDown in
                 let hasNew = currentHoveredGrid?.hasNew == true
                 let availableGrid = currentHoveredGrid?.newState?.targetGrid
-                if autoJump, hasNew, let grid = availableGrid {
-                    GlobalInstances.debugCamera.interceptor.resetPositions()
-                    GlobalInstances.debugCamera.position = grid.worldPosition.translated(dZ: 64)
-                    GlobalInstances.debugCamera.rotation = .zero
-                } else {
-                    if mouseDown.modifierFlags.contains(.command) {
-                        if tapPosition != nil {
-                            tapPosition = nil
-                            
-                            if mouseDown.modifierFlags.contains(.shift) {
-                                GlobalInstances.gridStore
-                                    .nodeHoverController
-                                    .lastGridEvent = .notFound
-                            }
-                        } else {
-                            tapPosition = mouseDown.locationInWindow.asSimd
-                        }
-                    }
-                }
+                
                 if hasNew, let availableGrid {
-                    _ = bookmarkedGrids.toggle(availableGrid)
+                    _ = GlobalInstances
+                        .gridStore
+                        .gridInteractionState
+                        .bookmarkedGrids
+                        .toggle(availableGrid)
                 }
             }
     }
@@ -77,26 +98,22 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                         VStack(alignment: .leading) {
                             gridInfoList(target: hoveredState.targetGrid)
                         }
-                    } else {
-                        Text("...")
-                            .padding(2)
-                            .background(Color.primaryBackground.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 2))
                     }
-                    
-//                    bookmarkList()
-//                        .padding(2)
-//                        .background(Color.primaryBackground.opacity(0.4))
-//                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-                .offset(
-                    (tapPosition ?? mousePosition).map {
-                        CGSize(
-                            width: $0.x.cg + 24,
-                            height: proxy.size.height - $0.y.cg - 24.0
-                        )
-                    } ?? CGSizeZero
-                )
+                }.attachedToMousePosition(in: proxy, with: link)
+                
+                bookmarkList()
+                    .padding(2)
+                    .background(Color.primaryBackground.opacity(0.4))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .modifier(
+                        DragSizableModifer(state: $dragState) {
+                            AppStatePreferences.shared.setCustom(
+                                name: "DragState-Hover-Glyph",
+                                value: dragState
+                            )
+                        }
+
+                    )
             }
             .frame(
                 width: proxy.size.width,
@@ -109,13 +126,21 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     
     @ViewBuilder
     func bookmarkList() -> some View {
-        // TODO: I know, I know; performace, list, arrays, slow, etc. etc.
-        let bookmarks = Array(bookmarkedGrids).sorted(by: { $0.fileName < $1.fileName})
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(bookmarks, id: \.id) { grid in
-                HStack(alignment: .top) {
-                    gridOptionList(target: grid)
-                    gridInfoList(target: grid)
+        
+        if GlobalInstances.gridStore.gridInteractionState.bookmarkedGrids.isEmpty {
+            Text("No Bookmarks").bold().padding()
+        } else {
+            let bookmarks = GlobalInstances
+                .gridStore
+                .gridInteractionState
+                .bookmarkedGrids
+            
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(bookmarks, id: \.id) { grid in
+                    HStack(alignment: .top) {
+                        gridOptionList(target: grid)
+                        gridInfoList(target: grid)
+                    }
                 }
             }
         }
@@ -129,25 +154,6 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             Text(grid.fileName)
                 .font(.headline)
                 .bold()
-            
-            if let path = grid.sourcePath {
-                let slices = path.pathComponents.suffix(10).slices(sliceSize: 5)
-                ForEach(slices, id: \.startIndex) { slice in
-                    HStack(spacing: 0) {
-                        ForEach(slice, id: \.self) { component in
-                            Text(component)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                            Text("/")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                .padding(2)
-                .background(Color.primaryBackground.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
         }
         .padding(4)
         .background(Color.primaryBackground.opacity(0.8))
@@ -158,21 +164,19 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     func gridOptionList(
         target grid: CodeGrid
     ) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        HStack(alignment: .center, spacing: 2) {
             SGButton("Jump", "") {
                 GlobalInstances.debugCamera.interceptor.resetPositions()
                 GlobalInstances.debugCamera.position = grid.worldPosition.translated(dZ: 64)
                 GlobalInstances.debugCamera.rotation = .zero
             }
             
-            if bookmarkedGrids.contains(grid) {
-                SGButton("Remove Bookmark", "") {
-                    bookmarkedGrids.remove(grid)
-                }
-            } else {
-                SGButton("Bookmark", "") {
-                    bookmarkedGrids.insert(grid)
-                }
+            SGButton("-", "") {
+                GlobalInstances
+                    .gridStore
+                    .gridInteractionState
+                    .bookmarkedGrids
+                    .removeAll(where: { $0.id == grid.id })
             }
         }
         .padding(4)
