@@ -58,10 +58,11 @@ public struct GitHubClientView: View {
                     repoDownloadErrorView
                 }
                 .padding()
+                .frame(maxHeight: .infinity)
                 .presentationDetents([.medium])
                 .interactiveDismissDisabled(progress != nil)
                 .presentationDragIndicator(.visible)
-                .background(Color.primaryBackground)
+                .background(Color.primaryBackground.opacity(0.5))
             }
     }
 #elseif os(macOS)
@@ -134,6 +135,13 @@ public struct GitHubClientView: View {
     @ViewBuilder
     var repoListView: some View {
         List {
+            if clientState.repoUrls.isEmpty {
+                Text("Download from an online repository to add a branch snapshot here.")
+                    .padding(8)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 0, trailing: 8))
+                    .listRowBackground(Color.clear)
+            }
             ForEach(clientState.repoUrls, id: \.path) { url in
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {

@@ -14,6 +14,12 @@ import Neon
 import TreeSitterSwift
 import SwiftTreeSitter
 
+public extension SerialColor {
+    var vector: LFloat4 {
+        LFloat4(red, green, blue, alpha)
+    }
+}
+
 enum ColorizerError: String, Error {
     case parseDidNotReturnTree
     case missingKernelFunction

@@ -37,21 +37,32 @@ public struct DragSizableModifer: ViewModifier {
     
     func rootPositionableView(_ wrappedContent: Content) -> some View {
         VStack(alignment: .trailing, spacing: 0) {
-            dragBar.frame(maxWidth: state.contentBounds.width)
-            wrappedContent.onSizeChanged(DraggableViewSize.self) {
-                guard state.contentBounds != $0 else { return }
-                state.contentBounds = $0
-            }
-//            dragBar.frame(maxWidth: state.contentBounds.width)
+            dragBar
+            wrappedContent
         }
+        .onSizeChanged(DraggableViewSize.self) {
+            guard state.contentBounds != $0 else { return }
+            state.contentBounds = $0
+        }
+        #if os(iOS)
+        // TODO: Why doesn't it work on iOS?
+        .gesture(DragGesture(
+            minimumDistance: 2,
+            coordinateSpace: .global
+        ).onChanged { value in
+            state.updateDrag(value, false)
+        }.onEnded { value in
+            state.updateDrag(value, true)
+        })
+        #endif
     }
     
     var dragBar: some View {
         Color.gray.opacity(0.4)
-            .frame(maxHeight: 12)
+            .frame(maxWidth: state.contentBounds.width, maxHeight: 12)
             .highPriorityGesture(
                 DragGesture(
-                    minimumDistance: 1.0,
+                    minimumDistance: 2,
                     coordinateSpace: .global
                 )
                 .onChanged { value in
@@ -62,5 +73,6 @@ public struct DragSizableModifer: ViewModifier {
                     onDragEnded()
                 }
             )
+            .contentShape(Rectangle())
     }
 }

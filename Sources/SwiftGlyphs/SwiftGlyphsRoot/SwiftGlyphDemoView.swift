@@ -202,14 +202,35 @@ public struct SwiftGlyphDemoView : View {
     }
 
     var actionsContent: some View {
-        VStack(alignment: .leading) {
-            saveAtlasButton
-            deleteAtlas
-            preloadAtlasButton
+        List {
+            Section("Atlas") {
+                LabeledContent("Save texture atlas", content: {
+                    saveAtlasButton
+                })
+                
+                LabeledContent("Totally clear atlas", content: {
+                    deleteAtlas
+                })
+                
+                LabeledContent("Run preload (autosaves)", content: {
+                    preloadAtlasButton
+                })
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            
+            Section("Configs") {
+                saveDefaultConfigButton
+                resetDefaultConfigButton
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
         }
+        #if os(iOS)
+        .listStyle(.grouped)
+        #endif
         .buttonStyle(.bordered)
-        .padding()
-        .background(Color.primaryBackground)
+        .tint(Color.primaryForeground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
@@ -241,20 +262,32 @@ public struct SwiftGlyphDemoView : View {
     }
     
     var deleteAtlas: some View {
-        Button("Reset (delete) atlas") {
+        Button("Clear") {
             GlobalInstances.resetAtlas()
         }
     }
     
     var saveAtlasButton: some View {
-        Button("Save Glyph Atlas") {
+        Button("Save") {
             GlobalInstances.defaultAtlas.save()
         }
     }
     
     var preloadAtlasButton: some View {
-        Button("Preload Glyph Atlas") {
+        Button("Preload") {
             GlobalInstances.defaultAtlas.preload()
+        }
+    }
+    
+    var saveDefaultConfigButton: some View {
+        Button("Save Default") {
+            GlobalLiveConfig.saveDefault()
+        }
+    }
+    
+    var resetDefaultConfigButton: some View {
+        Button("Reset Default") {
+            GlobalLiveConfig.saveDefault()
         }
     }
     

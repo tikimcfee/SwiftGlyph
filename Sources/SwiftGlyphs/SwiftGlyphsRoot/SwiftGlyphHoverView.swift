@@ -58,6 +58,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
 
     @State private var autoJump = false
     @State private var dragState = DragSizableViewState()
+    @State private var crosshairDragState = DragSizableViewState()
     
     public init(link: MetalLink) {
         self.link = link
@@ -99,7 +100,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     @ViewBuilder
     func rootView() -> some View {
         GeometryReader { proxy in
-            ZStack(alignment: .topLeading) {  // weirdly, this is overridden by the frame.
+            ZStack(alignment: .topLeading) {
                 VStack(alignment: .leading) {
                     if let hoveredState = currentHoveredGrid?.newState {
                         VStack(alignment: .leading) {
@@ -119,16 +120,40 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                                 value: dragState
                             )
                         }
-
                     )
+                
+                #if os(iOS)
+                Image(systemName: "arrow.up.left")
+                    .frame(width: 50, height: 50)
+                    .background(Color.primaryBackground)
+//                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .modifier(
+                        DragSizableModifer(state: $crosshairDragState) {
+                            AppStatePreferences.shared.setCustom(
+                                name: "DragState-Mobile-Crosshair-1",
+                                value: crosshairDragState
+                            )
+                        }
+                    )
+                    
+                    
+                #endif
             }
             .frame(
                 width: proxy.size.width,
                 height: proxy.size.height,
-                alignment: .topLeading // this overrides the z-stack alignment.
+                alignment: .topLeading
             )
+            #if os(iOS)
+            .onChange(of: crosshairDragState.offset) { old, new in
+                // TODO: Test if this works across devices.
+                let transform = new.asSimd
+                let event = OSEvent()
+                event.accessibilityElements = [transform]
+                link.input.mousePosition = event
+            }
+            #endif
         }
-        
     }
     
     @ViewBuilder

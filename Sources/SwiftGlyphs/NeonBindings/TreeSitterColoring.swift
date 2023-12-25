@@ -8,7 +8,7 @@ import BitHandling
 import MetalLink
 
 extension SyntaxType {
-    var foregroundColor: NSUIColor {
+    var foregroundColor: SerialColor {
         switch self {
         case .someRepeat:
             return GlobalLiveConfig.Default.coloring.unknownToken
