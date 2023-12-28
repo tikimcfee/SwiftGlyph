@@ -117,7 +117,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 
                 bookmarkList()
                     .padding(2)
-                    .background(Color.primaryBackground.opacity(0.4))
+                    .background(Color.primaryBackground.opacity(0.8))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
                     .withSavedDragstate(named: "DragState-Hover-Glyph", $dragState)
                 

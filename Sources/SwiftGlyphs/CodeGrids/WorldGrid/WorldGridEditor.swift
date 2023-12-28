@@ -8,6 +8,7 @@
 import Foundation
 import simd
 import MetalLink
+import BitHandling
 
 var default__VerticalSpacing: VectorFloat = 32.0
 var default__HorizontalSpacing: VectorFloat = 32.0

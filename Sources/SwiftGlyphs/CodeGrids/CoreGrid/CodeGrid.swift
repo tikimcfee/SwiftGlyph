@@ -32,11 +32,11 @@ public class CodeGrid: Identifiable, Equatable {
     public let semanticInfoBuilder: SemanticInfoBuilder = SemanticInfoBuilder()
     
     public private(set) var rootNode: GlyphCollection
+    public var targetNode: MetalLinkNode { rootNode }
+    
     public private(set) var nameNode: WordNode?
     public let tokenCache: CodeGridTokenCache
     public let gridBackground: BackgroundQuad
-    
-    public var targetNode: MetalLinkNode { rootNode }
     public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
     
     public private(set) var childGrids: [CodeGrid] = []

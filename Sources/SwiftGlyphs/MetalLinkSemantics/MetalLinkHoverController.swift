@@ -27,10 +27,12 @@ public class MetalLinkHoverController: ObservableObject {
     public lazy var sharedGlyphEvent = $lastGlyphEvent.share().eraseToAnyPublisher()
     
     private var trackedGrids = ConcurrentDictionary<CodeGrid.ID, CodeGrid>()
+    private let panController = PanController()
     
     public init(link: MetalLink) {
         self.link = link
         setupPickingHoverStream()
+        setupControlsStream()
     }
     
     public func attachPickingStream(to newGrid: CodeGrid) {
@@ -40,6 +42,28 @@ public class MetalLinkHoverController: ObservableObject {
 }
 
 private extension MetalLinkHoverController {
+    func setupControlsStream() {
+        let movements = link.input.sharedMouse.map {
+            PanEvent(state: .changed, currentLocation: $0.locationInWindow.asSimd)
+        }
+        let panStart = link.input.sharedMouseDown.map {
+            PanEvent(state: .began, currentLocation: $0.locationInWindow.asSimd)
+        }
+        let panEnd = link.input.sharedMouseUp.map {
+            PanEvent(state: .ended, currentLocation: $0.locationInWindow.asSimd)
+        }
+        
+        panStart
+            .merge(with: movements, panEnd)
+            .sink { event in
+                guard let grid = self.lastGridEvent.lastState?.targetGrid
+                else { return }
+                
+                self.panController.pan(event, on: grid)
+            }
+            .store(in: &bag)
+    }
+    
     func setupPickingHoverStream() {
         link.glyphPickingTexture.sharedPickingHover.sink { glyphID in
             self.doGlyphPicking(glyphID: glyphID)
