@@ -84,7 +84,12 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 #endif
             }
             .onReceive(link.input.sharedMouseDown) { mouseDown in
+                #if os(iOS)
+                let hasNew = currentHoveredGrid?.newState?.targetGrid != nil
+                #else
                 let hasNew = currentHoveredGrid?.hasNew == true
+                #endif
+                
                 let availableGrid = currentHoveredGrid?.newState?.targetGrid
                 
                 if hasNew, let availableGrid {
@@ -107,35 +112,33 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                             gridInfoList(target: hoveredState.targetGrid)
                         }
                     }
-                }.attachedToMousePosition(in: proxy, with: link)
+                }
+                .attachedToMousePosition(in: proxy, with: link)
                 
                 bookmarkList()
                     .padding(2)
                     .background(Color.primaryBackground.opacity(0.4))
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .modifier(
-                        DragSizableModifer(state: $dragState) {
-                            AppStatePreferences.shared.setCustom(
-                                name: "DragState-Hover-Glyph",
-                                value: dragState
-                            )
-                        }
-                    )
+                    .withSavedDragstate(named: "DragState-Hover-Glyph", $dragState)
                 
                 #if os(iOS)
                 Image(systemName: "arrow.up.left")
-                    .frame(width: 50, height: 50)
-                    .background(Color.primaryBackground)
-//                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .modifier(
-                        DragSizableModifer(state: $crosshairDragState) {
-                            AppStatePreferences.shared.setCustom(
-                                name: "DragState-Mobile-Crosshair-1",
-                                value: crosshairDragState
-                            )
-                        }
+                    .background(Color.primaryBackground.opacity(0.66))
+                    .withSavedDragstate(named: "DragState-Mobile-Crosshair-1", $crosshairDragState)
+                    .gesture(
+                        SpatialTapGesture(coordinateSpace: .global)
+                            .onEnded { event in
+                                let downEvent = OSEvent()
+                                downEvent.locationInWindow = event.location.asSimd
+                                self.link.input.mousePosition = downEvent
+                                self.link.input.mouseDownEvent = downEvent
+                            }
                     )
-                    
+                    .onChange(of: crosshairDragState.offset) { old, new in
+                        let event = OSEvent()
+                        event.locationInWindow = new.asSimd
+                        link.input.mousePosition = event
+                    }
                     
                 #endif
             }
@@ -144,15 +147,6 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 height: proxy.size.height,
                 alignment: .topLeading
             )
-            #if os(iOS)
-            .onChange(of: crosshairDragState.offset) { old, new in
-                // TODO: Test if this works across devices.
-                let transform = new.asSimd
-                let event = OSEvent()
-                event.accessibilityElements = [transform]
-                link.input.mousePosition = event
-            }
-            #endif
         }
     }
     

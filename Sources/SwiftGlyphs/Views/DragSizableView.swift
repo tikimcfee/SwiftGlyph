@@ -6,11 +6,39 @@
 //
 
 import SwiftUI
+import BitHandling
+
+extension View {
+    func withSavedDragstate(
+        named name: String,
+        _ dragState: Binding<DragSizableViewState>
+    ) -> some View {
+        modifier(
+            DragSizableModifer(state: dragState) {
+                AppStatePreferences.shared
+                    .setCustom(
+                        name: name,
+                        value: dragState.wrappedValue
+                    )
+            }
+        ).onAppear {
+            dragState.wrappedValue = 
+                AppStatePreferences.shared
+                    .getCustom(
+                        name: name,
+                        makeDefault: {
+                            DragSizableViewState()
+                        }
+                    )
+        }
+    }
+}
 
 public struct DragSizableViewState: Codable, Equatable {
     public var contentBounds: CGSize = .zero
     public var offset = CGPoint(x: 0, y: 0)
     public var lastOffset = CGPoint(x: 0, y: 0)
+    public var topBar = true
     
     mutating func updateDrag(
         _ value: DragGesture.Value,
@@ -37,7 +65,7 @@ public struct DragSizableModifer: ViewModifier {
     
     func rootPositionableView(_ wrappedContent: Content) -> some View {
         VStack(alignment: .trailing, spacing: 0) {
-            dragBar
+            if state.topBar { dragBar }
             wrappedContent
         }
         .onSizeChanged(DraggableViewSize.self) {
