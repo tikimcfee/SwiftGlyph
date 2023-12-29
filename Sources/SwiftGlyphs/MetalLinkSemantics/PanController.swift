@@ -18,7 +18,7 @@ class PanController {
         }
         
         if touchState.pan.valid {
-            panOnNode3(panEvent)
+            panOnNode(panEvent)
         }
         
         if panEvent.state == .ended {
@@ -27,8 +27,10 @@ class PanController {
             print("-- Ended pan on \(grid.fileName)")
         }
     }
-    
-    private func panBegan(
+}
+
+private extension PanController {
+    func panBegan(
         _ event: PanEvent,
         on grid: CodeGrid
     ) {
@@ -40,6 +42,7 @@ class PanController {
         touchState.pan.initialObjectPosition = grid.rootNode.worldPosition
         touchState.pan.initialDistance = camera.position.distance(to: grid.rootNode.worldPosition)
         touchState.pan.valid = true
+        
         // Calculate the initial intersection point based on the object's current world position
         let initialRay = camera.castRay(from: event.currentLocation)
         touchState.pan.initialIntersectionPoint = intersectRayWithSphere(
@@ -50,14 +53,19 @@ class PanController {
         )
     }
     
-    private func panOnNode(_ event: PanEvent) {
+    func panOnNode(_ event: PanEvent) {
         let currentLocation = event.currentLocation
         
         // Cast a ray from the camera through the current mouse position
         let currentRay = camera.castRay(from: currentLocation)
         
         // Find the intersection of this ray with the sphere
-        let currentIntersection = intersectRayWithSphere(rayOrigin: currentRay.origin, rayDirection: currentRay.direction, sphereCenter: camera.position, sphereRadius: touchState.pan.initialDistance)
+        let currentIntersection = intersectRayWithSphere(
+            rayOrigin: currentRay.origin,
+            rayDirection: currentRay.direction,
+            sphereCenter: camera.position,
+            sphereRadius: touchState.pan.initialDistance
+        )
         
         // Calculate the offset from the initial intersection point
         let offsetFromInitialIntersection = currentIntersection - touchState.pan.initialIntersectionPoint
@@ -74,69 +82,16 @@ class PanController {
             touchState.pan.isFirstMovement = false
         }
     }
-    
-    private func transformScreenDeltaToWorld(_ screenDelta: LFloat2) -> LFloat3 {
-        // Transform the screen space delta into world space using the camera's matrices
-        let viewProjectionInverse = (camera.projectionMatrix * camera.viewMatrix).inverse
-        let worldDelta4 = viewProjectionInverse * LFloat4(screenDelta.x, screenDelta.y, 0, 0)
-        return LFloat3(worldDelta4.x, worldDelta4.y, worldDelta4.z)
-    }
-    
-    private func intersectRayWithSphere(rayOrigin: LFloat3, rayDirection: LFloat3, sphereCenter: LFloat3, sphereRadius: Float) -> LFloat3 {
-        // Calculate the vector from the ray origin to the sphere center
-        let originToCenter = sphereCenter - rayOrigin
-        // Project this vector onto the ray direction
-        let projectionLength = simd_dot(originToCenter, rayDirection)
-        // Calculate the closest point on the ray to the sphere center
-        let closestPoint = rayOrigin + rayDirection * projectionLength
-        // Calculate the distance from the closest point to the sphere center
-        let centerToClosestPointLength = simd_length(sphereCenter - closestPoint)
-        // Calculate the intersection point using Pythagorean theorem
-        let offsetLength = sqrt(sphereRadius * sphereRadius - centerToClosestPointLength * centerToClosestPointLength)
-        // The intersection point is along the ray direction, offset from the closest point
-        let intersectionPoint = closestPoint + rayDirection * offsetLength
-        return intersectionPoint
-    }
-    
 }
 
-class TouchState {
-    var pan = TouchStart()
-}
-
-class TouchStart {
-    var valid: Bool = false
-    var gesturePoint = LFloat2.zero
-    var initialCameraPosition = LFloat3.zero
-    var initialObjectPosition = LFloat3.zero
-    var initialDistance = Float.zero
-    var initialIntersectionPoint: LFloat3 = .zero
-    var isFirstMovement: Bool = true
-    var positioningNode = MetalLinkNode()
-    var positioningNodeStart = LFloat3.zero
-    
-    var projectionDepthPosition = LFloat3.zero
-    var computedStartUnprojection = LFloat3.zero
-    
-    var cameraNodeEulers = LFloat3.zero
-    
-    func computeStartUnprojection() {
-        computedStartUnprojection = GlobalInstances.debugCamera.unprojectPoint(
-            gesturePoint,
-            depth: projectionDepthPosition.z // Use the stored depth
-        )
-    }
-    
-    func computedEndUnprojection(with location: LFloat2) -> LFloat3 {
-        return GlobalInstances.debugCamera.unprojectPoint(
-            location,
-            depth: projectionDepthPosition.z // Use the same depth as the start
-        )
+private extension PanController {
+    func panOnNodeXY(_ event: PanEvent) {
+        
     }
 }
 
-extension PanController {
-    private func panOnNode3(_ event: PanEvent) {
+private extension PanController {
+    func panOnNode3(_ event: PanEvent) {
         let currentLocation = event.currentLocation
         
         // Cast a ray from the camera through the current mouse position
@@ -165,41 +120,27 @@ extension PanController {
     }
 }
 
-extension PanController {
-    private func panOnNode2(_ event: PanEvent) {
-        let currentLocation = event.currentLocation
-        
-        // Calculate the change in screen space coordinates
-        let screenDelta = currentLocation - touchState.pan.gesturePoint
-        
-        // Transform this screen space delta into a world space delta
-        let worldDelta = transformScreenDeltaToWorld2(screenDelta)
-        
-        // Apply this world space delta to the object's initial position to get the new position
-        var newWorldPosition = touchState.pan.initialObjectPosition + worldDelta
-        
-        // Adjust the new world position's z value to maintain the initial distance from the camera
-        newWorldPosition.z = touchState.pan.initialObjectPosition.z + worldDelta.z
-        
-        // Move the object to this new world position
-        touchState.pan.positioningNode.setWorldPosition(newWorldPosition)
-        
-//        // Update the gesture point for the next frame
-//        touchState.pan.gesturePoint = currentLocation
+private extension PanController {
+    func transformScreenDeltaToWorld(_ screenDelta: LFloat2) -> LFloat3 {
+        // Transform the screen space delta into world space using the camera's matrices
+        let viewProjectionInverse = (camera.projectionMatrix * camera.viewMatrix).inverse
+        let worldDelta4 = viewProjectionInverse * LFloat4(screenDelta.x, screenDelta.y, 0, 0)
+        return LFloat3(worldDelta4.x, worldDelta4.y, worldDelta4.z)
     }
     
-    private func transformScreenDeltaToWorld2(_ screenDelta: LFloat2) -> LFloat3 {
-        // Convert screen delta to normalized device coordinates (NDC)
-        let viewBounds = GlobalInstances.debugCamera.viewBounds
-        let ndcDelta = LFloat2(screenDelta.x / viewBounds.x * 2 - 1, screenDelta.y / viewBounds.y * 2 - 1)
-        
-        // Unproject the NDC delta to world space using the inverse of the view-projection matrix
-        let inverseViewProjection = (camera.projectionMatrix * camera.viewMatrix).inverse
-        let worldDelta4 = inverseViewProjection * LFloat4(ndcDelta.x, -ndcDelta.y, 0, 0)
-        let worldDelta = LFloat3(worldDelta4.x, worldDelta4.y, worldDelta4.z)
-        
-        // Scale the world delta by the distance from the camera to the object to account for perspective
-        let distance = camera.position.distance(to: touchState.pan.initialObjectPosition)
-        return worldDelta * distance
+    func intersectRayWithSphere(rayOrigin: LFloat3, rayDirection: LFloat3, sphereCenter: LFloat3, sphereRadius: Float) -> LFloat3 {
+        // Calculate the vector from the ray origin to the sphere center
+        let originToCenter = sphereCenter - rayOrigin
+        // Project this vector onto the ray direction
+        let projectionLength = simd_dot(originToCenter, rayDirection)
+        // Calculate the closest point on the ray to the sphere center
+        let closestPoint = rayOrigin + rayDirection * projectionLength
+        // Calculate the distance from the closest point to the sphere center
+        let centerToClosestPointLength = simd_length(sphereCenter - closestPoint)
+        // Calculate the intersection point using Pythagorean theorem
+        let offsetLength = sqrt(sphereRadius * sphereRadius - centerToClosestPointLength * centerToClosestPointLength)
+        // The intersection point is along the ray direction, offset from the closest point
+        let intersectionPoint = closestPoint + rayDirection * offsetLength
+        return intersectionPoint
     }
 }
