@@ -194,9 +194,9 @@ extension CodeGrid: Measures {
         get {
             targetNode.worldPosition
         }
-//        set {
-//            targetNode.worldPosition = newValue
-//        }
+        set {
+            targetNode.setWorldPosition(newValue)
+        }
     }
     
     public var rotation: LFloat3 {
