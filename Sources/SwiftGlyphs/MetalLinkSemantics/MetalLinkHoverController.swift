@@ -43,6 +43,7 @@ public class MetalLinkHoverController: ObservableObject {
 
 private extension MetalLinkHoverController {
     func setupControlsStream() {
+        var lastEvent: PanEvent?
         let movements = link.input.sharedMouse.map {
             PanEvent(state: .changed, currentLocation: $0.locationInWindow.asSimd)
         }
@@ -52,16 +53,21 @@ private extension MetalLinkHoverController {
         let panEnd = link.input.sharedMouseUp.map {
             PanEvent(state: .ended, currentLocation: $0.locationInWindow.asSimd)
         }
+        let cameraChangeStream = panController.camera
+            .positionStream
+            .compactMap { _ in lastEvent }
         
-        panStart
-            .merge(with: movements, panEnd)
-            .sink { event in
-                guard let grid = self.lastGridEvent.lastState?.targetGrid
-                else { return }
-                
-                self.panController.pan(event, on: grid)
-            }
-            .store(in: &bag)
+        panStart.merge(
+            with: movements, panEnd, cameraChangeStream
+        )
+        .sink { event in
+            guard let grid = self.lastGridEvent.lastState?.targetGrid
+            else { return }
+            
+            lastEvent = event
+            self.panController.pan(event, on: grid)
+        }
+        .store(in: &bag)
     }
     
     func setupPickingHoverStream() {

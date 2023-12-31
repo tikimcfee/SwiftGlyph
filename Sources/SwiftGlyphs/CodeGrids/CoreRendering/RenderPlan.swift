@@ -278,7 +278,10 @@ private extension RenderPlan {
                 .withSourcePath(directoryURL)
                 .withFileName(directoryURL.fileName)
                 .applyName()
-                .removeBackground()
+                .applying {
+                    $0.updateBackground()
+                    hoverController.attachPickingStream(to: $0)
+                }
             
             let group = CodeGridGroup(globalRootGrid: grid)
             state.directoryGroups[directoryURL] = group

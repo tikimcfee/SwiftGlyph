@@ -78,12 +78,18 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 }
             )
             .onReceive(link.input.sharedMouse) { event in
-                mousePosition = event.locationInWindow.asSimd
                 #if os(macOS)
                 modifiers = event.modifierFlags
                 #endif
+                
+                mousePosition = event.locationInWindow.asSimd
+                
             }
             .onReceive(link.input.sharedMouseDown) { mouseDown in
+                #if os(macOS)
+                modifiers = mouseDown.modifierFlags
+                #endif
+                
                 #if os(iOS)
                 let hasNew = currentHoveredGrid?.newState?.targetGrid != nil
                 #else

@@ -2,9 +2,10 @@ import Foundation
 import SwiftUI
 import MetalLink
 import MetalLinkHeaders
+import simd
 
 // Adapted from https://stackoverflow.com/questions/48970111/rotating-scnnode-on-y-axis-based-on-pan-gesture
-class PanController {
+public class PanController {
     var touchState: TouchState = TouchState()
     var camera: DebugCamera { GlobalInstances.debugCamera }
     
@@ -16,74 +17,113 @@ class PanController {
             print("-- Starting pan on \(grid.fileName)")
             panBegan(panEvent, on: grid)
         }
-        
-        if touchState.pan.valid {
-            panOnNode(panEvent)
+
+        if panEvent.pressingCommand, let start = panEvent.commandStart {
+            // Can always rotate the camera
+            panHoldingCommand(panEvent, start)
+        } else if touchState.pan.valid {
+            if panEvent.pressingOption, let start = panEvent.optionStart {
+                panHoldingOption(panEvent, start)
+            } else {
+                panOnNode(panEvent)
+            }
         }
-        
+
         if panEvent.state == .ended {
             touchState.pan = TouchStart()
             touchState.pan.valid = false
-            print("-- Ended pan on \(grid.fileName)")
+            print("-- Ended pan")
         }
     }
 }
 
-private extension PanController {
-    func panBegan(
-        _ event: PanEvent,
-        on grid: CodeGrid
-    ) {
-        touchState.pan.positioningNode = grid.rootNode
+public extension PanController {
+    private func panBegan(_ event: PanEvent, on grid: CodeGrid) {
         touchState.pan.lastScreenCoordinate = event.currentLocation
-        touchState.pan.initialCameraPosition = camera.position
-        touchState.pan.initialObjectPosition = grid.rootNode.worldPosition
-        touchState.pan.initialDistance = camera.position.distance(to: grid.rootNode.worldPosition)
-        touchState.pan.projectionDepthPosition = grid.rootNode.worldPosition
-        touchState.pan.setStartUnprojection(screenPosition: event.currentLocation)
+        touchState.pan.positioningNode = grid.rootNode
+        touchState.pan.positioningNodeStart = grid.rootNode.position
+        
+        touchState.pan.cameraRotation = camera.rotation
+        touchState.pan.nodeRotation = grid.rootNode.rotation
+        
+        touchState.pan.projectionDepthPosition = grid.rootNode.position
+        touchState.pan.setStartUnprojection(mouse: event.currentLocation)
+        
         touchState.pan.valid = true
+        print("-- Found a node; touch valid")
     }
-    
-    func panOnNode(_ event: PanEvent) {
-        // Calculate the screen space delta
-        let current = event.currentLocation
-        let previous = touchState.pan.lastScreenCoordinate
-        
-        let startProjection = touchState.pan.computedStartUnprojection
-        let endProjection = touchState.pan.computedEndUnprojection(with: previous)
-        let transform = endProjection - startProjection
-        
-        
-        let initial = touchState.pan.initialObjectPosition
-        let initialProject = camera.projectPoint(initial)
-        let appliedTransform = initialProject + transform
-        print("""
-        startProjection: \(startProjection.tupleString)
-        endProjection:   \(endProjection.tupleString)
-        current:         \(current.tupleString)
-        previous:        \(previous.tupleString)
-        transform:       \(transform.tupleString)
-        applied:         \(appliedTransform.tupleString)
-        --------------------------------------------------
-        """)
-    }
-}
 
-private extension PanController {
+    private func panOnNode(_ event: PanEvent) {
+        // Previous world space touch position
+        let previousWorldPosition = touchState.pan.computedStartUnprojection
+        
+        // Current world space touch position
+        let currentWorldPosition = touchState.pan.cameraUnprojection(mouse: event.currentLocation)
+
+        // World space delta between touch positions
+        let worldDelta = currentWorldPosition - previousWorldPosition
+
+        // Node's initial world space position
+        var nodeWorldPosition = touchState.pan.positioningNodeStart
+
+        // Apply world space delta to node's position
+        nodeWorldPosition += worldDelta
+
+        // Update node's world space position
+        touchState.pan.positioningNode.position = nodeWorldPosition
+
+        // Update previous touch location
+        touchState.pan.lastScreenCoordinate = event.currentLocation
+    }
+
+    private func panHoldingOption(_ event: PanEvent, _ start: LFloat2) {
+        let end = event.currentLocation
+        let rotation = rotationBetween(start, end, using: touchState.pan.nodeRotation)
+        guard rotation.x != 0.0 || rotation.y != 0 else { return }
+        
+        touchState.pan.positioningNode.rotation.y = rotation.y.vector
+        touchState.pan.positioningNode.rotation.x = rotation.x.vector
+        
+        // Reset position 'start' position after rotation
+        touchState.pan.lastScreenCoordinate = event.currentLocation
+        touchState.pan.positioningNodeStart = touchState.pan.positioningNode.position
+        touchState.pan.projectionDepthPosition = camera.projectPoint(touchState.pan.positioningNode.position)
+        touchState.pan.setStartUnprojection(mouse: end)
+    }
     
-    func intersectRayWithSphere(rayOrigin: LFloat3, rayDirection: LFloat3, sphereCenter: LFloat3, sphereRadius: Float) -> LFloat3 {
-        // Calculate the vector from the ray origin to the sphere center
-        let originToCenter = sphereCenter - rayOrigin
-        // Project this vector onto the ray direction
-        let projectionLength = simd_dot(originToCenter, rayDirection)
-        // Calculate the closest point on the ray to the sphere center
-        let closestPoint = rayOrigin + rayDirection * projectionLength
-        // Calculate the distance from the closest point to the sphere center
-        let centerToClosestPointLength = simd_length(sphereCenter - closestPoint)
-        // Calculate the intersection point using Pythagorean theorem
-        let offsetLength = sqrt(sphereRadius * sphereRadius - centerToClosestPointLength * centerToClosestPointLength)
-        // The intersection point is along the ray direction, offset from the closest point
-        let intersectionPoint = closestPoint + rayDirection * offsetLength
-        return intersectionPoint
+    private func panHoldingCommand(_ event: PanEvent, _ start: LFloat2) {
+        let scaledStart = start * 0.33
+        let end = event.currentLocation * 0.33
+        if scaledStart == end {
+            touchState.pan.cameraRotation = camera.rotation
+            return
+        }
+
+        // reverse start and end to reverse camera control style
+        let rotation = rotationBetween(
+            end,
+            scaledStart,
+            using: touchState.pan.cameraRotation
+        )
+        guard rotation.x != 0.0 || rotation.y != 0 
+        else { return }
+
+        camera.rotation.y = rotation.y.vector
+        camera.rotation.x = rotation.x.vector
+    }
+
+    private func rotationBetween(_ startPosition: LFloat2,
+                                 _ endPosition: LFloat2,
+                                 using currentAngles: LFloat3) -> LFloat2 {
+        let translation = LFloat2(x: endPosition.x - startPosition.x,
+                                  y: endPosition.y - startPosition.y)
+        guard translation.x != 0.0 || translation.y != 0.0 
+        else { return .zero }
+        
+        var newAngleY = translation.x * Float.pi/180.0
+        var newAngleX = -translation.y * Float.pi/180.0
+        newAngleY += currentAngles.y
+        newAngleX += currentAngles.x
+        return LFloat2(x: newAngleX, y: newAngleY)
     }
 }
