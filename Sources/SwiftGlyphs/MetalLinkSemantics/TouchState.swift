@@ -10,32 +10,36 @@ class TouchState {
 }
 
 class TouchStart {
+    private var cam: DebugCamera {
+        GlobalInstances.debugCamera
+    }
+    
+    var positioningNode = MetalLinkNode()
+    var positioningNodeStart = LFloat3.zero
     var valid: Bool = false
-    var gesturePoint = LFloat2.zero
+   
     var initialCameraPosition = LFloat3.zero
     var initialObjectPosition = LFloat3.zero
     var initialDistance = Float.zero
-    var initialIntersectionPoint: LFloat3 = .zero
-    var isFirstMovement: Bool = true
-    var positioningNode = MetalLinkNode()
-    var positioningNodeStart = LFloat3.zero
     
+    var lastScreenCoordinate = LFloat2.zero
+   
     var projectionDepthPosition = LFloat3.zero
     var computedStartUnprojection = LFloat3.zero
-    
-    var cameraNodeEulers = LFloat3.zero
-    
-    func computeStartUnprojection() {
-        computedStartUnprojection = GlobalInstances.debugCamera.unprojectPoint(
-            gesturePoint,
-            depth: projectionDepthPosition.z // Use the stored depth
+
+    func setStartUnprojection(
+        screenPosition: LFloat2
+    ) {
+        computedStartUnprojection = cam.unprojectPoint(
+            screenPosition,
+            worldDepth: projectionDepthPosition.z
         )
     }
     
     func computedEndUnprojection(with location: LFloat2) -> LFloat3 {
-        return GlobalInstances.debugCamera.unprojectPoint(
+        cam.unprojectPoint(
             location,
-            depth: projectionDepthPosition.z // Use the same depth as the start
+            worldDepth: projectionDepthPosition.z // Use the same depth as the start
         )
     }
 }
