@@ -108,7 +108,7 @@ private extension RenderPlan {
             $0.totalValue += 1
             $0.message = "Jump in the line..."
         }
-        state.directoryGroups[rootPath]?.addLines(targetParent)
+        state.directoryGroups[rootPath]?.addAllWalls()
     }
 }
 
@@ -278,10 +278,6 @@ private extension RenderPlan {
                 .withSourcePath(directoryURL)
                 .withFileName(directoryURL.fileName)
                 .applyName()
-                .applying {
-                    $0.updateBackground()
-                    hoverController.attachPickingStream(to: $0)
-                }
             
             let group = CodeGridGroup(globalRootGrid: grid)
             state.directoryGroups[directoryURL] = group

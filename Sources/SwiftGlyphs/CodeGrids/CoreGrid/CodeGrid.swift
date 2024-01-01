@@ -38,8 +38,31 @@ public class CodeGrid: Identifiable, Equatable {
     public let tokenCache: CodeGridTokenCache
     public let gridBackground: BackgroundQuad
     public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
-    
     public private(set) var childGrids: [CodeGrid] = []
+
+    // Walls leaking into grids, 's'cool
+    private lazy var groupWalls = {
+        var walls = [
+            BackgroundQuad(rootNode.link), // top
+            BackgroundQuad(rootNode.link), // leading
+            BackgroundQuad(rootNode.link), // trailing
+            BackgroundQuad(rootNode.link), // bottom
+            BackgroundQuad(rootNode.link)  // front
+        ]
+        walls.forEach {
+            rootNode.add(child: $0)
+            $0.constants.pickingId = gridBackground.constants.pickingId
+        }
+        walls.append(gridBackground) // <--   default is back wall
+        return walls
+    }()
+    public var wallsTop: BackgroundQuad { groupWalls[0] }
+    public var wallsLeading: BackgroundQuad { groupWalls[1] }
+    public var wallsTrailing: BackgroundQuad { groupWalls[2] }
+    public var wallsBottom: BackgroundQuad { groupWalls[3] }
+    public var wallsFront: BackgroundQuad { groupWalls[4] }
+    public var wallsBack: BackgroundQuad { groupWalls[5] }
+    // ----------------------------------------------
     
     public init(
         rootNode: GlyphCollection,
@@ -88,6 +111,36 @@ public class CodeGrid: Identifiable, Equatable {
         return self
     }
     
+    @discardableResult
+    public func updateWalls() -> CodeGrid {
+        var childBounds = childGrids
+            .reduce(into: Bounds.forBaseComputing) {
+                $0.union(with: $1.sizeBounds)
+            }
+        
+        childBounds.applyLeading(wallsLeading)
+        wallsLeading.position.x -= 4
+        wallsLeading.setColor(LFloat4(0.2, 0.1, 0.1, 1.0))
+
+        childBounds.applyTrailing(wallsTrailing)
+        wallsTrailing.position.x += 4
+        wallsTrailing.setColor(LFloat4(0.1, 0.1, 0.1, 1.0))
+        
+//        childBounds.applyTop(wallsTop)
+//        wallsTop.position -= 4
+//        wallsTop.setColor(LFloat4(0.1, 0.3, 0.3, 1.0))
+        
+        childBounds.applyBottom(wallsBottom)
+        wallsBottom.position.y -= 4
+        wallsBottom.setColor(LFloat4(0.0, 0.1, 0.1, 1.0))
+        
+        childBounds.applyBack(wallsBack)
+        wallsBack.position.z -= 4
+        wallsBack.setColor(LFloat4(0.1, 0.2, 0.2, 1.0))
+        
+        return self
+    }
+    
     public func setNameNode(_ node: WordNode) {
         if let nameNode {
             targetNode.remove(child: nameNode)
@@ -103,7 +156,7 @@ public class CodeGrid: Identifiable, Equatable {
     }
     
     public func updateBackground() {
-        let size = targetNode.contentBounds
+        let size = targetNode.bounds
         gridBackground.size = LFloat2(x: size.width, y: size.height)
         
         gridBackground

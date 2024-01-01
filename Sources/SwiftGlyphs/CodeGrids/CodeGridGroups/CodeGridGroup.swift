@@ -23,6 +23,10 @@ class CodeGridGroup {
     
     init(globalRootGrid: CodeGrid) {
         self.globalRootGrid = globalRootGrid
+        
+        GlobalInstances.gridStore
+            .nodeHoverController
+            .attachPickingStream(to: globalRootGrid)
     }
     
     var lastRowTallestGrid: CodeGrid? {
@@ -47,6 +51,13 @@ class CodeGridGroup {
             childGroup.applyAllConstraints()
         }
         controller.applyConsecutiveConstraints()
+    }
+    
+    func addAllWalls() {
+        for childGroup in childGroups {
+            childGroup.addAllWalls()
+        }
+        globalRootGrid.updateWalls()
     }
     
     func addLines(_ root: MetalLinkNode) {
