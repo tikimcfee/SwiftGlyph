@@ -118,11 +118,11 @@ public class CodeGrid: Identifiable, Equatable {
                 $0.union(with: $1.sizeBounds)
             }
         
-        childBounds.applyLeading(wallsLeading)
+        wallsLeading.applyLeading(childBounds)
         wallsLeading.position.x -= 4
         wallsLeading.setColor(LFloat4(0.2, 0.1, 0.1, 1.0))
 
-        childBounds.applyTrailing(wallsTrailing)
+        wallsTrailing.applyTrailing(childBounds)
         wallsTrailing.position.x += 4
         wallsTrailing.setColor(LFloat4(0.1, 0.1, 0.1, 1.0))
         
@@ -130,11 +130,11 @@ public class CodeGrid: Identifiable, Equatable {
 //        wallsTop.position -= 4
 //        wallsTop.setColor(LFloat4(0.1, 0.3, 0.3, 1.0))
         
-        childBounds.applyBottom(wallsBottom)
+        wallsBottom.applyBottom(childBounds)
         wallsBottom.position.y -= 4
         wallsBottom.setColor(LFloat4(0.0, 0.1, 0.1, 1.0))
         
-        childBounds.applyBack(wallsBack)
+        wallsBack.applyBack(childBounds)
         wallsBack.position.z -= 4
         wallsBack.setColor(LFloat4(0.1, 0.2, 0.2, 1.0))
         
