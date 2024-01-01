@@ -108,6 +108,7 @@ private extension RenderPlan {
             $0.totalValue += 1
             $0.message = "Jump in the line..."
         }
+        state.directoryGroups[rootPath]?.addLines(targetParent)
         state.directoryGroups[rootPath]?.addAllWalls()
     }
 }

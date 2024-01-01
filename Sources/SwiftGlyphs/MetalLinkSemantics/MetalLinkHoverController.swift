@@ -53,8 +53,8 @@ private extension MetalLinkHoverController {
         let panEnd = link.input.sharedMouseUp.map {
             PanEvent(state: .ended, currentLocation: $0.locationInWindow.asSimd)
         }
-        let cameraChangeStream = panController.camera
-            .positionStream
+        let cameraChangeStream = panController.camera.positionStream
+            .merge(with: panController.camera.rotationSream)
             .compactMap { _ in lastEvent }
         
         panStart.merge(
