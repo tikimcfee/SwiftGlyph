@@ -56,18 +56,21 @@ private extension MetalLinkHoverController {
         let cameraChangeStream = panController.camera.positionStream
             .merge(with: panController.camera.rotationSream)
             .compactMap { _ in lastEvent }
+            .prepend(.newEmpty)
         
-        panStart.merge(
-            with: movements, panEnd, cameraChangeStream
-        )
-        .sink { event in
-            guard let grid = self.lastGridEvent.lastState?.targetGrid
-            else { return }
-            
-            lastEvent = event
-            self.panController.pan(event, on: grid)
-        }
-        .store(in: &bag)
+        panStart
+            .merge(with: movements, panEnd)
+            .combineLatest(cameraChangeStream.map { _ in () } )
+            .map { $0.0 }
+            .removeDuplicates()
+            .sink { event in
+                guard let grid = self.lastGridEvent.lastState?.targetGrid
+                else { return }
+                
+                lastEvent = event
+                self.panController.pan(event, on: grid)
+            }
+            .store(in: &bag)
     }
     
     func setupPickingHoverStream() {
