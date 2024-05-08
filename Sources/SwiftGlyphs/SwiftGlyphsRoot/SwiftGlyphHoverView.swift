@@ -115,7 +115,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 VStack(alignment: .leading) {
                     if let hoveredState = currentHoveredGrid?.newState {
                         VStack(alignment: .leading) {
-                            gridInfoList(target: hoveredState.targetGrid)
+                            fileNameHover(target: hoveredState.targetGrid)
                         }
                     }
                 }
@@ -130,6 +130,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 #if os(iOS)
                 Image(systemName: "arrow.up.left")
                     .background(Color.primaryBackground.opacity(0.66))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                     .withSavedDragstate(named: "DragState-Mobile-Crosshair-1", $crosshairDragState)
                     .gesture(
                         SpatialTapGesture(coordinateSpace: .global)
@@ -171,7 +172,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 ForEach(bookmarks, id: \.id) { grid in
                     HStack(alignment: .top) {
                         gridOptionList(target: grid)
-                        gridInfoList(target: grid)
+                        fileNameHover(target: grid)
                     }
                 }
             }
@@ -179,7 +180,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     }
     
     @ViewBuilder
-    func gridInfoList(
+    func fileNameHover(
         target grid: CodeGrid
     ) -> some View {
         VStack(alignment: .leading) {

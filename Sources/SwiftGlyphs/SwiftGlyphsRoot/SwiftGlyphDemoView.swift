@@ -53,9 +53,93 @@ public struct SwiftGlyphDemoView : View {
     
     public var body: some View {
         rootView
-            .environmentObject(MultipeerConnectionManager.shared)
+//            .environmentObject(MultipeerConnectionManager.shared)
     }
     
+    private var rootView: some View {
+        ZStack(alignment: .topTrailing) {
+            previewSafeView
+            
+            SwiftGlyphHoverView(
+                link: GlobalInstances.defaultLink
+            )
+            
+            #if os(macOS)
+            macOSContent
+            #else
+            iOSContent
+            #endif
+        }
+        #if os(iOS)
+        .ignoresSafeArea()
+        .safeAreaInset(edge: .top, alignment: .leading) {
+            topSafeAreaContent
+                .padding()
+        }
+        #endif
+    }
+    
+    #if os(macOS)
+    @ViewBuilder
+    var macOSContent: some View {
+        HStack {
+            topSafeAreaContent
+                .padding()
+            Spacer()
+        }
+        VStack(alignment: .trailing) {
+            Spacer()
+            screenView
+            bottomSafeAreaContent
+                .padding(.vertical)
+                .padding(.horizontal)
+        }
+    }
+    #endif
+    
+    #if os(iOS)
+    @ViewBuilder
+    private var iOSContent: some View {
+        VStack(alignment: .trailing) {
+            Spacer()
+            screenView
+                .frame(maxHeight: 600)
+                
+            HStack(alignment: .top) {
+                Spacer()
+                let image = showBottomControls
+                    ? "chevron.right"
+                    : "chevron.left"
+                
+                buttonImage(image).onTapGesture {
+                    withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
+                        showBottomControls.toggle()
+                    }
+                }
+                .padding([.leading, .bottom, .trailing], 24)
+                
+                if showBottomControls {
+                    bottomSafeAreaContent
+                        .padding([.trailing, .bottom], 24)
+                        .frame(maxWidth: .infinity)
+                        .transition(
+                            .move(edge: .trailing)
+                                .combined(with: .slide)
+                        )
+                        .layoutPriority(1)
+                        .zIndex(1)
+                }
+            }
+            .padding(.top)
+            .background(
+                showBottomControls
+                    ? Color.gray.opacity(0.3)
+                    : Color.clear
+            )
+        }
+        .frame(maxWidth: .infinity)
+    }
+    #endif
     
     @ViewBuilder
     private var previewSafeView: some View {
@@ -74,78 +158,6 @@ public struct SwiftGlyphDemoView : View {
                     URL.dumpAndDescopeAllKnownBookmarks()
                 }
         }
-    }
-    
-    private var rootView: some View {
-        ZStack(alignment: .topTrailing) {
-            previewSafeView
-            
-            SwiftGlyphHoverView(
-                link: GlobalInstances.defaultLink
-            )
-            
-            #if os(macOS)
-            HStack {
-                topSafeAreaContent
-                    .padding()
-                Spacer()
-            }
-            
-            VStack(alignment: .trailing) {
-                Spacer()
-                screenView
-                bottomSafeAreaContent
-                    .padding(.vertical)
-                    .padding(.horizontal)
-            }
-            #else
-            VStack(alignment: .trailing) {
-                Spacer()
-                screenView
-                    .frame(maxHeight: 600)
-                    
-                HStack(alignment: .top) {
-                    Spacer()
-                    let image = showBottomControls
-                        ? "chevron.right"
-                        : "chevron.left"
-                    
-                    buttonImage(image).onTapGesture {
-                        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
-                            showBottomControls.toggle()
-                        }
-                    }
-                    .padding([.leading, .bottom, .trailing], 24)
-                    
-                    if showBottomControls {
-                        bottomSafeAreaContent
-                            .padding([.trailing, .bottom], 24)
-                            .frame(maxWidth: .infinity)
-                            .transition(
-                                .move(edge: .trailing)
-                                    .combined(with: .slide)
-                            )
-                            .layoutPriority(1)
-                            .zIndex(1)
-                    }
-                }
-                .padding(.top)
-                .background(
-                    showBottomControls
-                        ? Color.gray.opacity(0.3)
-                        : Color.clear
-                )
-            }
-            .frame(maxWidth: .infinity)
-            #endif
-        }
-        #if os(iOS)
-        .ignoresSafeArea()
-        .safeAreaInset(edge: .top, alignment: .leading) {
-            topSafeAreaContent
-                .padding()
-        }
-        #endif
     }
     
     var topSafeAreaContent: some View {
