@@ -41,6 +41,10 @@ public class SwiftGlyphRoot: MetalLinkReader {
         GlobalInstances.gridStore.worldFocusController
     }
     
+    var builder: CodeGridGlyphCollectionBuilder {
+        GlobalInstances.gridStore.builder
+    }
+    
     public init(link: MetalLink) throws {
         self.link = link
         view.clearColor = MTLClearColorMake(0.03, 0.1, 0.2, 1.0)
@@ -52,6 +56,7 @@ public class SwiftGlyphRoot: MetalLinkReader {
         
         try setupRenderPlanTest()
 //        try setupRenderStreamTest()
+        try setupWordWarePLA()
     }
     
     func delegatedEncode(in sdp: SafeDrawPass) {

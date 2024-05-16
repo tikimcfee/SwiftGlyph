@@ -248,7 +248,7 @@ extension CodeGrid: Measures {
             targetNode.worldPosition
         }
         set {
-            targetNode.setWorldPosition(newValue)
+            targetNode.worldPosition = newValue
         }
     }
     
