@@ -85,27 +85,35 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 mousePosition = event.locationInWindow.asSimd
                 
             }
-            .onReceive(link.input.sharedMouseDown) { mouseDown in
-                #if os(macOS)
-                modifiers = mouseDown.modifierFlags
-                #endif
-                
-                #if os(iOS)
-                let hasNew = currentHoveredGrid?.newState?.targetGrid != nil
-                #else
-                let hasNew = currentHoveredGrid?.hasNew == true
-                #endif
-                
-                let availableGrid = currentHoveredGrid?.newState?.targetGrid
-                
-                if hasNew, let availableGrid {
-                    _ = GlobalInstances
-                        .gridStore
-                        .gridInteractionState
-                        .bookmarkedGrids
-                        .toggle(availableGrid)
-                }
+            .onReceive(link.input.sharedMouseDown, perform: onMouseDown(_:))
+    }
+    
+    private func onMouseDown(_ mouseDown: OSEvent) {
+        #if os(macOS)
+        modifiers = mouseDown.modifierFlags
+        #endif
+        
+        #if os(iOS)
+        let hasNew = currentHoveredGrid?.newState?.targetGrid != nil
+        #else
+        let hasNew = currentHoveredGrid?.hasNew == true
+        #endif
+        
+        let availableGrid = currentHoveredGrid?.newState?.targetGrid
+        
+        if hasNew, let availableGrid {
+            _ = GlobalInstances
+                .gridStore
+                .gridInteractionState
+                .bookmarkedGrids
+                .toggle(availableGrid)
+            
+            if let sourcePath = availableGrid.sourcePath {
+                GlobalInstances
+                    .swiftGlyphRoot
+                    .holder.inputSubject.value.file = sourcePath
             }
+        }
     }
     
     @ViewBuilder

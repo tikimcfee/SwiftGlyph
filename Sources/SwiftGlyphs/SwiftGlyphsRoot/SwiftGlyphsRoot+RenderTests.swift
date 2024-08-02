@@ -23,7 +23,7 @@ extension SwiftGlyphRoot {
         
         // Setup a local current collection to track (this is inefficient, but it's a test..)
         var currentStringData = "".data(using: .utf8)!
-        var currentDataCollection: GlyphCollection? = nil
+        var currentDataCollection: CodeGrid? = nil
         let dataSubject = PassthroughSubject<Data, Never>()
         
         // Create a renderer for the data stream.
@@ -39,21 +39,62 @@ extension SwiftGlyphRoot {
         // Yes, I know, I can just replace the buffer, and I will. I also feel the pain.
         renderer.collectionStream.sink { [root] nextCollection in
             if let currentDataCollection {
-                root.remove(child: currentDataCollection)
+                root.remove(child: currentDataCollection.rootNode)
             }
-            currentDataCollection = nextCollection
-            root.add(child: nextCollection)
+            let nextGrid = self.builder
+                .createGrid(around: nextCollection)
+                .applying {
+                    $0.updateBackground()
+                }
+            currentDataCollection = nextGrid.translated(dZ: 128)
+            root.add(child: nextGrid.rootNode)
         }.store(in: &bag)
         
+        holder.inputSubject
+            .receive(on: WorkerPool.shared.nextWorker())
+            .compactMap { $0.rootUserInput }
+            .removeDuplicates()
+            .sink { input in
+                let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
+                
+                do {
+                    try NSAttributedString(input).string.write(
+                        to: file,
+                        atomically: true,
+                        encoding: .utf8
+                    )
+                    self.holder.inputSubject.value.file = file
+                } catch {
+                    print(error)
+                }
+                
+            }
+            .store(in: &bag)
         
-        Task {
-            let testFile = ___RAW___SOURCE___
-            _ = try GlobalInstances.colorizer.execute(
-                colorizerQuery: .highlights,
-                for: testFile
+        holder.inputSubject
+            .receive(on: WorkerPool.shared.nextWorker())
+            .throttle(
+                for: .milliseconds(300),
+                scheduler: WorkerPool.shared.nextWorker(),
+                latest: true
             )
-            
-        }
+            .compactMap { $0.file }
+            .sink { input in
+                if let data = try? Data(contentsOf: input) {
+                    dataSubject.send(data)
+                }
+            }
+            .store(in: &bag)
+
+//        Task {
+////            let testFile = ___RAW___SOURCE___
+////            _ = try GlobalInstances.colorizer.execute(
+////                colorizerQuery: .highlights,
+////                for: testFile
+////            )
+//            let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
+//            dataSubject.send(try! Data(contentsOf: file))
+//        }
         
         // I'm gonna setup a pipe to just render any stream of UTF-8 data.
 //        var rawOutput = ""

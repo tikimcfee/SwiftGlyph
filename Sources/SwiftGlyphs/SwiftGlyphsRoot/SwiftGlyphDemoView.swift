@@ -4,6 +4,7 @@ import ARKit
 import SwiftUI
 import MetalLink
 import BitHandling
+import STTextViewSwiftUI
 
 private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
@@ -46,6 +47,9 @@ public struct SwiftGlyphDemoView : View {
     @State var screen: Screen = .root
     @State var showBottomControls = false
     @StateObject var browserState = FileBrowserViewState()
+    
+    @State var inputState = FloatableViewMode.displayedAsWindow
+    
     
     public init() {
         
@@ -195,6 +199,9 @@ public struct SwiftGlyphDemoView : View {
             buttonImage("gearshape.fill").onTapGesture {
                 setScreen(.showActions)
             }
+            
+            testInputStreamWindow
+
             Spacer()
             VStack(alignment: .trailing) {
                 showFileBrowserButton
@@ -202,6 +209,38 @@ public struct SwiftGlyphDemoView : View {
             }
         }
         .zIndex(6)
+    }
+    
+    @ViewBuilder
+    var testInputStreamWindow: some View {
+        FloatableView(
+            displayMode: $inputState,
+            windowKey: .githubTools,
+            resizableAsSibling: true,
+            innerViewBuilder: {
+                TextView(
+                    text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
+                    selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
+                    options: [.wrapLines, .highlightSelectedLine],
+                    plugins: []
+                )
+                .textViewFont(.preferredFont(forTextStyle: .body))
+//                    VStack {
+//                        Button("Load File") {
+//                            openFile { file in
+//                                if
+//                                    case let .success(url) = file,
+//                                    let attr = try? AttributedString(contentsOf: url, including: \.swiftUI)
+//                                {
+//                                    GlobalInstances.swiftGlyphRoot.holder.data.rootUserInput = attr
+//                                }
+//                            }
+//                        }
+//
+//
+//                    }
+            }
+        )
     }
     
     @ViewBuilder
