@@ -26,6 +26,8 @@ extension SwiftGlyphRoot {
         var currentDataCollection: CodeGrid? = nil
         let dataSubject = PassthroughSubject<Data, Never>()
         
+        let maxLengthTest = 95
+        
         // Create a renderer for the data stream.
         let renderer = DataStreamRenderer(
             link: link,
@@ -45,6 +47,10 @@ extension SwiftGlyphRoot {
                 .createGrid(around: nextCollection)
                 .applying {
                     $0.updateBackground()
+                    
+                    GlobalInstances.gridStore
+                        .nodeHoverController
+                        .attachPickingStream(to: $0)
                 }
             currentDataCollection = nextGrid.translated(dZ: 128)
             root.add(child: nextGrid.rootNode)
@@ -58,7 +64,12 @@ extension SwiftGlyphRoot {
                 let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
                 
                 do {
-                    try NSAttributedString(input).string.write(
+                    var string = try NSAttributedString(input).string
+                    let range = string.strideAll(by: maxLengthTest) {
+                        string.insert("\n", at: $0)
+                    }
+                    
+                    try string.write(
                         to: file,
                         atomically: true,
                         encoding: .utf8
@@ -368,3 +379,63 @@ let ___RAW___SOURCE___ = """
 
 
 """
+
+extension String {
+    func stride(
+        from start: Index,
+        to end: Index,
+        by stride: Int
+    ) -> [Index] {
+        var result = [Index]()
+        self.stride(
+            from: start,
+            to: end,
+            by: stride,
+            into: &result
+        )
+        return result
+    }
+    
+    func stride(
+        from start: Index,
+        to end: Index,
+        by stride: Int,
+        into receiver: inout [Index]
+    ) {
+        self.stride(
+            from: start,
+            to: end,
+            by: stride,
+            into: { receiver.append($0) } 
+        )
+    }
+
+    func stride(
+        from start: Index,
+        to end: Index,
+        by stride: Int,
+        into receiver: (Index) -> Void
+    ) {
+        var current = start
+        while current < end {
+            receiver(current)
+            
+            guard let nextIndex = index(current, offsetBy: stride, limitedBy: end)
+            else { break }
+            
+            current = nextIndex
+        }
+    }
+    
+    func strideAll(
+        by stride: Int,
+        _ receiver: (Index) -> Void
+    ) {
+        self.stride(
+            from: startIndex,
+            to: endIndex,
+            by: stride,
+            into: receiver
+        )
+    }
+}

@@ -107,12 +107,6 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 .gridInteractionState
                 .bookmarkedGrids
                 .toggle(availableGrid)
-            
-            if let sourcePath = availableGrid.sourcePath {
-                GlobalInstances
-                    .swiftGlyphRoot
-                    .holder.inputSubject.value.file = sourcePath
-            }
         }
     }
     

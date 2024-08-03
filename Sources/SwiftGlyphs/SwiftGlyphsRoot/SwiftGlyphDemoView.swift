@@ -216,15 +216,20 @@ public struct SwiftGlyphDemoView : View {
         FloatableView(
             displayMode: $inputState,
             windowKey: .githubTools,
+            maxSiblingSize: .init(width: 400, height: 300),
             resizableAsSibling: true,
             innerViewBuilder: {
-                TextView(
-                    text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
-                    selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
-                    options: [.wrapLines, .highlightSelectedLine],
-                    plugins: []
-                )
-                .textViewFont(.preferredFont(forTextStyle: .body))
+                VStack {
+                    TextView(
+                        text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
+                        selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
+                        options: [.highlightSelectedLine],
+                        plugins: []
+                    )
+                    .textViewFont(.preferredFont(forTextStyle: .body))
+                }
+                .padding()
+                
 //                    VStack {
 //                        Button("Load File") {
 //                            openFile { file in
@@ -236,8 +241,6 @@ public struct SwiftGlyphDemoView : View {
 //                                }
 //                            }
 //                        }
-//
-//
 //                    }
             }
         )

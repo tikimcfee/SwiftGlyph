@@ -13,8 +13,8 @@ import BitHandling
 public class GlobablWindowDelegate: NSObject, NSWindowDelegate {
     public static let instance = GlobablWindowDelegate()
     
-    private var knownWindowMap = BiMap<GlobalWindowKey, NSWindow>()
-    private var rootWindow: NSWindow?
+    public private(set) var knownWindowMap = BiMap<GlobalWindowKey, NSWindow>()
+    public private(set) var rootWindow: NSWindow?
     
     override private init() {
         super.init()

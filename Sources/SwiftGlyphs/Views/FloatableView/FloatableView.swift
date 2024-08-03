@@ -26,7 +26,28 @@ public struct FloatableView<Inner: View>: View {
     var resizableAsSibling: Bool = false
     let innerViewBuilder: () -> Inner
     
+    let initialSize: CGSize
     @State var dragState: DragSizableViewState
+    @State var maxSiblingSize: CGSize
+    
+    public init(
+        displayMode: Binding<FloatableViewMode>,
+        windowKey: GlobalWindowKey,
+        maxSiblingSize: CGSize,
+        resizableAsSibling: Bool,
+        innerViewBuilder: @escaping () -> Inner
+    ) {
+        self._displayMode = displayMode
+        self._maxSiblingSize = State(wrappedValue: maxSiblingSize)
+        self.initialSize = maxSiblingSize
+        self.windowKey = windowKey
+        self.resizableAsSibling = resizableAsSibling
+        self.innerViewBuilder = innerViewBuilder
+        self.dragState = AppStatePreferences.shared.getCustom(
+            name: "DragState-\(self.windowKey.rawValue)",
+            makeDefault: { DragSizableViewState() }
+        )
+    }
     
     public init(
         displayMode: Binding<FloatableViewMode>,
@@ -35,6 +56,8 @@ public struct FloatableView<Inner: View>: View {
         innerViewBuilder: @escaping () -> Inner
     ) {
         self._displayMode = displayMode
+        self._maxSiblingSize = State(initialValue: CGSize(width: -1, height: -1))
+        self.initialSize = CGSize(width: -1, height: -1)
         self.windowKey = windowKey
         self.resizableAsSibling = resizableAsSibling
         self.innerViewBuilder = innerViewBuilder
@@ -46,6 +69,18 @@ public struct FloatableView<Inner: View>: View {
     
     public var body: some View {
         makePlatformBody()
+            .onChange(of: displayMode, initial: true) {
+                maxSiblingSize = switch displayMode {
+                case .displayedAsWindow:
+                    .init(width: -1, height: -1)
+                case .displayedAsSibling:
+                    initialSize
+                }
+            }
+            .frame(
+                maxWidth: maxSiblingSize.width > 0 ? maxSiblingSize.width : nil,
+                maxHeight: maxSiblingSize.height > 0 ? maxSiblingSize.height : nil
+            )
     }
 }
 
@@ -56,7 +91,7 @@ public extension FloatableView {
         if resizableAsSibling {
             innerViewBuilder()
                 .modifier(
-                    DragSizableModifer(state: $dragState) {
+                    DragSizableModifier(state: $dragState) {
                         AppStatePreferences.shared.setCustom(
                             name: "DragState-\(self.windowKey.rawValue)",
                             value: dragState
@@ -68,24 +103,22 @@ public extension FloatableView {
         }
     #elseif os(macOS)
         switch displayMode {
-        case .displayedAsSibling where resizableAsSibling:
+        case .displayedAsSibling:
             VStack(alignment: .leading, spacing: 0) {
                 switchModeButton()
                 innerViewBuilder()
             }
             .modifier(
-                DragSizableModifer(state: $dragState) {
+                DragSizableModifier(
+                    state: $dragState,
+                    enabled: resizableAsSibling
+                ) {
                     AppStatePreferences.shared.setCustom(
                         name: "DragState-\(self.windowKey.rawValue)",
                         value: dragState
                     )
                 }
             )
-        case .displayedAsSibling:
-            VStack(alignment: .leading, spacing: 0) {
-                switchModeButton()
-                innerViewBuilder()
-            }
         case .displayedAsWindow:
             Spacer()
                 .onAppear { performUndock() }
