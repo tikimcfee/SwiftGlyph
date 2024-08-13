@@ -48,7 +48,7 @@ public struct DragSizableViewState: Codable, Equatable {
         guard parentSize.width > .zero else { return }
         guard parentSize.height > .zero else { return }
         
-        let window = GlobablWindowDelegate.instance.rootWindow?.frame
+        let window = GlobalWindowDelegate.instance.rootWindow?.frame
         let clampX = clamp(
             lastOffset.x + value.translation.width,
             min: -(parentSize.width / 2),
@@ -105,17 +105,6 @@ public struct DragSizableModifier: ViewModifier {
             guard state.contentBounds != $0 else { return }
             state.contentBounds = $0
         }
-        #if os(iOS)
-        // TODO: Why doesn't it work on iOS?
-        .gesture(DragGesture(
-            minimumDistance: 2,
-            coordinateSpace: .global
-        ).onChanged { value in
-            state.updateDrag(value, false)
-        }.onEnded { value in
-            state.updateDrag(value, true)
-        })
-        #endif
     }
     
     var dragBar: some View {

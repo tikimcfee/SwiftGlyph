@@ -12,9 +12,9 @@ import MetalLink
 import BitHandling
 import Foundation
 
-import Neon
-import TreeSitterSwift
-import SwiftTreeSitter
+//import Neon
+//import TreeSitterSwift
+//import SwiftTreeSitter
 
 extension SwiftGlyphRoot {
     
@@ -22,7 +22,6 @@ extension SwiftGlyphRoot {
         camera.position = LFloat3(0, 0, 300)
         
         // Setup a local current collection to track (this is inefficient, but it's a test..)
-        var currentStringData = "".data(using: .utf8)!
         var currentDataCollection: CodeGrid? = nil
         let dataSubject = PassthroughSubject<Data, Never>()
         
@@ -64,11 +63,11 @@ extension SwiftGlyphRoot {
                 let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
                 
                 do {
-                    var string = try NSAttributedString(input).string
-                    let range = string.strideAll(by: maxLengthTest) {
-                        string.insert("\n", at: $0)
-                    }
-                    
+//                    var string = NSAttributedString(input).string
+//                    let range = string.strideAll(by: maxLengthTest) {
+//                        string.insert("\n", at: $0)
+//                    }
+                    let string = NSAttributedString(input).string
                     try string.write(
                         to: file,
                         atomically: true,

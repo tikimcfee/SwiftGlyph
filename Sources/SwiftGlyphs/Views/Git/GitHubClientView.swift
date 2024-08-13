@@ -71,6 +71,8 @@ public struct GitHubClientView: View {
         HStack(alignment: .top) {
             VStack {
                 repoInfoCaptureView
+                repoDownloadButtonView
+                repoDownloadErrorView
                 
                 ProgressWrapperView(progress: progress)
                     .id(UUID()) // SwiftUI doesn't like `progress` equality checks
@@ -84,7 +86,15 @@ public struct GitHubClientView: View {
     @ViewBuilder
     var repoInfoCaptureView: some View {
         VStack(alignment: .leading) {
-            TextField("GitHub Repository", text: $clientState.repoName)
+            TextField("Repo URL", text: $clientState.repoUrl)
+                .padding()
+                .lineLimit(1)
+                .autocorrectionDisabled()
+                .underline(clientState.repoName.isEmpty)
+            
+            Divider()
+            
+            TextField("Repo Name", text: $clientState.repoName)
                 .padding()
                 .lineLimit(1)
                 .autocorrectionDisabled()

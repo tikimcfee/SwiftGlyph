@@ -29,7 +29,7 @@ let package = Package(
             dependencies: [
                 "BitHandling",
                 "MetalLink",
-                "Neon",
+                .product(name: "Neon", package: "Neon", condition: .when(platforms: [.macOS])),
                 .product(name: "TreeSitterSwift", package: "tree-sitter-swift")
             ],
             resources: [

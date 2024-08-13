@@ -130,7 +130,7 @@ public extension FloatableView {
 
 #if os(macOS)
 private extension FloatableView {
-    var delegate: GlobablWindowDelegate { GlobablWindowDelegate.instance }
+    var delegate: GlobalWindowDelegate { GlobalWindowDelegate.instance }
     
     @ViewBuilder
     func switchModeButton() -> some View {

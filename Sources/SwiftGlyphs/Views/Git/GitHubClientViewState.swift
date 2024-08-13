@@ -13,16 +13,21 @@ public class GitHubClientViewState: NSObject, ObservableObject {
     @Published var enabled: Bool = true
     @Published var showDownloadView = false
     
+    @Published var repoUrl: String = "" { didSet { evalInput() }}
     @Published var repoName: String = "" { didSet { evalInput() }}
     @Published var owner: String = "" { didSet { evalInput() }}
     @Published var branch: String = "" { didSet { evalInput() }}
     
-    @Published var progressTask: URLSessionDownloadTask?
+    @Published var progressTask: URLSessionTask?
     @Published var progress: Progress?
     @Published var downloadArgs: GitHubClient.RepositoryZipArgs?
     
     @Published var error: Error?
-    private lazy var session: URLSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+    private lazy var session: URLSession = URLSession(
+        configuration: .default,
+        delegate: self,
+        delegateQueue: nil
+    )
     
     override public init() {
         super.init()
@@ -34,6 +39,8 @@ public class GitHubClientViewState: NSObject, ObservableObject {
         enabled = !(
             repoName.isEmpty
             || owner.isEmpty
+        )   || (
+            !repoUrl.isEmpty
         )
     }
     
@@ -41,16 +48,7 @@ public class GitHubClientViewState: NSObject, ObservableObject {
         guard enabled else { return }
         enabled = false
         
-        let repoFileDownloadTarget = AppFiles
-            .githubRepositoriesRoot
-            .appendingPathComponent(repoName, isDirectory: true)
-        
-        let args = GitHubClient.RepositoryZipArgs(
-            owner: owner,
-            repo: repoName,
-            branchRef: branch,
-            unzippedResultTargetUrl: repoFileDownloadTarget
-        )
+        let args = zipArgumentsFromRepoUrl() ?? zipArgumentsFromInput()
         self.downloadArgs = args
         
         let task = GitHubClient(session: session)
@@ -94,6 +92,49 @@ public class GitHubClientViewState: NSObject, ObservableObject {
         
         resetDownload()
     }
+    
+    private func zipArgumentsFromInput() -> GitHubClient.RepositoryZipArgs {
+        let repoFileDownloadTarget = AppFiles
+            .githubRepositoriesRoot
+            .appendingPathComponent(repoName, isDirectory: true)
+        
+        return GitHubClient.RepositoryZipArgs(
+            owner: owner,
+            repo: repoName,
+            branchRef: branch,
+            unzippedResultTargetUrl: repoFileDownloadTarget
+        )
+    }
+    
+    private func zipArgumentsFromRepoUrl() -> GitHubClient.RepositoryZipArgs? {
+        guard
+            !repoUrl.isEmpty,
+            let url = URL(string: repoUrl),
+            url.host() == "github.com",
+            url.pathComponents.count >= 3
+        else {
+            return nil
+        }
+        
+        let urlRepoOwner = url.pathComponents[1]
+        let urlRepoName = url.pathComponents[2]
+        let urlBranch = url.pathComponents
+            .dropFirst(4) // drop up to 'tree'
+            .joined(separator: "/")
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        
+        let repoFileDownloadTarget = AppFiles
+            .githubRepositoriesRoot
+            .appendingPathComponent(urlRepoName, isDirectory: true)
+        
+        // LOOK AT `string.withUTF8`!!
+        return .init(
+            owner: urlRepoOwner,
+            repo: urlRepoName,
+            branchRef: urlBranch ?? "",
+            unzippedResultTargetUrl: repoFileDownloadTarget
+        )
+    }
 }
 
 extension GitHubClientViewState: URLSessionDownloadDelegate {
@@ -133,9 +174,11 @@ extension GitHubClientViewState: URLSessionDownloadDelegate {
             }
         } catch {
             print("Failed during file io: \(error)")
-            self.onRepositoryDownloaded(
-                .failure(error)
-            )
+            DispatchQueue.main.async {
+                self.onRepositoryDownloaded(
+                    .failure(error)
+                )
+            }
         }
     }
     
@@ -144,6 +187,6 @@ extension GitHubClientViewState: URLSessionDownloadDelegate {
         task: URLSessionTask,
         didCompleteWithError error: Error?
     ) {
-        
+        print("- download complete callback, error: \(error?.localizedDescription ?? "<no error>")")
     }
 }

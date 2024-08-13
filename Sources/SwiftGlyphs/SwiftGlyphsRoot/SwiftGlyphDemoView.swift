@@ -220,6 +220,7 @@ public struct SwiftGlyphDemoView : View {
             resizableAsSibling: true,
             innerViewBuilder: {
                 VStack {
+                    #if os(macOS)
                     TextView(
                         text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
                         selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
@@ -227,6 +228,7 @@ public struct SwiftGlyphDemoView : View {
                         plugins: []
                     )
                     .textViewFont(.preferredFont(forTextStyle: .body))
+                    #endif
                 }
                 .padding()
                 
@@ -384,7 +386,7 @@ private extension SwiftGlyphDemoView {
     
     func macOSViewDidAppear() {
         let rootWindow = makeRootWindow()
-        GlobablWindowDelegate.instance.registerRootWindow(rootWindow)
+        GlobalWindowDelegate.instance.registerRootWindow(rootWindow)
         rootWindow.contentView = makeRootContentView()
         rootWindow.makeKeyAndOrderFront(nil)
         Self.window = rootWindow

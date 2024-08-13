@@ -199,7 +199,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     func gridOptionList(
         target grid: CodeGrid
     ) -> some View {
-        HStack(alignment: .center, spacing: 2) {
+        HStack(alignment: .center) {
             SGButton("Jump", "") {
                 GlobalInstances.debugCamera.interceptor.resetPositions()
                 GlobalInstances.debugCamera.position = grid.worldPosition.translated(dZ: 64)
