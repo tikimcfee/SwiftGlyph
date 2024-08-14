@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import BitHandling
 
 public struct SourceInfoPanelToggles: View {
     @ObservedObject public var state: SourceInfoPanelState
@@ -38,13 +39,26 @@ public struct SourceInfoPanelToggles: View {
 //                .disabled(state.isWindow(section))
             
             dockControl(section)
+            resetControl(section)
 //                .disabled(!state.isVisible(section))
         }
     }
     
     @ViewBuilder
+    func resetControl(_ section: PanelSections) -> some View {
+        Button(
+            action: {
+                section.setDragState(.init())
+            },
+            label: {
+                Text("⊜")
+            }
+        )
+    }
+    
+    @ViewBuilder
     func dockControl(_ section: PanelSections) -> some View {
-        Toggle("Window", isOn: state.vendPanelIsWindowBinding(section))
+        Toggle("Window", isOn: state.getPanelIsWindowBinding(section))
     }
     
     @ViewBuilder

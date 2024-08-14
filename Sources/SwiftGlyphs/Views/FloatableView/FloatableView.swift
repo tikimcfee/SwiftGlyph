@@ -20,6 +20,26 @@ public enum FloatableViewMode: Codable {
     case displayedAsSibling
 }
 
+public extension GlobalWindowKey {
+    func setDragState(_ newValue: DragSizableViewState) {
+        AppStatePreferences.shared.setCustom(
+            name: persistedDragStateName,
+            value: newValue
+        )
+    }
+    
+    func getDragState() -> DragSizableViewState {
+        AppStatePreferences.shared.getCustom(
+            name: persistedDragStateName,
+            makeDefault: { DragSizableViewState() }
+        )
+    }
+    
+    var persistedDragStateName: String {
+        "DragState-\(rawValue)"
+    }
+}
+
 public struct FloatableView<Inner: View>: View {
     @Binding var displayMode: FloatableViewMode
     let windowKey: GlobalWindowKey
@@ -43,10 +63,7 @@ public struct FloatableView<Inner: View>: View {
         self.windowKey = windowKey
         self.resizableAsSibling = resizableAsSibling
         self.innerViewBuilder = innerViewBuilder
-        self.dragState = AppStatePreferences.shared.getCustom(
-            name: "DragState-\(self.windowKey.rawValue)",
-            makeDefault: { DragSizableViewState() }
-        )
+        self.dragState = windowKey.getDragState()
     }
     
     public init(
@@ -61,10 +78,7 @@ public struct FloatableView<Inner: View>: View {
         self.windowKey = windowKey
         self.resizableAsSibling = resizableAsSibling
         self.innerViewBuilder = innerViewBuilder
-        self.dragState = AppStatePreferences.shared.getCustom(
-            name: "DragState-\(self.windowKey.rawValue)",
-            makeDefault: { DragSizableViewState() }
-        )
+        self.dragState = windowKey.getDragState()
     }
     
     public var body: some View {
@@ -104,21 +118,24 @@ public extension FloatableView {
     #elseif os(macOS)
         switch displayMode {
         case .displayedAsSibling:
-            VStack(alignment: .leading, spacing: 0) {
-                switchModeButton()
-                innerViewBuilder()
-            }
-            .modifier(
-                DragSizableModifier(
-                    state: $dragState,
-                    enabled: resizableAsSibling
-                ) {
-                    AppStatePreferences.shared.setCustom(
-                        name: "DragState-\(self.windowKey.rawValue)",
-                        value: dragState
-                    )
+            ResizableComponentView {
+                VStack(alignment: .leading, spacing: 0) {
+                    switchModeButton()
+                    innerViewBuilder()
                 }
-            )
+            }
+//            VStack(alignment: .leading, spacing: 0) {
+//                switchModeButton()
+//                innerViewBuilder()
+//            }
+//            .modifier(
+//                DragSizableModifier(
+//                    state: $dragState,
+//                    enabled: resizableAsSibling
+//                ) {
+//                    windowKey.setDragState(dragState)
+//                }
+//            )
         case .displayedAsWindow:
             Spacer()
                 .onAppear { performUndock() }

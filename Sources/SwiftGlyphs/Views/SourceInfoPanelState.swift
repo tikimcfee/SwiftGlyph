@@ -44,7 +44,7 @@ public class SourceInfoPanelState: ObservableObject {
     @Published public var categories: Categories = Categories()
 
     // Visible subsections
-    @Published public private(set) var visiblePanelStates = CodableAutoCache<PanelSections, FloatableViewMode>() {
+    @Published public var visiblePanelStates = CodableAutoCache<PanelSections, FloatableViewMode>() {
         didSet {
             savePanelWindowStates()
         }
@@ -56,6 +56,8 @@ public class SourceInfoPanelState: ObservableObject {
             updatePanelSlices()
         }
     }
+    
+    public var windowBindings = [PanelSections: Binding<Bool>]()
     
     var panelGroups = 3
     @Published public private(set) var visiblePanelSlices: [ArraySlice<PanelSections>] = []
@@ -102,7 +104,15 @@ public extension SourceInfoPanelState {
         return makeNewBinding()
     }
     
-    func vendPanelIsWindowBinding(_ panel: PanelSections) -> Binding<Bool> {
+    func getPanelIsWindowBinding(_ panel: PanelSections) -> Binding<Bool> {
+        if let binding = windowBindings[panel] {
+            return binding
+        } else {
+            let newBinding = makeNewBinding()
+            windowBindings[panel] = newBinding
+            return newBinding
+        }
+        
         func makeNewBinding() -> Binding<Bool> {
             Binding<Bool>(
                 get: {
@@ -118,7 +128,7 @@ public extension SourceInfoPanelState {
                 }
             )
         }
-        return makeNewBinding()
+        
     }
     
     func vendPanelVisibleBinding(_ panel: PanelSections) -> Binding<Bool> {

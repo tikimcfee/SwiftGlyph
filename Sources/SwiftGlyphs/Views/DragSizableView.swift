@@ -45,22 +45,26 @@ public struct DragSizableViewState: Codable, Equatable {
         _ value: DragGesture.Value,
         _ isFinal: Bool
     ) {
-        guard parentSize.width > .zero else { return }
-        guard parentSize.height > .zero else { return }
+//        guard parentSize.width > .zero else { return }
+//        guard parentSize.height > .zero else { return }
+//        
+//        let window = GlobalWindowDelegate.instance.rootWindow?.frame
+//        let clampX = clamp(
+//            lastOffset.x + value.translation.width,
+//            min: -(parentSize.width / 2),
+//            max: (window?.width ?? .infinity) - (parentSize.width / 2)
+//        )
+//        let clampY = clamp(
+//            lastOffset.y + value.translation.height,
+//            min: 0,
+//            max: (window?.height ?? .infinity) - 40
+//        )
+//        offset.x = clampX
+//        offset.y = clampY
         
-        let window = GlobalWindowDelegate.instance.rootWindow?.frame
-        let clampX = clamp(
-            lastOffset.x + value.translation.width,
-            min: -(parentSize.width / 2),
-            max: (window?.width ?? .infinity) - (parentSize.width / 2)
-        )
-        let clampY = clamp(
-            lastOffset.y + value.translation.height,
-            min: 0,
-            max: (window?.height ?? .infinity) - 40
-        )
-        offset.x = clampX
-        offset.y = clampY
+        offset.x = lastOffset.x + value.translation.width
+        offset.y = lastOffset.y + value.translation.height
+        
         if isFinal {
             lastOffset = offset
         }
@@ -135,7 +139,7 @@ public struct DragSizableModifier: ViewModifier {
 
 
 struct ResizableView<Content: View>: View {
-    @State private var size: CGSize = CGSize(width: 100, height: 100)
+    @State private var size: CGSize = CGSize(width: 400, height: 500)
     @State public var isHovered: Bool = false
     
     let content: Content
@@ -145,7 +149,7 @@ struct ResizableView<Content: View>: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack(alignment: .topTrailing) {
             content.frame(
                 width: size.width,
                 height: size.height
@@ -167,6 +171,7 @@ struct ResizableView<Content: View>: View {
                     .onChanged { value in
                         size.width = clamp(value.translation.width + size.width, min: 100, max: 1200)
                         size.height = clamp(value.translation.height + size.height, min: 100, max: 1200)
+                        print(size)
                     }
             )
             .onHover { isHovered = $0 }

@@ -14,8 +14,6 @@ import SwiftUI
 public class GridInteractionState {
     var bag = Set<AnyCancellable>()
     
-    private var lockedNodeEvent: NodePickingState.Event = .initial
-    private var lockedGridEvent: GridPickingState.Event = .initial
     public var bookmarkedGrids: [CodeGrid] = []
     
     public let hoverController: MetalLinkHoverController
@@ -32,34 +30,12 @@ public class GridInteractionState {
     public func setupStreams() {
         let glyphStream = hoverController.sharedGlyphEvent
 //        let gridStream = hoverController.sharedGridEvent
-//        let mouseStream = input.sharedMouseDown
-        
-//        gridStream
-//            .removeDuplicates(by: {
-//                $0.latestState?.targetGrid.id == $1.latestState?.targetGrid.id
-//            })
-//            .sink {
-//                $0.latestState?.targetGrid.showName()
-//                $0.maybeLasteState?.targetGrid.hideName()
-//            }
-//            .store(in: &bag)
-//        
-//        mouseStream
-//            .combineLatest(
-//                glyphStream,
-//                gridStream
-//            )
-//            .sink { _, glyphEvent, gridEvent in
-//                self.lockedNodeEvent = glyphEvent
-//                self.lockedGridEvent = gridEvent
-//            }
-//        .store(in: &bag)
         
         glyphStream
             .sink { glyph in
                 self.handleNodeEvent(glyph)
             }
-        .store(in: &bag)
+            .store(in: &bag)
     }
 }
 

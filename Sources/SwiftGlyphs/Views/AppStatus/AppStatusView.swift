@@ -18,11 +18,9 @@ public struct AppStatusView: View {
     }
     
     public var body: some View {
-        if status.progress.isActive {
-            mainView
-                .zIndex(1)
-                .transition(.move(edge: .top))
-        }
+        mainView
+            .zIndex(1)
+//            .transition(.move(edge: .top))
     }
     
     @ViewBuilder

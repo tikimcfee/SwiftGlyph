@@ -50,7 +50,6 @@ public struct SwiftGlyphDemoView : View {
     
     @State var inputState = FloatableViewMode.displayedAsWindow
     
-    
     public init() {
         
     }
@@ -86,18 +85,22 @@ public struct SwiftGlyphDemoView : View {
     #if os(macOS)
     @ViewBuilder
     var macOSContent: some View {
-        HStack {
-            topSafeAreaContent
-                .padding()
-            Spacer()
+        ZStack(alignment: .topTrailing) {
+            SourceInfoPanelView()
         }
-        VStack(alignment: .trailing) {
-            Spacer()
-            screenView
-            bottomSafeAreaContent
-                .padding(.vertical)
-                .padding(.horizontal)
-        }
+        
+//        HStack {
+//            topSafeAreaContent
+//                .padding()
+//            Spacer()
+//        }
+//        VStack(alignment: .trailing) {
+//            Spacer()
+//            screenView
+//            bottomSafeAreaContent
+//                .padding(.vertical)
+//                .padding(.horizontal)
+//        }
     }
     #endif
     
@@ -200,7 +203,7 @@ public struct SwiftGlyphDemoView : View {
                 setScreen(.showActions)
             }
             
-            testInputStreamWindow
+//            testInputStreamWindow
 
             Spacer()
             VStack(alignment: .trailing) {
