@@ -11,6 +11,10 @@ import MetalLink
 import MetalLinkHeaders
 import MetalLinkResources
 
+#if canImport(STTextViewSwiftUI)
+import STTextViewSwiftUI
+#endif
+
 struct SourceInfoPanelView: View {
     @StateObject var state: SourceInfoPanelState = SourceInfoPanelState()
     
@@ -129,9 +133,18 @@ extension SourceInfoPanelView {
     
     @ViewBuilder
     var editorView: some View {
-#if !TARGETING_SUI
-        Text("Editor not implemented. Again.")
-#endif
+        #if os(macOS)
+        TextView(
+            text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
+            selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
+            options: [.highlightSelectedLine],
+            plugins: []
+        )
+        .textViewFont(.preferredFont(forTextStyle: .body))
+        #else
+        Text("Text editing is hard for da little phone buddies. Gotta have big beefy operating system to actually edit words. Go figure.")
+        #endif
+        
     }
     
     @ViewBuilder

@@ -57,8 +57,6 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     #endif
 
     @State private var autoJump = false
-    @State private var dragState = DragSizableViewState()
-    @State private var crosshairDragState = DragSizableViewState()
     
     public init(link: MetalLink) {
         self.link = link
@@ -123,33 +121,48 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 }
                 .attachedToMousePosition(in: proxy, with: link)
                 
-                bookmarkList()
-                    .padding(2)
-                    .background(Color.primaryBackground.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .withSavedDragstate(named: "DragState-Hover-Glyph", $dragState)
-                
-                #if os(iOS)
-                Image(systemName: "arrow.up.left")
-                    .background(Color.primaryBackground.opacity(0.66))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .withSavedDragstate(named: "DragState-Mobile-Crosshair-1", $crosshairDragState)
-                    .gesture(
-                        SpatialTapGesture(coordinateSpace: .global)
-                            .onEnded { event in
-                                let downEvent = OSEvent()
-                                downEvent.locationInWindow = event.location.asSimd
-                                self.link.input.mousePosition = downEvent
-                                self.link.input.mouseDownEvent = downEvent
-                            }
-                    )
-                    .onChange(of: crosshairDragState.offset) { old, new in
-                        let event = OSEvent()
-                        event.locationInWindow = new.asSimd
-                        link.input.mousePosition = event
+                ResizableComponentView(
+                    model: {
+                        AppStatePreferences.shared.getCustom(
+                            name: "DragState-Hover-Glyph",
+                            makeDefault: ComponentModel.init
+                        )
+                    },
+                    onSave: {
+                        AppStatePreferences.shared.setCustom(
+                            name: "DragState-Hover-Glyph",
+                            value: $0
+                        )
+                    },
+                    content: {
+                        bookmarkList()
+                            .padding(2)
+                            .background(Color.primaryBackground.opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
-                    
-                #endif
+                )
+                
+                // TODO: Just get the user's current touch input instead of using this weird arrow
+//                #if os(iOS)
+//                Image(systemName: "arrow.up.left")
+//                    .background(Color.primaryBackground.opacity(0.66))
+//                    .clipShape(RoundedRectangle(cornerRadius: 8))
+//                    .withSavedDragstate(named: "DragState-Mobile-Crosshair-1", $crosshairDragState)
+//                    .gesture(
+//                        SpatialTapGesture(coordinateSpace: .global)
+//                            .onEnded { event in
+//                                let downEvent = OSEvent()
+//                                downEvent.locationInWindow = event.location.asSimd
+//                                self.link.input.mousePosition = downEvent
+//                                self.link.input.mouseDownEvent = downEvent
+//                            }
+//                    )
+//                    .onChange(of: crosshairDragState.offset) { old, new in
+//                        let event = OSEvent()
+//                        event.locationInWindow = new.asSimd
+//                        link.input.mousePosition = event
+//                    }
+//                #endif
             }
             .frame(
                 width: proxy.size.width,

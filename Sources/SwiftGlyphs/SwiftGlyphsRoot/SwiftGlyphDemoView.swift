@@ -4,7 +4,10 @@ import ARKit
 import SwiftUI
 import MetalLink
 import BitHandling
+
+#if canImport(STTextViewSwiftUI)
 import STTextViewSwiftUI
+#endif
 
 private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
@@ -202,8 +205,6 @@ public struct SwiftGlyphDemoView : View {
             buttonImage("gearshape.fill").onTapGesture {
                 setScreen(.showActions)
             }
-            
-//            testInputStreamWindow
 
             Spacer()
             VStack(alignment: .trailing) {
@@ -212,43 +213,6 @@ public struct SwiftGlyphDemoView : View {
             }
         }
         .zIndex(6)
-    }
-    
-    @ViewBuilder
-    var testInputStreamWindow: some View {
-        FloatableView(
-            displayMode: $inputState,
-            windowKey: .githubTools,
-            maxSiblingSize: .init(width: 400, height: 300),
-            resizableAsSibling: true,
-            innerViewBuilder: {
-                VStack {
-                    #if os(macOS)
-                    TextView(
-                        text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
-                        selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
-                        options: [.highlightSelectedLine],
-                        plugins: []
-                    )
-                    .textViewFont(.preferredFont(forTextStyle: .body))
-                    #endif
-                }
-                .padding()
-                
-//                    VStack {
-//                        Button("Load File") {
-//                            openFile { file in
-//                                if
-//                                    case let .success(url) = file,
-//                                    let attr = try? AttributedString(contentsOf: url, including: \.swiftUI)
-//                                {
-//                                    GlobalInstances.swiftGlyphRoot.holder.data.rootUserInput = attr
-//                                }
-//                            }
-//                        }
-//                    }
-            }
-        )
     }
     
     @ViewBuilder

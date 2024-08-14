@@ -35,7 +35,6 @@ public enum PanelSections: String, CaseIterable, Equatable, Comparable, Codable 
 public class SourceInfoPanelState: ObservableObject {
     // MARK: - Reused states
     public var fileBrowserState = FileBrowserViewState()
-    public var dragViewState = DragSizableViewState()
     
     // Category pannel state
     public struct Categories {
