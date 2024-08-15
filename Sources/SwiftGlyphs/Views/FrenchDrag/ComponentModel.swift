@@ -8,6 +8,9 @@
 import Foundation
 import CoreGraphics
 
+private let minWidth = 100.0
+private let minHeight = 100.0
+
 public struct ComponentState: Codable, Equatable {
     public var origin: CGPoint
     public var size: CGSize
@@ -29,67 +32,72 @@ public struct ComponentModel: Codable, Equatable {
 
     func widthForCardComponent() -> CGFloat {
         let widthOffset = resizeOffset?.width ?? 0.0
-        return componentInfo.size.width + widthOffset
+        return max(minWidth, componentInfo.size.width + widthOffset)
     }
     
     func heightForCardComponent() -> CGFloat {
         let heightOffset = resizeOffset?.height ?? 0.0
-        return componentInfo.size.height + heightOffset
+        return max(minHeight, componentInfo.size.height + heightOffset)
     }
     
     func xPositionForCardComponent() -> CGFloat {
         let xPositionOffset = dragOffset?.width ?? 0.0
-        return componentInfo.origin.x
+        let computed = componentInfo.origin.x
             + (componentInfo.size.width / 2.0)
             + xPositionOffset
+        return max(0, computed)
     }
     
     func yPositionForCardComponent() -> CGFloat {
         let yPositionOffset = dragOffset?.height ?? 0.0
-        return componentInfo.origin.y
+        let computed = componentInfo.origin.y
             + (componentInfo.size.height / 2.0)
             + yPositionOffset
+        return max(0, computed)
     }
     
     mutating func resizeEnded() {
         guard let resizePoint, let resizeOffset else { return }
         
-        var w: CGFloat = componentInfo.size.width
-        var h: CGFloat = componentInfo.size.height
+        var width: CGFloat = componentInfo.size.width
+        var height: CGFloat = componentInfo.size.height
         var x: CGFloat = componentInfo.origin.x
         var y: CGFloat = componentInfo.origin.y
         switch resizePoint {
         case .topLeft:
-            w -= resizeOffset.width
-            h -= resizeOffset.height
+            width -= resizeOffset.width
+            height -= resizeOffset.height
             x += resizeOffset.width
             y += resizeOffset.height
         case .topMiddle:
-            h -= resizeOffset.height
+            height -= resizeOffset.height
             y += resizeOffset.height
         case .topRight:
-            w += resizeOffset.width
-            h -= resizeOffset.height
+            width += resizeOffset.width
+            height -= resizeOffset.height
         case .rightMiddle:
-            w += resizeOffset.width
+            width += resizeOffset.width
         case .bottomRight:
-            w += resizeOffset.width
-            h += resizeOffset.height
+            width += resizeOffset.width
+            height += resizeOffset.height
         case .bottomMiddle:
-            h += resizeOffset.height
+            height += resizeOffset.height
         case .bottomLeft:
-            w -= resizeOffset.width
-            h += resizeOffset.height
+            width -= resizeOffset.width
+            height += resizeOffset.height
             x -= resizeOffset.width
             y += resizeOffset.height
         case .leftMiddle:
-            w -= resizeOffset.width
+            width -= resizeOffset.width
             x += resizeOffset.width
         }
-        componentInfo.size = CGSize(width: w, height: h)
-        componentInfo.origin = CGPoint(x: x, y: y)
         self.resizeOffset = nil
         self.resizePoint = nil
+        
+        let clampedWidth = clamp(width, min: minWidth, max: .infinity)
+        let clampedHeight = clamp(height, min: minHeight, max: .infinity)
+        componentInfo.size = CGSize(width: clampedWidth, height: clampedHeight)
+        componentInfo.origin = CGPoint(x: x, y: y)
     }
     
     mutating func updateForDrag(deltaX: CGFloat, deltaY: CGFloat) {
@@ -133,7 +141,10 @@ public struct ComponentModel: Codable, Equatable {
             width -= deltaX
             x += deltaX
         }
-        componentInfo.size = CGSize(width: width, height: height)
+        
+        let clampedWidth = clamp(width, min: minWidth, max: .infinity)
+        let clampedHeight = clamp(height, min: minHeight, max: .infinity)
+        componentInfo.size = CGSize(width: clampedWidth, height: clampedHeight)
         componentInfo.origin = CGPoint(x: x, y: y)
     }
 

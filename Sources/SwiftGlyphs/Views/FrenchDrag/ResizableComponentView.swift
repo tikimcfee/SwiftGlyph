@@ -19,6 +19,7 @@ public struct ResizableComponentView<Content: View>: View {
     
     @State var isHovered: Bool = false
     @State var model: ComponentModel
+    @State var isResizing: Bool = false
     let onSave: (ComponentModel) -> Void
     @ViewBuilder let content: () -> Content
         
@@ -38,7 +39,9 @@ public struct ResizableComponentView<Content: View>: View {
                 dragBar
                 content()
             }
-            ResizingControlsView { point, deltaX, deltaY in
+            ResizingControlsView(
+                isResizing: $isResizing
+            ) { point, deltaX, deltaY in
                 model.updateForResize(using: point, deltaX: deltaX, deltaY: deltaY)
                 onSave(model)
             } dragEnded: {
@@ -63,6 +66,9 @@ public struct ResizableComponentView<Content: View>: View {
             .onHover { isHovered = $0 }
             .contentShape(Rectangle())
             .gesture(dragGesture)
+            .onTapGesture(count: 2, perform: {
+                isResizing.toggle()
+            })
     }
     
     var dragGesture: some Gesture {

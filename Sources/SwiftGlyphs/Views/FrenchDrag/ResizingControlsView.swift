@@ -22,10 +22,19 @@ public struct ResizingControlsView: View {
     let borderColor: Color = .white
     let fillColor: Color = .blue
     let diameter: CGFloat = 15.0
+    @Binding var isResizing: Bool
     let dragged: (ResizePoint, CGFloat, CGFloat) -> Void
     let dragEnded: () -> Void
     
+    
     public var body: some View {
+        if isResizing {
+            resizeBody
+        }
+    }
+    
+    @ViewBuilder
+    private var resizeBody: some View {
         VStack(spacing: 0.0) {
             HStack(spacing: 0.0) {
                 grabView(resizePoint: .topLeft)
@@ -62,18 +71,18 @@ public struct ResizingControlsView: View {
         case .topMiddle:
             offsetY = -halfDiameter
         case .topRight:
-            offsetX = halfDiameter
+            offsetX =  halfDiameter
             offsetY = -halfDiameter
         case .rightMiddle:
-            offsetX = halfDiameter
+            offsetX =  halfDiameter
         case .bottomRight:
-            offsetX = +halfDiameter
-            offsetY = halfDiameter
+            offsetX =  halfDiameter
+            offsetY =  halfDiameter
         case .bottomMiddle:
-            offsetY = halfDiameter
+            offsetY =  halfDiameter
         case .bottomLeft:
             offsetX = -halfDiameter
-            offsetY = halfDiameter
+            offsetY =  halfDiameter
         case .leftMiddle:
             offsetX = -halfDiameter
         }
