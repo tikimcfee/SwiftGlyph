@@ -15,7 +15,8 @@ extension GlobalWindowKey: Identifiable, Hashable {
     var title: String { rawValue }
 }
 
-public enum FloatableViewMode: Codable {
+public enum FloatableViewMode: Codable, CaseIterable {
+    case hidden
     case displayedAsWindow
     case displayedAsSibling
 }
@@ -86,6 +87,8 @@ public struct FloatableView<Inner: View>: View {
                     .init(width: -1, height: -1)
                 case .displayedAsSibling:
                     initialSize
+                case .hidden:
+                    .zero
                 }
             }
             .frame(
@@ -116,6 +119,10 @@ public extension FloatableView {
         }
     #elseif os(macOS)
         switch displayMode {
+        case .hidden:
+            EmptyView()
+                .onAppear { performDock() }
+            
         case .displayedAsSibling:
             ResizableComponentView(
                 model: {
@@ -131,6 +138,8 @@ public extension FloatableView {
                     }
                 }
             )
+            .onAppear { performDock() }
+            
         case .displayedAsWindow:
             Spacer()
                 .onAppear { performUndock() }
@@ -155,19 +164,21 @@ private extension FloatableView {
             Button("Dock", action: {
                 displayMode = .displayedAsSibling
             }).padding(2)
+        case .hidden:
+            EmptyView()
         }
     }
 
     // `Undock` is called when review is rebuilt, check state before calling window actions
     func performUndock() {
-        guard displayMode == .displayedAsWindow else { return }
+//        guard displayMode == .displayedAsWindow else { return }
         guard !delegate.windowIsDisplayed(for: windowKey) else { return }
         displayWindowWithNewBuilderInstance()
     }
     
     // `Dock` is called when review is rebuilt, check state before calling window actions
     func performDock() {
-        guard displayMode == .displayedAsSibling else { return }
+//        guard displayMode == .displayedAsSibling else { return }
         delegate.dismissWindow(for: windowKey)
     }
     

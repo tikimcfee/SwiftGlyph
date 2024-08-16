@@ -28,15 +28,24 @@ struct SourceInfoPanelView: View {
 extension SourceInfoPanelView {
     
     var allPanelsGroup: some View {
-        ForEach(state.visiblePanelSlices, id: \.self) { panelSlice in
-            ForEach(panelSlice, id: \.self) { panel in
-                floatingView(for: panel)
-            }
+        ForEach(PanelSections.allCases) { section in
+            viewWithDisplayState(for: section)
         }
     }
     
     @ViewBuilder
-    func floatingView(for panel: PanelSections) -> some View {
+    func viewWithDisplayState(for section: PanelSections) -> some View {
+        switch state.visiblePanelStates.source[section, default: .hidden] {
+        case .displayedAsSibling,
+             .displayedAsWindow:
+            makeFloatingView(for: section)
+        case .hidden:
+            EmptyView()
+        }
+    }
+    
+    @ViewBuilder
+    func makeFloatingView(for panel: PanelSections) -> some View {
         FloatableView(
             displayMode: state.vendPanelBinding(panel),
             windowKey: panel,

@@ -45,38 +45,31 @@ public class SourceInfoPanelState: ObservableObject {
     // Visible subsections
     @Published public var visiblePanelStates = CodableAutoCache<PanelSections, FloatableViewMode>() {
         didSet {
-            savePanelWindowStates()
+            AppStatePreferences.shared.panelStates = visiblePanelStates
         }
     }
-    
-    @Published public private(set) var visiblePanels: Set<PanelSections> {
-        didSet {
-            savePanelStates()
-            updatePanelSlices()
-        }
-    }
-    
-    public var windowBindings = [PanelSections: Binding<Bool>]()
-    
-    var panelGroups = 3
-    @Published public private(set) var visiblePanelSlices: [ArraySlice<PanelSections>] = []
     
     private var bag = Set<AnyCancellable>()
     
     public init() {
-        self.visiblePanels = AppStatePreferences.shared.visiblePanels
-            ?? [.windowControls, .directories, .appStatusInfo]
-        self.visiblePanelStates = AppStatePreferences.shared.panelStates
-            ?? {
-                var states = CodableAutoCache<PanelSections, FloatableViewMode>()
-                states.source[.windowControls] = .displayedAsWindow
-                states.source[.directories] = .displayedAsWindow
-                states.source[.appStatusInfo] = .displayedAsWindow
-                return states
-            }()
+        self.visiblePanelStates = AppStatePreferences.shared.panelStates ?? Self.defaultStates()
         
         setupBindings()
-        updatePanelSlices()
+    }
+    
+    private static func defaultStates() -> CodableAutoCache<PanelSections, FloatableViewMode> {
+        PanelSections.allCases.reduce(
+            into: CodableAutoCache<PanelSections, FloatableViewMode>()
+        ) { cache, section in
+            switch section {
+            case .windowControls,
+                    .directories,
+                    .appStatusInfo:
+                cache.source[section] = .displayedAsWindow
+            default:
+                cache.source[section] = .hidden
+            }
+        }
     }
 }
 
@@ -86,17 +79,17 @@ public extension SourceInfoPanelState {
     }
     
     func isVisible(_ panel: PanelSections) -> Bool {
-        visiblePanels.contains(panel)
+        visiblePanelStates.source[panel] != .hidden
     }
     
     func vendPanelBinding(_ panel: PanelSections) -> Binding<FloatableViewMode> {
         func makeNewBinding() -> Binding<FloatableViewMode> {
             Binding<FloatableViewMode>(
                 get: {
-                    self.visiblePanelStates.source[panel, default: .displayedAsSibling]
+                    self[panel]
                 },
                 set: {
-                    self.visiblePanelStates.source[panel] = $0
+                    self[panel] = $0
                 }
             )
         }
@@ -104,40 +97,31 @@ public extension SourceInfoPanelState {
     }
     
     func getPanelIsWindowBinding(_ panel: PanelSections) -> Binding<Bool> {
-        if let binding = windowBindings[panel] {
-            return binding
-        } else {
-            let newBinding = makeNewBinding()
-            windowBindings[panel] = newBinding
-            return newBinding
-        }
-        
         func makeNewBinding() -> Binding<Bool> {
             Binding<Bool>(
                 get: {
-                    self.visiblePanelStates
-                        .source[panel, default: .displayedAsSibling]
-                     == .displayedAsWindow
+                    self[panel] == .displayedAsWindow
                 },
                 set: { isSelected in
+                    let oldState = self[panel]
                     let newState = isSelected
                         ? FloatableViewMode.displayedAsWindow
-                        : FloatableViewMode.displayedAsSibling
-                    self.visiblePanelStates.source[panel] = newState
+                        : oldState
+                    self[panel] = newState
                 }
             )
         }
-        
+        return makeNewBinding()
     }
     
     func vendPanelVisibleBinding(_ panel: PanelSections) -> Binding<Bool> {
         func makeNewBinding() -> Binding<Bool> {
             Binding<Bool>(
-                get: { self.visiblePanels.contains(panel) },
+                get: { self[panel] != .hidden },
                 set: { isSelected in
                     switch isSelected {
-                    case true: self.visiblePanels.insert(panel)
-                    case false: self.visiblePanels.remove(panel)
+                    case true: self[panel] = .displayedAsWindow
+                    case false: self[panel] = .hidden
                     }
                 }
             )
@@ -147,22 +131,9 @@ public extension SourceInfoPanelState {
 }
 
 private extension SourceInfoPanelState {
-    func updatePanelSlices() {
-        guard !visiblePanels.isEmpty else {
-            visiblePanelSlices = []
-            return
-        }
-        let sortedPanelList = Array(visiblePanels).sorted(by: <)
-        visiblePanelSlices = sortedPanelList
-            .slices(sliceSize: panelGroups)
-    }
-    
-    func savePanelStates() {
-        AppStatePreferences.shared.visiblePanels = visiblePanels
-    }
-    
-    func savePanelWindowStates() {
-        AppStatePreferences.shared.panelStates = visiblePanelStates
+    subscript(_ section: PanelSections) -> FloatableViewMode {
+        get { visiblePanelStates.source[section, default: .hidden] }
+        set { visiblePanelStates.source[section] = newValue }
     }
     
     func setupBindings() {
