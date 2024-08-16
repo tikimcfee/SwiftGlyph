@@ -75,7 +75,7 @@ extension SourceInfoPanelView {
         case .focusState:
             focusState
         case .testStreamInput:
-            EmptyView()
+            editorView
         }
     }
     
