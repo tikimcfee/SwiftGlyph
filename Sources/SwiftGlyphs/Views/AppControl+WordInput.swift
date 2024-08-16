@@ -6,6 +6,6 @@
 import SwiftUI
 import BitHandling
 
-extension SourceInfoPanelView {
+extension AppControlPanelView {
     
 }

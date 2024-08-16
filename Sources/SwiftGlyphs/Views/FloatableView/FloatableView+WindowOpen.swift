@@ -8,6 +8,46 @@
 import SwiftUI
 
 #if os(macOS)
+extension FloatableView {
+    var delegate: GlobalWindowDelegate { GlobalWindowDelegate.instance }
+    
+    @ViewBuilder
+    func switchModeButton() -> some View {
+        switch displayMode {
+        case .displayedAsSibling:
+            Button("Undock", action: {
+                displayMode = .displayedAsWindow
+            }).padding(2)
+        case .displayedAsWindow:
+            Button("Dock", action: {
+                displayMode = .displayedAsSibling
+            }).padding(2)
+        case .hidden:
+            EmptyView()
+        }
+    }
+
+    // `Undock` is called when review is rebuilt, check state before calling window actions
+    func performUndock() {
+//        guard displayMode == .displayedAsWindow else { return }
+        guard !delegate.windowIsDisplayed(for: windowKey) else { return }
+        displayWindowWithNewBuilderInstance()
+    }
+    
+    // `Dock` is called when review is rebuilt, check state before calling window actions
+    func performDock() {
+//        guard displayMode == .displayedAsSibling else { return }
+        delegate.dismissWindow(for: windowKey)
+    }
+    
+    func displayWindowWithNewBuilderInstance() {
+        VStack(alignment: .leading, spacing: 0) {
+            switchModeButton()
+            innerViewBuilder()
+        }.openInWindow(key: windowKey, sender: self)
+    }
+}
+
 extension View {
     
     @discardableResult

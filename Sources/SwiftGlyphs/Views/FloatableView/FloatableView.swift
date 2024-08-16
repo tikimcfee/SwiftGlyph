@@ -8,37 +8,10 @@
 import SwiftUI
 import BitHandling
 
-public typealias GlobalWindowKey = PanelSections
-
-extension GlobalWindowKey: Identifiable, Hashable {
-    public var id: String { rawValue }
-    var title: String { rawValue }
-}
-
 public enum FloatableViewMode: Codable, CaseIterable {
     case hidden
     case displayedAsWindow
     case displayedAsSibling
-}
-
-public extension GlobalWindowKey {
-    func setDragState(_ newValue: ComponentModel) {
-        AppStatePreferences.shared.setCustom(
-            name: persistedDragStateName,
-            value: newValue
-        )
-    }
-    
-    func getDragState() -> ComponentModel {
-        AppStatePreferences.shared.getCustom(
-            name: persistedDragStateName,
-            makeDefault: { ComponentModel() }
-        )
-    }
-    
-    var persistedDragStateName: String {
-        "DragState-\(rawValue)"
-    }
 }
 
 public struct FloatableView<Inner: View>: View {
@@ -85,10 +58,8 @@ public struct FloatableView<Inner: View>: View {
                 maxSiblingSize = switch displayMode {
                 case .displayedAsWindow:
                     .init(width: -1, height: -1)
-                case .displayedAsSibling:
+                case .displayedAsSibling, .hidden:
                     initialSize
-                case .hidden:
-                    .zero
                 }
             }
             .frame(
@@ -98,10 +69,10 @@ public struct FloatableView<Inner: View>: View {
     }
 }
 
+#if os(iOS)
 public extension FloatableView {
     @ViewBuilder
     func makePlatformBody() -> some View {
-    #if os(iOS)
         if resizableAsSibling {
             ResizableComponentView(
                 model: {
@@ -117,7 +88,13 @@ public extension FloatableView {
         } else {
             innerViewBuilder()
         }
-    #elseif os(macOS)
+    
+    }
+}
+#elseif os(macOS)
+public extension FloatableView {
+    @ViewBuilder
+    func makePlatformBody() -> some View {
         switch displayMode {
         case .hidden:
             EmptyView()
@@ -145,48 +122,6 @@ public extension FloatableView {
                 .onAppear { performUndock() }
                 .onDisappear { performDock() }
         }
-    #endif
-    }
-}
-
-#if os(macOS)
-private extension FloatableView {
-    var delegate: GlobalWindowDelegate { GlobalWindowDelegate.instance }
-    
-    @ViewBuilder
-    func switchModeButton() -> some View {
-        switch displayMode {
-        case .displayedAsSibling:
-            Button("Undock", action: {
-                displayMode = .displayedAsWindow
-            }).padding(2)
-        case .displayedAsWindow:
-            Button("Dock", action: {
-                displayMode = .displayedAsSibling
-            }).padding(2)
-        case .hidden:
-            EmptyView()
-        }
-    }
-
-    // `Undock` is called when review is rebuilt, check state before calling window actions
-    func performUndock() {
-//        guard displayMode == .displayedAsWindow else { return }
-        guard !delegate.windowIsDisplayed(for: windowKey) else { return }
-        displayWindowWithNewBuilderInstance()
-    }
-    
-    // `Dock` is called when review is rebuilt, check state before calling window actions
-    func performDock() {
-//        guard displayMode == .displayedAsSibling else { return }
-        delegate.dismissWindow(for: windowKey)
-    }
-    
-    func displayWindowWithNewBuilderInstance() {
-        VStack(alignment: .leading, spacing: 0) {
-            switchModeButton()
-            innerViewBuilder()
-        }.openInWindow(key: windowKey, sender: self)
     }
 }
 #endif

@@ -1,5 +1,5 @@
 //
-//  SourceInfoPanelState.swift
+//  AppControlPanelState.swift
 //  LookAtThat_AppKit
 //
 //  Created by Ivan Lugo on 4/23/22.
@@ -32,7 +32,7 @@ public enum PanelSections: String, CaseIterable, Equatable, Comparable, Codable 
     }
 }
 
-public class SourceInfoPanelState: ObservableObject {
+public class AppControlPanelState: ObservableObject {
     // MARK: - Reused states
     public var fileBrowserState = FileBrowserViewState()
     
@@ -73,7 +73,7 @@ public class SourceInfoPanelState: ObservableObject {
     }
 }
 
-public extension SourceInfoPanelState {
+public extension AppControlPanelState {
     func isWindow(_ panel: PanelSections) -> Bool {
         visiblePanelStates.source[panel] == .displayedAsWindow
     }
@@ -130,7 +130,7 @@ public extension SourceInfoPanelState {
     }
 }
 
-private extension SourceInfoPanelState {
+private extension AppControlPanelState {
     subscript(_ section: PanelSections) -> FloatableViewMode {
         get { visiblePanelStates.source[section, default: .hidden] }
         set { visiblePanelStates.source[section] = newValue }

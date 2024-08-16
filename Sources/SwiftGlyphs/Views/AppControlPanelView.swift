@@ -1,5 +1,5 @@
 //
-//  SourceInfoGrid.swift
+//  AppControlPanelView.swift
 //  LookAtThat_AppKit
 //
 //  Created by Ivan Lugo on 11/25/21.
@@ -15,8 +15,8 @@ import MetalLinkResources
 import STTextViewSwiftUI
 #endif
 
-struct SourceInfoPanelView: View {
-    @StateObject var state: SourceInfoPanelState = SourceInfoPanelState()
+struct AppControlPanelView: View {
+    @StateObject var state: AppControlPanelState = AppControlPanelState()
     
     var body: some View {
 //        VStack(alignment: .leading) {
@@ -25,7 +25,7 @@ struct SourceInfoPanelView: View {
     }
 }
 
-extension SourceInfoPanelView {
+extension AppControlPanelView {
     
     var allPanelsGroup: some View {
         ForEach(PanelSections.allCases) { section in
@@ -164,7 +164,7 @@ extension SourceInfoPanelView {
     }
     
     var windowControlsView: some View {
-        SourceInfoPanelToggles(state: state)
+        AppControlPanelToggles(state: state)
     }
 }
 
@@ -200,8 +200,8 @@ func helloWorld() {
         return "no-id" // TODO: Expose node ids somehow
     }
     
-    static var sourceState: SourceInfoPanelState = {
-        let state = SourceInfoPanelState()
+    static var sourceState: AppControlPanelState = {
+        let state = AppControlPanelState()
         return state
     }()
 

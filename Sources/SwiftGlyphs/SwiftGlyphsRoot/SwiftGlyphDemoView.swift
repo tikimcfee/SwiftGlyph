@@ -89,7 +89,7 @@ public struct SwiftGlyphDemoView : View {
     @ViewBuilder
     var macOSContent: some View {
         ZStack(alignment: .topTrailing) {
-            SourceInfoPanelView()
+            AppControlPanelView()
         }
         
 //        HStack {

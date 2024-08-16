@@ -1,5 +1,5 @@
 //
-//  SourceInfoPanelToggles.swift
+//  AppControlPanelToggles.swift
 //  LookAtThat_AppKit
 //
 //  Created by Ivan Lugo on 5/15/22.
@@ -8,10 +8,10 @@
 import SwiftUI
 import BitHandling
 
-public struct SourceInfoPanelToggles: View {
-    @ObservedObject public var state: SourceInfoPanelState
+public struct AppControlPanelToggles: View {
+    @ObservedObject public var state: AppControlPanelState
     
-    public init(state: SourceInfoPanelState) {
+    public init(state: AppControlPanelState) {
         self.state = state
     }
     
@@ -72,9 +72,9 @@ public struct SourceInfoPanelToggles: View {
     }
 }
 
-struct SourceInfoPanelToggles_Preview: PreviewProvider {
-    static let state = SourceInfoPanelState()
+struct AppControlPanelToggles_Preview: PreviewProvider {
+    static let state = AppControlPanelState()
     static var previews: some View {
-        return SourceInfoPanelToggles(state: state)
+        return AppControlPanelToggles(state: state)
     }
 }
