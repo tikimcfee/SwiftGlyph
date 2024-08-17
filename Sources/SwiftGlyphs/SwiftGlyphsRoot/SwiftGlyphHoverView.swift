@@ -10,40 +10,6 @@ import SwiftUI
 import MetalLink
 import BitHandling
 
-struct AtMousePositionModifier: ViewModifier {
-    public let link: MetalLink
-    public let cursorOffset: CGFloat = 24.0
-    
-    var proxy: GeometryProxy
-    @State var mousePosition: LFloat2?
-    
-    func body(content: Content) -> some View {
-        #if os(macOS)
-        content.onReceive(link.input.sharedMouse) { event in
-            mousePosition = event.locationInWindow.asSimd
-        }.offset(
-            mousePosition.map {
-                CGSize(
-                    width: $0.x.cg + cursorOffset,
-                    height: proxy.size.height - $0.y.cg - cursorOffset
-                )
-            } ?? CGSizeZero
-        )
-        #endif
-    }
-}
-
-extension View {
-    func attachedToMousePosition(
-        in parentProxy: GeometryProxy,
-        with link: MetalLink
-    ) -> some View {
-        modifier(AtMousePositionModifier(
-            link: link,
-            proxy: parentProxy
-        ))
-    }
-}
 
 public struct SwiftGlyphHoverView: View, MetalLinkReader {
     public let link: MetalLink
@@ -99,12 +65,24 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
         
         let availableGrid = currentHoveredGrid?.newState?.targetGrid
         
-        if hasNew, let availableGrid {
-            _ = GlobalInstances
-                .gridStore
-                .gridInteractionState
-                .bookmarkedGrids
-                .toggle(availableGrid)
+        if let availableGrid {
+            if hasNew {
+                _ = GlobalInstances
+                    .gridStore
+                    .gridInteractionState
+                    .bookmarkedGrids
+                    .toggle(availableGrid)
+            }
+            
+            if 
+                let source = availableGrid.sourcePath
+            {
+                GlobalInstances.swiftGlyphRoot
+                    .holder
+                    .userTextInputBinding
+                    .wrappedValue
+                    .userSelectedFile = source
+            }
         }
     }
     
@@ -113,56 +91,15 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
         GeometryReader { proxy in
             ZStack(alignment: .topLeading) {
                 VStack(alignment: .leading) {
-                    if let hoveredState = currentHoveredGrid?.newState {
+                    if 
+                        let hoveredState = currentHoveredGrid?.newState
+                    {
                         VStack(alignment: .leading) {
                             fileNameHover(target: hoveredState.targetGrid)
                         }
                     }
                 }
                 .attachedToMousePosition(in: proxy, with: link)
-                
-                ResizableComponentView(
-                    model: {
-                        AppStatePreferences.shared.getCustom(
-                            name: "DragState-Hover-Glyph",
-                            makeDefault: ComponentModel.init
-                        )
-                    },
-                    onSave: {
-                        AppStatePreferences.shared.setCustom(
-                            name: "DragState-Hover-Glyph",
-                            value: $0
-                        )
-                    },
-                    content: {
-                        bookmarkList()
-                            .padding(2)
-                            .background(Color.primaryBackground.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                )
-                
-                // TODO: Just get the user's current touch input instead of using this weird arrow
-//                #if os(iOS)
-//                Image(systemName: "arrow.up.left")
-//                    .background(Color.primaryBackground.opacity(0.66))
-//                    .clipShape(RoundedRectangle(cornerRadius: 8))
-//                    .withSavedDragstate(named: "DragState-Mobile-Crosshair-1", $crosshairDragState)
-//                    .gesture(
-//                        SpatialTapGesture(coordinateSpace: .global)
-//                            .onEnded { event in
-//                                let downEvent = OSEvent()
-//                                downEvent.locationInWindow = event.location.asSimd
-//                                self.link.input.mousePosition = downEvent
-//                                self.link.input.mouseDownEvent = downEvent
-//                            }
-//                    )
-//                    .onChange(of: crosshairDragState.offset) { old, new in
-//                        let event = OSEvent()
-//                        event.locationInWindow = new.asSimd
-//                        link.input.mousePosition = event
-//                    }
-//                #endif
             }
             .frame(
                 width: proxy.size.width,
@@ -173,8 +110,31 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     }
     
     @ViewBuilder
-    func bookmarkList() -> some View {
-        
+    var bookmarkListResizable: some View {
+        ResizableComponentView(
+            model: {
+                AppStatePreferences.shared.getCustom(
+                    name: "DragState-Hover-Glyph",
+                    makeDefault: ComponentModel.init
+                )
+            },
+            onSave: {
+                AppStatePreferences.shared.setCustom(
+                    name: "DragState-Hover-Glyph",
+                    value: $0
+                )
+            },
+            content: {
+                bookmarkListContent
+                    .padding(2)
+                    .background(Color.primaryBackground.opacity(0.8))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            }
+        )
+    }
+    
+    @ViewBuilder
+    var bookmarkListContent: some View {
         if GlobalInstances.gridStore.gridInteractionState.bookmarkedGrids.isEmpty {
             Text("No Bookmarks").bold().padding()
         } else {

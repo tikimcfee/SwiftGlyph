@@ -22,33 +22,13 @@ extension SwiftGlyphRoot: MetalLinkRendererDelegate {
     }
 }
 
-class InputHolder: ObservableObject {
-    struct Inputs {
-        var rootUserInput = AttributedString("")
-        var selection: NSRange?
-        var file: URL?
-    }
-    
-    let dataSubject = CurrentValueSubject<Data, Never>(Data())
-    lazy var dataBinding = Binding(
-        get: { self.dataSubject.value },
-        set: { self.dataSubject.send($0) }
-    )
-    
-    let inputSubject = CurrentValueSubject<Inputs, Never>(Inputs())
-    lazy var inputBinding = Binding(
-        get: { self.inputSubject.value },
-        set: { self.inputSubject.send($0) }
-    )
-}
-
 public class SwiftGlyphRoot: MetalLinkReader {
     public let link: MetalLink
     
     var bag = Set<AnyCancellable>()
     
     lazy var root = RootNode(camera)
-    var holder = InputHolder()
+    var holder = UserTextEditingStateHolder()
     
     var camera: DebugCamera {
         GlobalInstances.debugCamera
@@ -76,7 +56,7 @@ public class SwiftGlyphRoot: MetalLinkReader {
         GlobalInstances.defaultAtlas.load()
         
         try setupRenderPlanTest()
-        try setupRenderStreamTest()
+//        try setupRenderStreamTest()
 //        try setupWordWarePLA()
     }
     

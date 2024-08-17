@@ -139,12 +139,12 @@ extension AppControlPanelView {
     var editorView: some View {
         #if os(macOS)
         TextView(
-            text: GlobalInstances.swiftGlyphRoot.holder.inputBinding.rootUserInput,
-            selection: GlobalInstances.swiftGlyphRoot.holder.inputBinding.selection,
+            text: GlobalInstances.swiftGlyphRoot.holder.userTextInputBinding.userTextInput,
+            selection: GlobalInstances.swiftGlyphRoot.holder.userTextInputBinding.userTextSelection,
             options: [.highlightSelectedLine],
             plugins: []
         )
-        .textViewFont(.preferredFont(forTextStyle: .body))
+        .textViewFont(.monospacedSystemFont(ofSize: 14, weight: .regular))
         #else
         Text("Text editing is hard for da little phone buddies. Gotta have big beefy operating system to actually edit words. Go figure.")
         #endif

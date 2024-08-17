@@ -23,7 +23,6 @@ extension SwiftGlyphRoot {
         
         // Setup a local current collection to track (this is inefficient, but it's a test..)
         var currentDataCollection: CodeGrid? = nil
-        let dataSubject = PassthroughSubject<Data, Never>()
         
         let maxLengthTest = 95
         
@@ -32,7 +31,7 @@ extension SwiftGlyphRoot {
             link: link,
             atlas: GlobalInstances.defaultAtlas,
             compute: GlobalInstances.gridStore.sharedConvert,
-            dataStream: dataSubject.eraseToAnyPublisher(),
+            dataStream: holder.userSelectedFileDataSubject.eraseToAnyPublisher(),
             name: "SGTestDataRenderer"
         )
         
@@ -55,9 +54,9 @@ extension SwiftGlyphRoot {
             root.add(child: nextGrid.rootNode)
         }.store(in: &bag)
         
-        holder.inputSubject
+        holder.userTextInputSubject
             .receive(on: WorkerPool.shared.nextWorker())
-            .compactMap { $0.rootUserInput }
+            .compactMap { $0.userTextInput }
             .removeDuplicates()
             .sink { input in
                 let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
@@ -73,7 +72,7 @@ extension SwiftGlyphRoot {
                         atomically: true,
                         encoding: .utf8
                     )
-                    self.holder.inputSubject.value.file = file
+                    self.holder.userTextInputSubject.value.userSelectedFile = file
                 } catch {
                     print(error)
                 }
@@ -81,20 +80,7 @@ extension SwiftGlyphRoot {
             }
             .store(in: &bag)
         
-        holder.inputSubject
-            .receive(on: WorkerPool.shared.nextWorker())
-            .throttle(
-                for: .milliseconds(300),
-                scheduler: WorkerPool.shared.nextWorker(),
-                latest: true
-            )
-            .compactMap { $0.file }
-            .sink { input in
-                if let data = try? Data(contentsOf: input) {
-                    dataSubject.send(data)
-                }
-            }
-            .store(in: &bag)
+        
 
 //        Task {
 ////            let testFile = ___RAW___SOURCE___
