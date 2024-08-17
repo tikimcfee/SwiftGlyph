@@ -23,6 +23,7 @@ extension SwiftGlyphRoot {
         
         // Setup a local current collection to track (this is inefficient, but it's a test..)
         var currentDataCollection: CodeGrid? = nil
+        let dataStream = PassthroughSubject<Data, Never>()
         
         let maxLengthTest = 95
         
@@ -31,7 +32,7 @@ extension SwiftGlyphRoot {
             link: link,
             atlas: GlobalInstances.defaultAtlas,
             compute: GlobalInstances.gridStore.sharedConvert,
-            dataStream: holder.userSelectedFileDataSubject.eraseToAnyPublisher(),
+            dataStream: dataStream.eraseToAnyPublisher(),
             name: "SGTestDataRenderer"
         )
         
@@ -54,9 +55,8 @@ extension SwiftGlyphRoot {
             root.add(child: nextGrid.rootNode)
         }.store(in: &bag)
         
-        holder.userTextInputSubject
+        holder.$userTextInput
             .receive(on: WorkerPool.shared.nextWorker())
-            .compactMap { $0.userTextInput }
             .removeDuplicates()
             .sink { input in
                 let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
@@ -72,7 +72,8 @@ extension SwiftGlyphRoot {
                         atomically: true,
                         encoding: .utf8
                     )
-                    self.holder.userTextInputSubject.value.userSelectedFile = file
+                    let data = try Data(contentsOf: file)
+                    dataStream.send(data)
                 } catch {
                     print(error)
                 }

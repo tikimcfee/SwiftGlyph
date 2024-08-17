@@ -9,24 +9,17 @@ import SwiftUI
 import Combine
 import BitHandling
 
-class UserTextEditingStateHolder {
-    struct Inputs {
-        var userTextInput = AttributedString("")
-        var userTextSelection: NSRange?
-        var userSelectedFile: URL?
-    }
+struct EditPair: Equatable {
+    let file: URL
+    var input: AttributedString
+}
+
+class UserTextEditingStateHolder: ObservableObject {
+    @Published var userTextInput = AttributedString("")
+    @Published var userTextSelection: NSRange?
+    @Published var userSelectedFile: URL?
     
-    let userSelectedFileDataSubject = CurrentValueSubject<Data, Never>(Data())
-    lazy var userSelectedFileDataBinding = Binding(
-        get: { self.userSelectedFileDataSubject.value },
-        set: { self.userSelectedFileDataSubject.send($0) }
-    )
-    
-    let userTextInputSubject = CurrentValueSubject<Inputs, Never>(Inputs())
-    lazy var userTextInputBinding = Binding(
-        get: { self.userTextInputSubject.value },
-        set: { self.userTextInputSubject.send($0) }
-    )
+    @Published private var editPairs: EditPair?
     
     private var bag = Set<AnyCancellable>()
     
@@ -35,29 +28,69 @@ class UserTextEditingStateHolder {
     }
     
     private func bind() {
-        userTextInputSubject
+        $userSelectedFile
             .receive(on: WorkerPool.shared.nextWorker())
 //            .throttle(
 //                for: .milliseconds(300),
 //                scheduler: WorkerPool.shared.nextWorker(),
 //                latest: true
 //            )
-            .compactMap { $0.userSelectedFile }
+            .compactMap { $0 }
+            .removeDuplicates()
+            .compactMap { selectedFile in
+                do {
+                    let selectedFileText = try String(contentsOf: selectedFile)
+                    let attributedContents = AttributedString(selectedFileText)
+                    return EditPair(file: selectedFile, input: attributedContents)
+                } catch {
+                    print(error)
+                    return nil
+                }
+            }
+            .receive(on: DispatchQueue.main)
+            .sink { pair in
+                // TODO: Use a different editor. Lol.
+                // Always update text selection when setting new content to ensure TextViewWrapper updates
+                self.userTextSelection = .none
+                self.userTextInput = pair.input
+                self.editPairs = .init(file: pair.file, input: pair.input)
+            }
+            .store(in: &bag)
+        
+        $userTextInput
             .removeDuplicates()
             .sink { input in
+                self.editPairs?.input = input
+            }
+            .store(in: &bag)
+        
+        $editPairs
+            .debounce(
+                for: .milliseconds(300),
+                scheduler: WorkerPool.shared.nextWorker()
+            )
+            .compactMap { $0 }
+            .removeDuplicates()
+            .sink { pair in
+                let (selectedFile, input) = (pair.file, pair.input)
                 do {
-                    let text = try String(contentsOf: input)
-                    let attributedContents = AttributedString(text)
-                    self.userTextInputSubject.value.userTextInput = attributedContents
+                    let inputStagingFile = AppFiles.file(named: "inputStagingFile", in: AppFiles.glyphSceneDirectory)
+                    let inputData = NSAttributedString(input).string
+                    try inputData.write(
+                        to: inputStagingFile,
+                        atomically: true,
+                        encoding: .utf8
+                    )
+                    
+                    let currentFileContents = try Data(contentsOf: selectedFile, options: .alwaysMapped)
+                    let newFileContents = try Data(contentsOf: inputStagingFile, options: .alwaysMapped)
+                    
+                    if currentFileContents != newFileContents {
+                        try AppFiles.replace(fileUrl: selectedFile, with: inputStagingFile)
+                    }
                 } catch {
                     print(error)
                 }
-//                do {
-//                    let data = try Data(contentsOf: input)
-//                    self.userSelectedFileDataSubject.send(data)
-//                } catch {
-//                    print(error)
-//                }
             }
             .store(in: &bag)
     }

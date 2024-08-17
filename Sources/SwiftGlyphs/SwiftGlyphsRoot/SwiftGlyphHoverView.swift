@@ -79,8 +79,6 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             {
                 GlobalInstances.swiftGlyphRoot
                     .holder
-                    .userTextInputBinding
-                    .wrappedValue
                     .userSelectedFile = source
             }
         }

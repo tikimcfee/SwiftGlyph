@@ -11,10 +11,6 @@ import MetalLink
 import MetalLinkHeaders
 import MetalLinkResources
 
-#if canImport(STTextViewSwiftUI)
-import STTextViewSwiftUI
-#endif
-
 struct AppControlPanelView: View {
     @StateObject var state: AppControlPanelState = AppControlPanelState()
     
@@ -137,18 +133,7 @@ extension AppControlPanelView {
     
     @ViewBuilder
     var editorView: some View {
-        #if os(macOS)
-        TextView(
-            text: GlobalInstances.swiftGlyphRoot.holder.userTextInputBinding.userTextInput,
-            selection: GlobalInstances.swiftGlyphRoot.holder.userTextInputBinding.userTextSelection,
-            options: [.highlightSelectedLine],
-            plugins: []
-        )
-        .textViewFont(.monospacedSystemFont(ofSize: 14, weight: .regular))
-        #else
-        Text("Text editing is hard for da little phone buddies. Gotta have big beefy operating system to actually edit words. Go figure.")
-        #endif
-        
+        TextViewWrapper()
     }
     
     @ViewBuilder
