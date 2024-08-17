@@ -21,7 +21,6 @@ public enum PanelSections: String, CaseIterable, Equatable, Comparable, Codable 
     case gridStateInfo = "Grid State Info"
     case githubTools = "GitHub Tools"
     case focusState = "Focus State"
-    case testStreamInput = "(Test) Stream Input"
     
     public static func < (lhs: PanelSections, rhs: PanelSections) -> Bool {
         lhs.rawValue < rhs.rawValue
@@ -35,12 +34,6 @@ public enum PanelSections: String, CaseIterable, Equatable, Comparable, Codable 
 public class AppControlPanelState: ObservableObject {
     // MARK: - Reused states
     public var fileBrowserState = FileBrowserViewState()
-    
-    // Category pannel state
-    public struct Categories {
-        var expandedGrids = Set<CodeGrid.ID>()
-    }
-    @Published public var categories: Categories = Categories()
 
     // Visible subsections
     @Published public var visiblePanelStates = CodableAutoCache<PanelSections, FloatableViewMode>() {
@@ -96,45 +89,13 @@ public extension AppControlPanelState {
         return makeNewBinding()
     }
     
-    func getPanelIsWindowBinding(_ panel: PanelSections) -> Binding<Bool> {
-        func makeNewBinding() -> Binding<Bool> {
-            Binding<Bool>(
-                get: {
-                    self[panel] == .displayedAsWindow
-                },
-                set: { isSelected in
-                    let oldState = self[panel]
-                    let newState = isSelected
-                        ? FloatableViewMode.displayedAsWindow
-                        : oldState
-                    self[panel] = newState
-                }
-            )
-        }
-        return makeNewBinding()
-    }
-    
-    func vendPanelVisibleBinding(_ panel: PanelSections) -> Binding<Bool> {
-        func makeNewBinding() -> Binding<Bool> {
-            Binding<Bool>(
-                get: { self[panel] != .hidden },
-                set: { isSelected in
-                    switch isSelected {
-                    case true: self[panel] = .displayedAsWindow
-                    case false: self[panel] = .hidden
-                    }
-                }
-            )
-        }
-        return makeNewBinding()
-    }
-}
-
-private extension AppControlPanelState {
     subscript(_ section: PanelSections) -> FloatableViewMode {
         get { visiblePanelStates.source[section, default: .hidden] }
         set { visiblePanelStates.source[section] = newValue }
     }
+}
+
+private extension AppControlPanelState {
     
     func setupBindings() {
         print("Not implemented: \(#function)")

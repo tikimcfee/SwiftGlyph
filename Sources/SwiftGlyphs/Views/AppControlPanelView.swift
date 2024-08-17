@@ -19,9 +19,7 @@ struct AppControlPanelView: View {
     @StateObject var state: AppControlPanelState = AppControlPanelState()
     
     var body: some View {
-//        VStack(alignment: .leading) {
-            allPanelsGroup
-//        }
+        allPanelsGroup
     }
 }
 
@@ -29,23 +27,12 @@ extension AppControlPanelView {
     
     var allPanelsGroup: some View {
         ForEach(PanelSections.allCases) { section in
-            viewWithDisplayState(for: section)
+            floatingViewWrapper(for: section)
         }
     }
     
     @ViewBuilder
-    func viewWithDisplayState(for section: PanelSections) -> some View {
-        switch state.visiblePanelStates.source[section, default: .hidden] {
-        case .displayedAsSibling,
-             .displayedAsWindow:
-            makeFloatingView(for: section)
-        case .hidden:
-            EmptyView()
-        }
-    }
-    
-    @ViewBuilder
-    func makeFloatingView(for panel: PanelSections) -> some View {
+    func floatingViewWrapper(for panel: PanelSections) -> some View {
         FloatableView(
             displayMode: state.vendPanelBinding(panel),
             windowKey: panel,
@@ -61,30 +48,38 @@ extension AppControlPanelView {
     @ViewBuilder
     func panelView(for panel: PanelSections) -> some View {
         switch panel {
-        case .appStatusInfo:
-            appStatusView
-        case .gridStateInfo:
-            gridStateView
-        case .globalSearch:
-            globalSearchView
-        case .editor:
-            editorView
-        case .directories:
-            fileBrowserView
-        case .semanticCategories:
-            semanticCategoriesView
-        case .hoverInfo:
-            hoverInfoView
-        case .tracingInfo:
-            traceInfoView
         case .windowControls:
             windowControlsView
+            
+        case .appStatusInfo:
+            appStatusView
+            
+        case .gridStateInfo:
+            gridStateView
+            
+        case .globalSearch:
+            globalSearchView
+            
+        case .editor:
+            editorView
+            
+        case .directories:
+            fileBrowserView
+            
+        case .semanticCategories:
+            semanticCategoriesView
+            
+        case .hoverInfo:
+            hoverInfoView
+            
+        case .tracingInfo:
+            traceInfoView
+            
         case .githubTools:
             gitHubTools
+            
         case .focusState:
             focusState
-        case .testStreamInput:
-            editorView
         }
     }
     

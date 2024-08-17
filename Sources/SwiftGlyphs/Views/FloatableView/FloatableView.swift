@@ -8,10 +8,23 @@
 import SwiftUI
 import BitHandling
 
-public enum FloatableViewMode: Codable, CaseIterable {
+public enum FloatableViewMode: Codable, Identifiable, Equatable, CaseIterable {
+    public var id: Self { self }
+    
     case hidden
-    case displayedAsWindow
     case displayedAsSibling
+    case displayedAsWindow
+    
+    var segmentedControlName: String {
+        switch self {
+        case .hidden:
+            "⤫"
+        case .displayedAsWindow:
+            "✚"
+        case .displayedAsSibling:
+            "⿴"
+        }
+    }
 }
 
 public struct FloatableView<Inner: View>: View {
@@ -97,7 +110,7 @@ public extension FloatableView {
     func makePlatformBody() -> some View {
         switch displayMode {
         case .hidden:
-            EmptyView()
+            Spacer()
                 .onAppear { performDock() }
             
         case .displayedAsSibling:

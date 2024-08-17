@@ -53,7 +53,6 @@ public class FileBrowserViewState: ObservableObject {
     public func filter(files: [FileBrowser.Scope]) -> [FileBrowser.Scope] {
         guard !filterText.isEmpty else { return files }
         return files.filter {
-//            $0.path.path.fuzzyMatch(filterText)
             $0.path.fileName.fuzzyMatch(filterText)
         }
     }

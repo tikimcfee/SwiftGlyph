@@ -40,7 +40,6 @@ public extension GlobalInstances {
 public extension GlobalInstances {
     static let fileBrowser = FileBrowser()
     static let fileStream = fileBrowser.$scopes.share().eraseToAnyPublisher()
-    static let fileEventStream = fileBrowser.$fileSelectionEvents.share().eraseToAnyPublisher()
 }
 
 // MARK: - Syntax
