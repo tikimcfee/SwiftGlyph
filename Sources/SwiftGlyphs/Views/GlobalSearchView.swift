@@ -46,17 +46,12 @@ extension GlobalSearchViewState {
 
 struct GlobalSearchView: View {
     @StateObject var searchState = GlobalSearchViewState()
-    @State var searchScrollLock = Set<ScrollLock>()
     
     var body: some View {
         VStack(alignment: .leading) {
             searchInput
-            HStack {
-                scrollLocks
-            }
+            ScrollLockView()
             gridListColumns
-        }.onChange(of: searchScrollLock) { oldValue, newValue in
-            GlobalInstances.debugCamera.scrollLock = newValue
         }
         .padding()
         .fixedSize()
@@ -123,37 +118,6 @@ struct GlobalSearchView: View {
         GlobalInstances.debugCamera.rotation = .zero
         GlobalInstances.debugCamera.scrollBounds = scrollBounds
         GlobalInstances.gridStore.editor.snapping.searchTargetGrid = grid
-        
-        searchScrollLock.insert(.transverse)
-    }
-    
-    var scrollLocks: some View {
-        VStack {
-            Text("Camera Lock")
-            HStack {
-                ForEach(ScrollLock.allCases) {
-                    scrollToggleButton($0)
-                }
-            }
-        }
-        .padding()
-        .border(.gray)
-    }
-    
-    func scrollToggleButton(_ lock: ScrollLock) -> some View {
-        Button(
-            action: {
-                _ = searchScrollLock.toggle(lock)
-            },
-            label: {
-                Label(
-                    lock.rawValue.capitalized,
-                    systemImage: searchScrollLock.contains(lock)
-                        ? "checkmark.square"
-                        : "square"
-                )
-            }
-        )
     }
     
     var searchInput: some View {
