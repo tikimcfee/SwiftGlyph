@@ -9,21 +9,30 @@ import SwiftUI
 import Combine
 import BitHandling
 
-struct EditPair: Equatable {
-    let file: URL
-    var input: AttributedString
+public struct EditPair: Equatable {
+    let selectedFile: URL
+    var userInput: AttributedString
 }
 
-class UserTextEditingStateHolder: ObservableObject {
+public struct WatchPair: Equatable {
+    let sourceData: Data
+    let attributedString: AttributedString
+}
+
+public typealias Watcher = MappingFileWatcher<WatchPair>
+
+public class UserTextEditingStateHolder: ObservableObject {
     @Published var userTextInput = AttributedString("")
     @Published var userTextSelection: NSRange?
     @Published var userSelectedFile: URL?
-    @Published var editPairs: EditPair?
     
-    private var fileWatcher: MappingFileWatcher<AttributedString>?
+    @Published private var editPairs: EditPair?
+    @Published private var watchData: Data?
+    
+    private var fileWatcher: Watcher?
     private var bag = Set<AnyCancellable>()
     
-    init() {
+    public init() {
         bind()
     }
     
@@ -41,27 +50,27 @@ class UserTextEditingStateHolder: ObservableObject {
                 do {
                     let selectedFileText = try String(contentsOf: selectedFile)
                     let attributedContents = AttributedString(selectedFileText)
-                    return EditPair(file: selectedFile, input: attributedContents)
+                    return EditPair(selectedFile: selectedFile, userInput: attributedContents)
                 } catch {
                     print(error)
                     return nil
                 }
             }
             .receive(on: DispatchQueue.main)
-            .sink { pair in
+            .sink { (pair: EditPair) in
                 // TODO: Use a different editor. Lol.
                 // Always update text selection when setting new content to ensure TextViewWrapper updates
                 self.userTextSelection = .none
-                self.userTextInput = pair.input
-                self.editPairs = .init(file: pair.file, input: pair.input)
-                self.restartFileWatcher(fileURL: pair.file)
+                self.userTextInput = pair.userInput
+                self.restartFileWatcher(fileURL: pair.selectedFile)
+                self.editPairs = pair
             }
             .store(in: &bag)
         
         $userTextInput
             .removeDuplicates()
             .sink { input in
-                self.editPairs?.input = input
+                self.editPairs?.userInput = input
             }
             .store(in: &bag)
             
@@ -73,7 +82,7 @@ class UserTextEditingStateHolder: ObservableObject {
             .compactMap { $0 }
             .removeDuplicates()
             .sink { pair in
-                let (selectedFile, input) = (pair.file, pair.input)
+                let (selectedFile, input) = (pair.selectedFile, pair.userInput)
                 do {
                     let inputStagingFile = AppFiles.file(
                         named: "inputStagingFile",
@@ -116,12 +125,14 @@ extension UserTextEditingStateHolder {
     
     private func makeWatcher(
         fileURL: URL
-    ) -> MappingFileWatcher<AttributedString> {
+    ) -> Watcher {
         MappingFileWatcher(
             path: fileURL.path(),
             pathReader: { url in
+                let data = try Data(contentsOf: url)
                 let selectedFileText = try String(contentsOf: url)
-                return AttributedString(selectedFileText)
+                let attributedString = AttributedString(selectedFileText)
+                return .init(sourceData: data, attributedString: attributedString)
             },
             differenceReader: { left, right in
                 left != right
@@ -130,15 +141,16 @@ extension UserTextEditingStateHolder {
     }
     
     private func onFileWatcherEvent(
-        _ result: MappingFileWatcher<AttributedString>.RefreshResult
+        _ result: Watcher.RefreshResult
     ) {
         switch result {
         case .noChanges:
             break
             
-        case .updated(let data):
+        case .updated(let result):
             print("- New string set")
-            userTextInput = data
+            userTextInput = result.attributedString
+            watchData = result.sourceData
         }
     }
 }

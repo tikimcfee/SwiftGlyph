@@ -55,7 +55,9 @@ extension SwiftGlyphRoot {
             root.add(child: nextGrid.rootNode)
         }.store(in: &bag)
         
-        holder.$userTextInput
+        GlobalInstances
+            .userTextEditHolder
+            .$userTextInput
             .receive(on: WorkerPool.shared.nextWorker())
             .removeDuplicates()
             .sink { input in

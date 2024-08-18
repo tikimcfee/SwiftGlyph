@@ -7,13 +7,13 @@
 
 import Foundation
 
-final class MappingFileWatcher<MappedResult> {
-    typealias CancelBlock = () -> Void
-    typealias UpdateClosure = (RefreshResult) -> Void
-    typealias PathReader = (URL) throws -> MappedResult
-    typealias DifferenceReader = (MappedResult, MappedResult) throws -> Bool
+public final class MappingFileWatcher<MappedResult> {
+    public typealias CancelBlock = () -> Void
+    public typealias UpdateClosure = (RefreshResult) -> Void
+    public typealias PathReader = (URL) throws -> MappedResult
+    public typealias DifferenceReader = (MappedResult, MappedResult) throws -> Bool
     
-    enum WatchError: Error {
+    public enum WatchError: Error {
         case alreadyStarted
         case alreadyStopped
         case failedToStart(reason: String)

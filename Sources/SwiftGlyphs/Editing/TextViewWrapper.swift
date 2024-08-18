@@ -12,7 +12,7 @@ import STTextViewSwiftUI
 #endif
 
 struct TextViewWrapper: View {
-    @ObservedObject var holder = GlobalInstances.swiftGlyphRoot.holder
+    @ObservedObject var holder = GlobalInstances.userTextEditHolder
     
     var body: some View {
 #if os(macOS)

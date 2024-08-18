@@ -28,7 +28,6 @@ public class SwiftGlyphRoot: MetalLinkReader {
     var bag = Set<AnyCancellable>()
     
     lazy var root = RootNode(camera)
-    var holder = UserTextEditingStateHolder()
     
     var camera: DebugCamera {
         GlobalInstances.debugCamera
