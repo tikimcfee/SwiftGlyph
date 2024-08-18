@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import BitHandling
+import MetalLink
 
 public struct EditPair: Equatable {
     let selectedFile: URL
@@ -22,28 +23,34 @@ public struct WatchPair: Equatable {
 public typealias Watcher = MappingFileWatcher<WatchPair>
 
 public class UserTextEditingStateHolder: ObservableObject {
+    private let link: MetalLink
+    
     @Published var userTextInput = AttributedString("")
     @Published var userTextSelection: NSRange?
-    @Published var userSelectedFile: URL?
+    @Published var userSelectedGrid: CodeGrid?
     
     @Published private var editPairs: EditPair?
-    @Published private var watchData: Data?
+    @Published public private(set) var watchData: Data?
     
     private var fileWatcher: Watcher?
     private var bag = Set<AnyCancellable>()
     
-    public init() {
+    public init(
+        link: MetalLink
+    ) {
+        self.link = link
+        
         bind()
     }
     
     private func bind() {
-        $userSelectedFile
+        $userSelectedGrid
 //            .throttle(
 //                for: .milliseconds(300),
 //                scheduler: WorkerPool.shared.nextWorker(),
 //                latest: true
 //            )
-            .compactMap { $0 }
+            .compactMap { $0?.sourcePath }
             .removeDuplicates()
             .receive(on: WorkerPool.shared.nextWorker())
             .compactMap { selectedFile in
@@ -69,8 +76,6 @@ public class UserTextEditingStateHolder: ObservableObject {
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
                     self.userTextInput = pair.userInput
                 }
-                
-                
                 self.restartFileWatcher(fileURL: pair.selectedFile)
                 self.editPairs = pair
             }
@@ -85,9 +90,10 @@ public class UserTextEditingStateHolder: ObservableObject {
             
         $editPairs
             .debounce(
-                for: .milliseconds(300),
+                for: .milliseconds(60),
                 scheduler: WorkerPool.shared.nextWorker()
             )
+            .receive(on: WorkerPool.shared.nextWorker())
             .compactMap { $0 }
             .removeDuplicates()
             .sink { pair in

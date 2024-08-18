@@ -13,6 +13,7 @@ import STTextViewSwiftUI
 
 struct TextViewWrapper: View {
     @ObservedObject var holder = GlobalInstances.userTextEditHolder
+    @ObservedObject var renderer = GlobalInstances.userTextEditRenderer
     
     var body: some View {
 #if os(macOS)

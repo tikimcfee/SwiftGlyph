@@ -40,7 +40,9 @@ public extension GlobalInstances {
 public extension GlobalInstances {
     static let fileBrowser = FileBrowser()
     static let fileStream = fileBrowser.$scopes.share().eraseToAnyPublisher()
-    static let userTextEditHolder = UserTextEditingStateHolder()
+    
+    static let userTextEditHolder = UserTextEditingStateHolder(link: defaultLink)
+    static let userTextEditRenderer = UserTextEditingRenderer(link: defaultLink, holder: userTextEditHolder, builder: gridStore.builder)
 }
 
 // MARK: - Syntax

@@ -74,11 +74,9 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                     .toggle(availableGrid)
             }
             
-            if let source = availableGrid.sourcePath {
-                GlobalInstances
-                    .userTextEditHolder
-                    .userSelectedFile = source
-            }
+            GlobalInstances
+                .userTextEditHolder
+                .userSelectedGrid = availableGrid
         }
     }
     

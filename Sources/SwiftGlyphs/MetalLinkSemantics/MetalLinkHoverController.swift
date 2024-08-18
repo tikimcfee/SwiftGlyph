@@ -39,6 +39,10 @@ public class MetalLinkHoverController: ObservableObject {
         guard trackedGrids[newGrid.id] == nil else { return }
         trackedGrids[newGrid.id] = newGrid
     }
+    
+    public func detachPickingStream(from grid: CodeGrid) {
+        trackedGrids[grid.id] = nil
+    }
 }
 
 private extension MetalLinkHoverController {

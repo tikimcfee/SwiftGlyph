@@ -147,6 +147,7 @@ public class CodeGrid: Identifiable, Equatable {
         }
         targetNode.add(child: node)
         self.nameNode = node
+        node.parentGrid = self
     }
     
     @discardableResult
@@ -187,6 +188,19 @@ public class CodeGrid: Identifiable, Equatable {
 }
 
 // MARK: - Hashing
+extension CodeGrid {
+    func copyDisplayState(from other: CodeGrid) {
+        self.id = other.id
+        self.position = other.position
+        self.rotation = other.rotation
+        self.sourcePath = other.sourcePath
+        self.fileName = other.fileName
+        
+        self.applyName()
+        self.updateBackground()
+    }
+}
+
 extension CodeGrid: Hashable {
     public func hash(into hasher: inout Hasher) {
         laztrace(#fileID,#function,hasher)
