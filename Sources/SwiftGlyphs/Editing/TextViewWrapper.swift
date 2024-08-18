@@ -19,7 +19,7 @@ struct TextViewWrapper: View {
         TextView(
             text: $holder.userTextInput,
             selection: $holder.userTextSelection,
-            options: [.highlightSelectedLine],
+            options: [],
             plugins: []
         )
         .textViewFont(.monospacedSystemFont(ofSize: 14, weight: .regular))

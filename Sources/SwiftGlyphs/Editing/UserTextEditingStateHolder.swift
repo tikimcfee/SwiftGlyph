@@ -38,7 +38,6 @@ public class UserTextEditingStateHolder: ObservableObject {
     
     private func bind() {
         $userSelectedFile
-            .receive(on: WorkerPool.shared.nextWorker())
 //            .throttle(
 //                for: .milliseconds(300),
 //                scheduler: WorkerPool.shared.nextWorker(),
@@ -46,10 +45,14 @@ public class UserTextEditingStateHolder: ObservableObject {
 //            )
             .compactMap { $0 }
             .removeDuplicates()
+            .receive(on: WorkerPool.shared.nextWorker())
             .compactMap { selectedFile in
                 do {
                     let selectedFileText = try String(contentsOf: selectedFile)
-                    let attributedContents = AttributedString(selectedFileText)
+                    let attributedContents = AttributedString(
+                        selectedFileText,
+                        attributes: .init([.foregroundColor: NSUIColor.white])
+                    )
                     return EditPair(selectedFile: selectedFile, userInput: attributedContents)
                 } catch {
                     print(error)
@@ -60,8 +63,14 @@ public class UserTextEditingStateHolder: ObservableObject {
             .sink { (pair: EditPair) in
                 // TODO: Use a different editor. Lol.
                 // Always update text selection when setting new content to ensure TextViewWrapper updates
-                self.userTextSelection = .none
-                self.userTextInput = pair.userInput
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(50)) {
+                    self.userTextSelection = .none
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(100)) {
+                    self.userTextInput = pair.userInput
+                }
+                
+                
                 self.restartFileWatcher(fileURL: pair.selectedFile)
                 self.editPairs = pair
             }
@@ -116,7 +125,16 @@ extension UserTextEditingStateHolder {
                 try fileWatcher.stop()
             }
             let newWatcher = makeWatcher(fileURL: fileURL)
-            try newWatcher.start(closure: onFileWatcherEvent(_:))
+            
+            var droppedFirst = false
+            try newWatcher.start(closure: {
+                guard droppedFirst else {
+                    droppedFirst = true
+                    return
+                }
+                self.onFileWatcherEvent($0)
+            })
+            
             fileWatcher = newWatcher
         } catch {
             print(error)
@@ -131,7 +149,10 @@ extension UserTextEditingStateHolder {
             pathReader: { url in
                 let data = try Data(contentsOf: url)
                 let selectedFileText = try String(contentsOf: url)
-                let attributedString = AttributedString(selectedFileText)
+                let attributedString = AttributedString(
+                    selectedFileText,
+                    attributes: .init([.foregroundColor: NSUIColor.white])
+                )
                 return .init(sourceData: data, attributedString: attributedString)
             },
             differenceReader: { left, right in
