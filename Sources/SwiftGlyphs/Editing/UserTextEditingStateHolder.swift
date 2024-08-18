@@ -65,7 +65,6 @@ class UserTextEditingStateHolder: ObservableObject {
             }
             .store(in: &bag)
             
-        
         $editPairs
             .debounce(
                 for: .milliseconds(300),
