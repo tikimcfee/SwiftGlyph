@@ -18,9 +18,9 @@ class UserTextEditingStateHolder: ObservableObject {
     @Published var userTextInput = AttributedString("")
     @Published var userTextSelection: NSRange?
     @Published var userSelectedFile: URL?
+    @Published var editPairs: EditPair?
     
-    @Published private var editPairs: EditPair?
-    
+    private var fileWatcher: MappingFileWatcher<AttributedString>?
     private var bag = Set<AnyCancellable>()
     
     init() {
@@ -54,6 +54,7 @@ class UserTextEditingStateHolder: ObservableObject {
                 self.userTextSelection = .none
                 self.userTextInput = pair.input
                 self.editPairs = .init(file: pair.file, input: pair.input)
+                self.restartFileWatcher(fileURL: pair.file)
             }
             .store(in: &bag)
         
@@ -63,6 +64,7 @@ class UserTextEditingStateHolder: ObservableObject {
                 self.editPairs?.input = input
             }
             .store(in: &bag)
+            
         
         $editPairs
             .debounce(
@@ -74,7 +76,10 @@ class UserTextEditingStateHolder: ObservableObject {
             .sink { pair in
                 let (selectedFile, input) = (pair.file, pair.input)
                 do {
-                    let inputStagingFile = AppFiles.file(named: "inputStagingFile", in: AppFiles.glyphSceneDirectory)
+                    let inputStagingFile = AppFiles.file(
+                        named: "inputStagingFile",
+                        in: AppFiles.glyphSceneDirectory
+                    )
                     let inputData = NSAttributedString(input).string
                     try inputData.write(
                         to: inputStagingFile,
@@ -83,7 +88,7 @@ class UserTextEditingStateHolder: ObservableObject {
                     )
                     
                     let currentFileContents = try Data(contentsOf: selectedFile, options: .alwaysMapped)
-                    let newFileContents = try Data(contentsOf: inputStagingFile, options: .alwaysMapped)
+                    let newFileContents = try Data(contentsOf: inputStagingFile, options: .uncached)
                     
                     if currentFileContents != newFileContents {
                         try AppFiles.replace(fileUrl: selectedFile, with: inputStagingFile)
@@ -93,5 +98,48 @@ class UserTextEditingStateHolder: ObservableObject {
                 }
             }
             .store(in: &bag)
+    }
+}
+
+extension UserTextEditingStateHolder {
+    private func restartFileWatcher(fileURL: URL) {
+        do {
+            if let fileWatcher {
+                try fileWatcher.stop()
+            }
+            let newWatcher = makeWatcher(fileURL: fileURL)
+            try newWatcher.start(closure: onFileWatcherEvent(_:))
+            fileWatcher = newWatcher
+        } catch {
+            print(error)
+        }
+    }
+    
+    private func makeWatcher(
+        fileURL: URL
+    ) -> MappingFileWatcher<AttributedString> {
+        MappingFileWatcher(
+            path: fileURL.path(),
+            pathReader: { url in
+                let selectedFileText = try String(contentsOf: url)
+                return AttributedString(selectedFileText)
+            },
+            differenceReader: { left, right in
+                left != right
+            }
+        )
+    }
+    
+    private func onFileWatcherEvent(
+        _ result: MappingFileWatcher<AttributedString>.RefreshResult
+    ) {
+        switch result {
+        case .noChanges:
+            break
+            
+        case .updated(let data):
+            print("- New string set")
+            userTextInput = data
+        }
     }
 }

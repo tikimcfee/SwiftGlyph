@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
         .package(url: "https://github.com/ChimeHQ/Neon.git", branch: "main"),
         .package(url: "https://github.com/alex-pinkus/tree-sitter-swift.git", branch: "with-generated-files"),
-        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
+        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
