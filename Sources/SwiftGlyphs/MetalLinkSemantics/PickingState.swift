@@ -54,6 +54,21 @@ public struct GridPickingState {
         case matchesLast(last: GridPickingState, new: GridPickingState)
         case foundNew(last: GridPickingState?, new: GridPickingState)
         
+        public var name: String {
+            switch self {
+            case .initial:
+                "Initial"
+            case .notFound:
+                "NotFound"
+            case .useLast(let last):
+                "UseLast - \(last?.targetGrid.id)"
+            case .matchesLast(let last, let new):
+                "MatchesLast - \(new.targetGrid.id)"
+            case .foundNew(let last, let new):
+                "FoundNew - \(new.targetGrid.id)"
+            }
+        }
+        
         public var hasNew: Bool {
             switch self {
             case .initial:

@@ -1,7 +1,7 @@
-//  
+//
 //
 //  Created on 12/17/23.
-//  
+//
 
 #if os(iOS)
 import ARKit
@@ -11,10 +11,12 @@ import MetalLink
 import BitHandling
 
 
+
 public struct SwiftGlyphHoverView: View, MetalLinkReader {
     public let link: MetalLink
+    
     @State private var currentHoveredGrid: GridPickingState.Event?
-//    @State private var currentHoveredNode: NodePickingState.Event?
+    @State private var currentHoveredNode: NodePickingState.Event?
     
     @State private var mousePosition: LFloat2?
     @State private var tapPosition: LFloat2?
@@ -22,7 +24,7 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     #if os(macOS)
     @State private var modifiers = OSEvent.ModifierFlags()
     #endif
-
+    
     @State private var autoJump = false
     
     public init(link: MetalLink) {
@@ -32,47 +34,30 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     // We assume we take up the same size as the parent
     public var body: some View {
         rootView()
-            .onReceive(
-                GlobalInstances.gridStore
-                    .nodeHoverController
-                    .sharedGridEvent
-                    .subscribe(on: RunLoop.main)
-                    .receive(on: RunLoop.main),
-                perform: { hoveredGrid in
-                    self.currentHoveredGrid = hoveredGrid
-                }
+            .attachedHoverState(
+                $currentHoveredGrid,
+                $currentHoveredNode
             )
             .onReceive(
-                GlobalInstances.gridStore
-                    .nodeHoverController
-                    .sharedGlyphEvent
-                    .subscribe(on: RunLoop.main)
-                    .receive(on: RunLoop.main),
-                perform: { hoveredGlyph in
-                    if
-                        let grid = GlobalInstances
-                            .userTextEditHolder
-                            .userSelectedGrid,
-                        hoveredGlyph.latestState?.targetGrid.id == grid.id,
-                        let index = hoveredGlyph.latestState?.node.instanceConstants?.bufferIndex
-                    {
-                        DispatchQueue.main.async {
-                            GlobalInstances
-                                .userTextEditHolder
-                                .userTextSelection = NSRange(location: Int(index), length: 1)
-                        }
-                    }
-                }
+                link.input.sharedMouseDown, 
+                perform: onMouseDown(_:)
             )
-            .onReceive(link.input.sharedMouse) { event in
-                #if os(macOS)
-                modifiers = event.modifierFlags
-                #endif
-                
-                mousePosition = event.locationInWindow.asSimd
-                
+    }
+    
+    private func onGlyphEvent(_ hoveredGlyph: NodePickingState.Event) {
+        if
+            let grid = GlobalInstances
+                .userTextEditHolder
+                .userSelectedGrid,
+            hoveredGlyph.latestState?.targetGrid.id == grid.id,
+            let index = hoveredGlyph.latestState?.node.instanceConstants?.bufferIndex
+        {
+            DispatchQueue.main.async {
+                GlobalInstances
+                    .userTextEditHolder
+                    .userTextSelection = NSRange(location: Int(index), length: 1)
             }
-            .onReceive(link.input.sharedMouseDown, perform: onMouseDown(_:))
+        }
     }
     
     private func onMouseDown(_ mouseDown: OSEvent) {
@@ -105,24 +90,60 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
     
     @ViewBuilder
     func rootView() -> some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .topLeading) {
-                VStack(alignment: .leading) {
-                    if 
-                        let hoveredState = currentHoveredGrid?.newState
-                    {
-                        VStack(alignment: .leading) {
-                            fileNameHover(target: hoveredState.targetGrid)
-                        }
-                    }
+        PointerHoverView(link: link)
+    }
+    
+    struct PointerHoverView: View {
+        let link: MetalLink
+        
+        @State private var currentHoveredGrid: GridPickingState.Event?
+        @State private var currentHoveredNode: NodePickingState.Event?
+        
+        var body: some View {
+            GeometryReader { proxy in
+                ZStack(alignment: .topLeading) {
+                    gridStateView()
                 }
+                .frame(
+                    width: proxy.size.width,
+                    height: proxy.size.height,
+                    alignment: .topLeading
+                )
                 .attachedToMousePosition(in: proxy, with: link)
+                .attachedHoverState(
+                    $currentHoveredGrid,
+                    $currentHoveredNode
+                )
             }
-            .frame(
-                width: proxy.size.width,
-                height: proxy.size.height,
-                alignment: .topLeading
-            )
+        }
+        
+        @ViewBuilder
+        func gridStateView() -> some View {
+            switch currentHoveredGrid {
+            case let .foundNew(_, event),
+                 let .matchesLast(_, event):
+                fileNameView(event.targetGrid)
+                
+            case .initial,
+                 .notFound,
+                 .useLast(_),
+                 .none:
+                EmptyView()
+            }
+        }
+        
+        @ViewBuilder
+        func fileNameView(
+            _ grid: CodeGrid
+        ) -> some View {
+            VStack(alignment: .leading) {
+                Text(grid.fileName)
+                    .font(.headline)
+                    .bold()
+            }
+            .padding(4)
+            .background(Color.primaryBackground.opacity(0.8))
+            .clipShape(RoundedRectangle(cornerRadius: 2))
         }
     }
     
@@ -164,27 +185,14 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 ForEach(bookmarks, id: \.id) { grid in
                     HStack(alignment: .top) {
                         gridOptionList(target: grid)
-                        fileNameHover(target: grid)
                     }
                 }
             }
         }
     }
     
-    @ViewBuilder
-    func fileNameHover(
-        target grid: CodeGrid
-    ) -> some View {
-        VStack(alignment: .leading) {
-            Text(grid.fileName)
-                .font(.headline)
-                .bold()
-        }
-        .padding(4)
-        .background(Color.primaryBackground.opacity(0.8))
-        .clipShape(RoundedRectangle(cornerRadius: 2))
-    }
-
+    
+    
     @ViewBuilder
     func gridOptionList(
         target grid: CodeGrid
