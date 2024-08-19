@@ -16,6 +16,7 @@ public struct EditPair: Equatable {
 }
 
 public struct WatchPair: Equatable {
+    let sourceURL: URL
     let sourceData: Data
     let attributedString: AttributedString
 }
@@ -138,7 +139,7 @@ extension UserTextEditingStateHolder {
                     droppedFirst = true
                     return
                 }
-                self.onFileWatcherEvent($0)
+                self.onFileWatcherEvent(source: fileURL, $0)
             })
             
             fileWatcher = newWatcher
@@ -159,7 +160,11 @@ extension UserTextEditingStateHolder {
                     selectedFileText,
                     attributes: .init([.foregroundColor: NSUIColor.white])
                 )
-                return .init(sourceData: data, attributedString: attributedString)
+                return .init(
+                    sourceURL: url,
+                    sourceData: data,
+                    attributedString: attributedString
+                )
             },
             differenceReader: { left, right in
                 left != right
@@ -168,6 +173,7 @@ extension UserTextEditingStateHolder {
     }
     
     private func onFileWatcherEvent(
+        source: URL,
         _ result: Watcher.RefreshResult
     ) {
         switch result {

@@ -14,6 +14,7 @@ import BitHandling
 public struct SwiftGlyphHoverView: View, MetalLinkReader {
     public let link: MetalLink
     @State private var currentHoveredGrid: GridPickingState.Event?
+//    @State private var currentHoveredNode: NodePickingState.Event?
     
     @State private var mousePosition: LFloat2?
     @State private var tapPosition: LFloat2?
@@ -39,6 +40,28 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                     .receive(on: RunLoop.main),
                 perform: { hoveredGrid in
                     self.currentHoveredGrid = hoveredGrid
+                }
+            )
+            .onReceive(
+                GlobalInstances.gridStore
+                    .nodeHoverController
+                    .sharedGlyphEvent
+                    .subscribe(on: RunLoop.main)
+                    .receive(on: RunLoop.main),
+                perform: { hoveredGlyph in
+                    if
+                        let grid = GlobalInstances
+                            .userTextEditHolder
+                            .userSelectedGrid,
+                        hoveredGlyph.latestState?.targetGrid.id == grid.id,
+                        let index = hoveredGlyph.latestState?.node.instanceConstants?.bufferIndex
+                    {
+                        DispatchQueue.main.async {
+                            GlobalInstances
+                                .userTextEditHolder
+                                .userTextSelection = NSRange(location: Int(index), length: 1)
+                        }
+                    }
                 }
             )
             .onReceive(link.input.sharedMouse) { event in
