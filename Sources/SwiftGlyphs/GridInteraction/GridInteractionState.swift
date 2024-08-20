@@ -83,6 +83,7 @@ public extension Array where Element: CodeGrid {
         case addedToSet, removedFromSet
     }
     
+    @discardableResult
     mutating func toggle(_ toggled: Element) -> Selection {
         let index = firstIndex(where: { $0.id == toggled.id })
         if let index {

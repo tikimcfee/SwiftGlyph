@@ -7,16 +7,14 @@
 
 import SwiftUI
 
-#if canImport(STTextViewSwiftUI)
+import STTextView
 import STTextViewSwiftUI
-#endif
 
 struct TextViewWrapper: View {
     @ObservedObject var holder = GlobalInstances.userTextEditHolder
     @ObservedObject var renderer = GlobalInstances.userTextEditRenderer
     
     var body: some View {
-#if os(macOS)
         TextView(
             text: $holder.userTextInput,
             selection: $holder.userTextSelection,
@@ -24,10 +22,5 @@ struct TextViewWrapper: View {
             plugins: []
         )
         .textViewFont(.monospacedSystemFont(ofSize: 14, weight: .regular))
-#else
-        Text("Text editing is hard for da little phone buddies. Gotta have big beefy operating system to actually edit words. Go figure.")
-#endif
     }
-    
-    
 }

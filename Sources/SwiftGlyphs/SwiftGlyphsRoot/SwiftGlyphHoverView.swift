@@ -39,6 +39,10 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
                 $currentHoveredNode
             )
             .onReceive(
+                currentHoveredNode.publisher,
+                perform: onGlyphEvent(_:)
+            )
+            .onReceive(
                 link.input.sharedMouseDown, 
                 perform: onMouseDown(_:)
             )
@@ -65,26 +69,24 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
         modifiers = mouseDown.modifierFlags
         #endif
         
-        #if os(iOS)
-        let hasNew = currentHoveredGrid?.newState?.targetGrid != nil
-        #else
-        let hasNew = currentHoveredGrid?.hasNew == true
-        #endif
-        
-        let availableGrid = currentHoveredGrid?.newState?.targetGrid
-        
-        if let availableGrid {
-            if hasNew {
-                _ = GlobalInstances
-                    .gridStore
-                    .gridInteractionState
-                    .bookmarkedGrids
-                    .toggle(availableGrid)
-            }
+        switch currentHoveredGrid {
+        case .initial,
+             .notFound,
+             .useLast(_),
+             .none:
+            break
+            
+        case .matchesLast(_, let new),
+                .foundNew(_, let new):
+            GlobalInstances
+                .gridStore
+                .gridInteractionState
+                .bookmarkedGrids
+                .toggle(new.targetGrid)
             
             GlobalInstances
                 .userTextEditHolder
-                .userSelectedGrid = availableGrid
+                .userSelectedGrid = new.targetGrid
         }
     }
     
@@ -145,75 +147,5 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             .background(Color.primaryBackground.opacity(0.8))
             .clipShape(RoundedRectangle(cornerRadius: 2))
         }
-    }
-    
-    @ViewBuilder
-    var bookmarkListResizable: some View {
-        ResizableComponentView(
-            model: {
-                AppStatePreferences.shared.getCustom(
-                    name: "DragState-Hover-Glyph",
-                    makeDefault: ComponentModel.init
-                )
-            },
-            onSave: {
-                AppStatePreferences.shared.setCustom(
-                    name: "DragState-Hover-Glyph",
-                    value: $0
-                )
-            },
-            content: {
-                bookmarkListContent
-                    .padding(2)
-                    .background(Color.primaryBackground.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-        )
-    }
-    
-    @ViewBuilder
-    var bookmarkListContent: some View {
-        if GlobalInstances.gridStore.gridInteractionState.bookmarkedGrids.isEmpty {
-            Text("No Bookmarks").bold().padding()
-        } else {
-            let bookmarks = GlobalInstances
-                .gridStore
-                .gridInteractionState
-                .bookmarkedGrids
-            
-            VStack(alignment: .leading, spacing: 2) {
-                ForEach(bookmarks, id: \.id) { grid in
-                    HStack(alignment: .top) {
-                        gridOptionList(target: grid)
-                    }
-                }
-            }
-        }
-    }
-    
-    
-    
-    @ViewBuilder
-    func gridOptionList(
-        target grid: CodeGrid
-    ) -> some View {
-        HStack(alignment: .center) {
-            SGButton("Jump", "") {
-                GlobalInstances.debugCamera.interceptor.resetPositions()
-                GlobalInstances.debugCamera.position = grid.worldPosition.translated(dZ: 64)
-                GlobalInstances.debugCamera.rotation = .zero
-            }
-            
-            SGButton("-", "") {
-                GlobalInstances
-                    .gridStore
-                    .gridInteractionState
-                    .bookmarkedGrids
-                    .removeAll(where: { $0.id == grid.id })
-            }
-        }
-        .padding(4)
-        .background(Color.primaryBackground.opacity(0.8))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

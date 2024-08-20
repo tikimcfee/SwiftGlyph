@@ -17,9 +17,10 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
-        .package(url: "https://github.com/ChimeHQ/Neon.git", branch: "main"),
         .package(url: "https://github.com/alex-pinkus/tree-sitter-swift.git", branch: "with-generated-files"),
-        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link")
+        .package(url: "https://github.com/ChimeHQ/SwiftTreeSitter.git", exact: "0.8.0"),
+        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
+        .package(url: "https://github.com/tikimcfee/STTextView.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,8 +30,9 @@ let package = Package(
             dependencies: [
                 "BitHandling",
                 "MetalLink",
-                .product(name: "Neon", package: "Neon", condition: .when(platforms: [.macOS])),
-                .product(name: "TreeSitterSwift", package: "tree-sitter-swift")
+                .product(name: "TreeSitterSwift", package: "tree-sitter-swift"),
+                .product(name: "SwiftTreeSitter", package: "SwiftTreeSitter"),
+                .product(name: "STTextView", package: "STTextView")
             ],
             resources: [
                 .process("Resources/Assets.xcassets")

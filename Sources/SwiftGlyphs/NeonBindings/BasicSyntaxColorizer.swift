@@ -10,11 +10,8 @@ import MetalLink
 import BitHandling
 import Foundation
 
-#if canImport(Neon)
-import Neon
 import TreeSitterSwift
 import SwiftTreeSitter
-#endif
 
 public extension SerialColor {
     var vector: LFloat4 {
@@ -46,11 +43,9 @@ public class BasicSyntaxColorizer: MetalLinkReader {
     public let commandQueue: MTLCommandQueue
     public let queryRootUrl: URL
     
-    #if canImport(Neon)
     public let language: Language
     public let parser: Parser
     public var cachedQueries = [ColorizerQuery: Query]()
-    #endif
     
     private lazy var pipelineState = CachedValue<MTLComputePipelineState?>(update: {
         do {
@@ -73,10 +68,8 @@ public class BasicSyntaxColorizer: MetalLinkReader {
             .appendingPathComponent("TreeSitterSwift_TreeSitterSwift.bundle")
             .appendingPathComponent("Contents/Resources/queries/")
         
-        #if canImport(Neon)
         self.language = Language(language: tree_sitter_swift())
         self.parser = Parser()
-        #endif
     }
     
     public func runColorizer(
@@ -115,7 +108,6 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         )
     }
     
-    #if canImport(Neon)
     public func execute(
         colorizerQuery: ColorizerQuery,
         for loadedText: String
@@ -180,14 +172,6 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         
         return outputBuffer
     }
-    #else
-    public func execute(
-        colorizerQuery: ColorizerQuery,
-        for loadedText: String
-    ) throws -> MTLBuffer {
-        return try link.makeBuffer(of: Int.self, count: 1)
-    }
-    #endif
     
     public func blitColors(
         from colorBuffer: MTLBuffer,
