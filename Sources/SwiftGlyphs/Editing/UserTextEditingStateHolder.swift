@@ -87,9 +87,14 @@ public class UserTextEditingStateHolder: ObservableObject {
             .store(in: &bag)
             
         $editPairs
-            .debounce(
-                for: .milliseconds(60),
-                scheduler: WorkerPool.shared.nextWorker()
+//            .debounce(
+//                for: .milliseconds(60),
+//                scheduler: WorkerPool.shared.nextWorker()
+//            )
+            .throttle(
+                for: .milliseconds(16),
+                scheduler: WorkerPool.shared.nextWorker(),
+                latest: true
             )
             .receive(on: WorkerPool.shared.nextWorker())
             .compactMap { $0 }
@@ -113,7 +118,10 @@ public class UserTextEditingStateHolder: ObservableObject {
                     
                     if currentFileContents != newFileContents {
                         try AppFiles.replace(fileUrl: selectedFile, with: inputStagingFile)
-                        self.watchData = newFileContents
+                        
+                        DispatchQueue.main.async {
+                            self.watchData = newFileContents
+                        }
                     }
                 } catch {
                     print(error)
@@ -164,6 +172,7 @@ private extension UserTextEditingStateHolder {
     ) -> Watcher {
         MappingFileWatcher(
             path: fileURL.path(),
+            refreshInterval: 1.0, // Refresh from FS slower than the throttle to avoid rewriting data
             pathReader: { url in
                 let data = try Data(contentsOf: url)
                 let selectedFileText = try String(contentsOf: url)
@@ -188,7 +197,10 @@ private extension UserTextEditingStateHolder {
         case .noChanges:
             break
             
-        case .updated(let result) where result.attributedString != userTextInput:
+        case .updated(let result) where (
+            result.attributedString != userTextInput
+            && watchData != result.sourceData
+        ):
             print("- New string set")
             userTextInput = result.attributedString
             watchData = result.sourceData
