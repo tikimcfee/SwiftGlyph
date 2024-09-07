@@ -56,10 +56,15 @@ public struct SwiftGlyphHoverView: View, MetalLinkReader {
             hoveredGlyph.latestState?.targetGrid.id == grid.id,
             let index = hoveredGlyph.latestState?.node.instanceConstants?.bufferIndex
         {
+            let range = NSRange(location: Int(index), length: 1)
             DispatchQueue.main.async {
+                guard range != GlobalInstances
+                    .userTextEditHolder
+                    .userTextSelection else { return }
+                
                 GlobalInstances
                     .userTextEditHolder
-                    .userTextSelection = NSRange(location: Int(index), length: 1)
+                    .userTextSelection = range
             }
         }
     }

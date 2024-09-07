@@ -85,12 +85,24 @@ public class UserTextEditingStateHolder: ObservableObject {
                 self.editPairs?.userInput = input
             }
             .store(in: &bag)
+        
+//        $userTextSelection
+//            .removeDuplicates()
+//            .compactMap { $0 }
+//            .combineLatest($userSelectedGrid.compactMap { $0 })
+//            .sink { selection, grid in
+//                let new = selection.location
+//                let (count, pointer) = grid.rootNode.instancePointerPair
+//                guard new > 0 && new < count else { return }
+//                
+//                GlobalInstances
+//                    .defaultLink
+//                    .glyphPickingTexture
+//                    .currentHover = pointer[new].instanceID
+//            }
+//            .store(in: &bag)
             
         $editPairs
-//            .debounce(
-//                for: .milliseconds(60),
-//                scheduler: WorkerPool.shared.nextWorker()
-//            )
             .throttle(
                 for: .milliseconds(16),
                 scheduler: WorkerPool.shared.nextWorker(),
