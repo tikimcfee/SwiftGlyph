@@ -57,10 +57,7 @@ public class UserTextEditingStateHolder: ObservableObject {
             .compactMap { selectedFile in
                 do {
                     let selectedFileText = try String(contentsOf: selectedFile)
-                    let attributedContents = AttributedString(
-                        selectedFileText,
-                        attributes: .init([.foregroundColor: NSUIColor.white])
-                    )
+                    let attributedContents = self.__demo_TerminalAttributedString(selectedFileText)
                     return EditPair(selectedFile: selectedFile, userInput: attributedContents)
                 } catch {
                     print(error)
@@ -116,6 +113,7 @@ public class UserTextEditingStateHolder: ObservableObject {
                     
                     if currentFileContents != newFileContents {
                         try AppFiles.replace(fileUrl: selectedFile, with: inputStagingFile)
+                        self.watchData = newFileContents
                     }
                 } catch {
                     print(error)
@@ -125,8 +123,21 @@ public class UserTextEditingStateHolder: ObservableObject {
     }
 }
 
-extension UserTextEditingStateHolder {
-    private func restartFileWatcher(fileURL: URL) {
+private extension UserTextEditingStateHolder {
+    func __demo_TerminalAttributedString(
+        _ text: String
+    ) -> AttributedString {
+        AttributedString(
+            text,
+            attributes: .init([
+                .foregroundColor: NSUIColor.white,
+                .font: NSUIFont.monospacedSystemFont(ofSize: 14, weight: .regular)
+            ])
+        )
+    }
+
+    
+    func restartFileWatcher(fileURL: URL) {
         do {
             if let fileWatcher {
                 try fileWatcher.stop()
@@ -148,7 +159,7 @@ extension UserTextEditingStateHolder {
         }
     }
     
-    private func makeWatcher(
+    func makeWatcher(
         fileURL: URL
     ) -> Watcher {
         MappingFileWatcher(
@@ -156,10 +167,7 @@ extension UserTextEditingStateHolder {
             pathReader: { url in
                 let data = try Data(contentsOf: url)
                 let selectedFileText = try String(contentsOf: url)
-                let attributedString = AttributedString(
-                    selectedFileText,
-                    attributes: .init([.foregroundColor: NSUIColor.white])
-                )
+                let attributedString = self.__demo_TerminalAttributedString(selectedFileText)
                 return .init(
                     sourceURL: url,
                     sourceData: data,
@@ -172,7 +180,7 @@ extension UserTextEditingStateHolder {
         )
     }
     
-    private func onFileWatcherEvent(
+    func onFileWatcherEvent(
         source: URL,
         _ result: Watcher.RefreshResult
     ) {
@@ -180,10 +188,13 @@ extension UserTextEditingStateHolder {
         case .noChanges:
             break
             
-        case .updated(let result):
+        case .updated(let result) where result.attributedString != userTextInput:
             print("- New string set")
             userTextInput = result.attributedString
             watchData = result.sourceData
+            
+        default:
+            break
         }
     }
 }
