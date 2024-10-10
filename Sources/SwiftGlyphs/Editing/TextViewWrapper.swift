@@ -9,7 +9,6 @@ import SwiftUI
 
 import STTextView
 import STTextViewSwiftUI
-import NeonPlugin
 
 struct TextViewWrapper: View {
     @ObservedObject var holder = GlobalInstances.userTextEditHolder
