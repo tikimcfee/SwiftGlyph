@@ -54,7 +54,6 @@ struct GlobalSearchView: View {
             gridListColumns
         }
         .padding()
-        .fixedSize()
     }
     
     @ViewBuilder
@@ -122,7 +121,7 @@ struct GlobalSearchView: View {
     
     var searchInput: some View {
         TextField(
-            "🔍 Find",
+            "Search",
             text: $searchState.filterText
         )
         .padding()

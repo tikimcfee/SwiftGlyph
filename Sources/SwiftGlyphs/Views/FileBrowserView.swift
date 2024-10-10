@@ -95,7 +95,7 @@ public struct FileBrowserView: View {
     
     var searchInput: some View {
         TextField(
-            "🔍 Find",
+            "Search",
             text: $browserState.filterText
         )
     }
@@ -192,9 +192,11 @@ private extension FileBrowserView {
             Text(path.lastPathComponent)
             
             Spacer()
-            
+        }
+        .overlay(alignment: .trailing) {
             if isHovered(scope) {
                 showDirectoryButton(path)
+                    .padding(2)
             }
         }
     }

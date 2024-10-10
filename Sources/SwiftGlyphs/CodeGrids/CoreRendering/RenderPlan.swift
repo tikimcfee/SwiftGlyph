@@ -253,14 +253,14 @@ private extension RenderPlan {
                         $0.updateBackground()
                     }
                 }
-//            do {
-//                try GlobalInstances.colorizer.runColorizer(
-//                    colorizerQuery: .highlights,
-//                    on: collection
-//                )
-//            } catch {
-//                print("lol internet")
-//            }
+            do {
+                try GlobalInstances.colorizer.runColorizer(
+                    colorizerQuery: .highlights,
+                    on: collection
+                )
+            } catch {
+                print("lol internet")
+            }
             
         case .notBuilt:
             break

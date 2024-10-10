@@ -25,7 +25,6 @@ public struct AppControlPanelToggles: View {
                 }
             }
         }
-        .fixedSize()
         .padding()
     }
     

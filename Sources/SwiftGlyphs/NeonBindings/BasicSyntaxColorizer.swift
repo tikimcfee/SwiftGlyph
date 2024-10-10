@@ -144,7 +144,7 @@ public class BasicSyntaxColorizer: MetalLinkReader {
             count: loadedText.count
         )
         outputPointer.update(
-            repeating: LFloat4.one,
+            repeating: LFloat4.zero,
             count: loadedText.count
         )
         
