@@ -40,6 +40,7 @@ public class WordNode: MetalLinkNode {
         for glyph in glyphs {
             // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
             glyph.instanceConstants?.useParentMatrix = .zero
+            glyph.instanceConstants?.ignoreHover = 1
             glyph.parent = self
             glyph.position = LFloat3(x: xOffset, y: 0, z: 0)
             xOffset += glyph.boundsWidth

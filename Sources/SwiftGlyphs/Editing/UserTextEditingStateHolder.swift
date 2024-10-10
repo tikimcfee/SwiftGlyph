@@ -18,7 +18,7 @@ public struct EditPair: Equatable {
 public struct WatchPair: Equatable {
     let sourceURL: URL
     let sourceData: Data
-    let attributedString: AttributedString
+    let string: String
 }
 
 public typealias Watcher = MappingFileWatcher<WatchPair>
@@ -188,11 +188,10 @@ private extension UserTextEditingStateHolder {
             pathReader: { url in
                 let data = try Data(contentsOf: url)
                 let selectedFileText = try String(contentsOf: url)
-                let attributedString = self.__demo_TerminalAttributedString(selectedFileText)
                 return .init(
                     sourceURL: url,
                     sourceData: data,
-                    attributedString: attributedString
+                    string: selectedFileText
                 )
             },
             differenceReader: { left, right in
@@ -210,11 +209,12 @@ private extension UserTextEditingStateHolder {
             break
             
         case .updated(let result) where (
-            result.attributedString != userTextInput
+            result.string != NSAttributedString(userTextInput).string
             && watchData != result.sourceData
         ):
             print("- New string set")
-            userTextInput = result.attributedString
+            let attributedString = self.__demo_TerminalAttributedString(result.string)
+            userTextInput = attributedString
             watchData = result.sourceData
             
         default:

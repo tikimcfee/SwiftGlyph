@@ -216,8 +216,15 @@ extension SwiftGlyphRoot {
                         action(childPath)
                     }
                 
-            case let .newSingleCommand(url, _):
-                action(url)
+            case let .newSingleCommand(url, selection):
+                switch selection {
+                case .removeFromWorld:
+                    if let grid = GlobalInstances.gridStore.gridCache.get(url) {
+                        grid.parent?.remove(child: grid.rootNode)
+                    }
+                default:
+                    action(url)
+                }
                 
             default:
                 break

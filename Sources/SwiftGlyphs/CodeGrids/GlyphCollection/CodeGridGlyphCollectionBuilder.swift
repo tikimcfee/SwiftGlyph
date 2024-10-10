@@ -28,7 +28,9 @@ public class CodeGridGlyphCollectionBuilder {
         self.sharedTokenCache = tokenCache
     }
     
-    public func getCollection(bufferSize: Int = BackingBufferDefaultSize) -> GlyphCollection {
+    public func getCollection(
+        bufferSize: Int = BackingBufferDefaultSize
+    ) -> GlyphCollection {
         return try! GlyphCollection(
             link: link,
             linkAtlas: atlas,

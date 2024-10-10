@@ -13,68 +13,113 @@ public class PanController {
         _ panEvent: PanEvent,
         on grid: CodeGrid
     ) {
-        if panEvent.state == .began {
-            print("-- Starting pan on \(grid.fileName)")
-            panBegan(panEvent, on: grid)
-        }
-
-        if panEvent.pressingCommand, let start = panEvent.commandStart {
-            // Can always rotate the camera
-            panHoldingCommand(panEvent, start)
-        } else if touchState.pan.valid {
-            if panEvent.pressingOption, let start = panEvent.optionStart {
-                panHoldingOption(panEvent, start)
-            } else {
-                panOnNode(panEvent)
-            }
-        }
-
-        if panEvent.state == .ended {
-            touchState.pan = TouchStart()
-            touchState.pan.valid = false
-            print("-- Ended pan")
-        }
+        
+//        if panEvent.state == .began {
+//            print("-- Starting pan on \(grid.fileName)")
+//            panBegan(panEvent, on: grid)
+//        }
+//
+//        if panEvent.pressingCommand, let start = panEvent.commandStart {
+//            // Can always rotate the camera
+//            panHoldingCommand(panEvent, start)
+//        } else if touchState.pan.valid {
+//            if panEvent.pressingOption, let start = panEvent.optionStart {
+//                panHoldingOption(panEvent, start)
+//            } else {
+//                panOnNode(panEvent)
+//            }
+//        }
+//
+//        if panEvent.state == .ended {
+//            touchState.pan = TouchStart()
+//            touchState.pan.valid = false
+//            print("-- Ended pan")
+//        }
     }
 }
 
 public extension PanController {
+//    private func panBegan(_ event: PanEvent, on grid: CodeGrid) {
+//        touchState.pan.lastScreenCoordinate = event.currentLocation
+//        touchState.pan.positioningNode = grid.rootNode
+//        touchState.pan.positioningNodeStart = grid.rootNode.position
+//        
+//        touchState.pan.cameraRotation = camera.rotation
+//        touchState.pan.nodeRotation = grid.rootNode.rotation
+//        
+//        touchState.pan.projectionDepthPosition = grid.rootNode.position
+//        touchState.pan.setStartUnprojection(mouse: event.currentLocation)
+//        
+//        touchState.pan.valid = true
+//        print("-- Found a node; touch valid")
+//    }
+    
     private func panBegan(_ event: PanEvent, on grid: CodeGrid) {
+        // Compute the vector from the camera to the node;
+        // Project this vector onto the camera's forward vector to get the depth
+        
+        let cameraToNode = grid.rootNode.worldPosition - camera.position
+        let depth = dot(cameraToNode, camera.worldFront)
+        touchState.pan.projectionDepthPosition.z = depth
+
         touchState.pan.lastScreenCoordinate = event.currentLocation
         touchState.pan.positioningNode = grid.rootNode
-        touchState.pan.positioningNodeStart = grid.rootNode.position
-        
-        touchState.pan.cameraRotation = camera.rotation
-        touchState.pan.nodeRotation = grid.rootNode.rotation
-        
-        touchState.pan.projectionDepthPosition = grid.rootNode.position
-        touchState.pan.setStartUnprojection(mouse: event.currentLocation)
-        
         touchState.pan.valid = true
-        print("-- Found a node; touch valid")
     }
 
+
+//    private func panOnNode(_ event: PanEvent) {
+//        // Previous world space touch position
+//        let previousWorldPosition = touchState.pan.computedStartUnprojection
+//        
+//        // Current world space touch position
+//        let currentWorldPosition = touchState.pan.cameraUnprojection(mouse: event.currentLocation)
+//
+//        // World space delta between touch positions
+//        let worldDelta = currentWorldPosition - previousWorldPosition
+//
+//        // Node's initial world space position
+//        var nodeWorldPosition = touchState.pan.positioningNodeStart
+//
+//        // Apply world space delta to node's position
+//        nodeWorldPosition += worldDelta
+//
+//        // Update node's world space position
+//        touchState.pan.positioningNode.position = nodeWorldPosition
+//
+//        // Update previous touch location
+//        touchState.pan.lastScreenCoordinate = event.currentLocation
+//    }
+    
     private func panOnNode(_ event: PanEvent) {
-        // Previous world space touch position
-        let previousWorldPosition = touchState.pan.computedStartUnprojection
+        let node = touchState.pan.positioningNode
         
-        // Current world space touch position
-        let currentWorldPosition = touchState.pan.cameraUnprojection(mouse: event.currentLocation)
-
-        // World space delta between touch positions
-        let worldDelta = currentWorldPosition - previousWorldPosition
-
-        // Node's initial world space position
-        var nodeWorldPosition = touchState.pan.positioningNodeStart
-
-        // Apply world space delta to node's position
-        nodeWorldPosition += worldDelta
-
-        // Update node's world space position
-        touchState.pan.positioningNode.position = nodeWorldPosition
-
-        // Update previous touch location
+        let cameraToNode = node.worldPosition - camera.position
+        let depth = dot(cameraToNode, camera.worldFront)
+//        touchState.pan.projectionDepthPosition.z = depth
+        
+        // Unproject the previous and current screen positions to world space
+        let previousWorldPosition = GlobalInstances.debugCamera.unprojectPoint(
+            touchState.pan.lastScreenCoordinate,
+            worldDepth: touchState.pan.projectionDepthPosition.z
+        )
+        let currentWorldPosition = GlobalInstances.debugCamera.unprojectPoint(
+            event.currentLocation,
+            worldDepth: depth
+        )
+        
+        // Calculate the delta in world space
+        var worldDelta = currentWorldPosition - previousWorldPosition
+        worldDelta.y *= -1
+        
+        // Update the node's position
+        node.worldPosition += worldDelta
+        
+        // Update the last screen coordinate
         touchState.pan.lastScreenCoordinate = event.currentLocation
+        touchState.pan.projectionDepthPosition.z = node.worldPosition.z
     }
+
 
     private func panHoldingOption(_ event: PanEvent, _ start: LFloat2) {
         let end = event.currentLocation

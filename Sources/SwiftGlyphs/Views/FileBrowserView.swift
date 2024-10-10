@@ -63,6 +63,9 @@ public struct FileBrowserView: View {
     public typealias RowType = [FileBrowser.Scope]
     @StateObject var browserState = FileBrowserViewState()
     @State var hoveredScope: FileBrowser.Scope? = .none
+    func isHovered(_ scope: FileBrowser.Scope) -> Bool {
+        hoveredScope == scope
+    }
     
     public init(
         browserState: FileBrowserViewState
@@ -84,6 +87,7 @@ public struct FileBrowserView: View {
     var rootView: some View {
         VStack(alignment: .leading) {
             fileRows(browserState.files)
+            Spacer()
             searchInput
         }
     }
@@ -98,31 +102,29 @@ public struct FileBrowserView: View {
     
     @ViewBuilder
     func fileRows(_ rows: RowType) -> some View {
-        List(rows) { scope in
-            VStack {
-                HStack(spacing: 0) {
-                    makeSpacer(pathDepths(scope))
-                    rowForScope(scope)
-                }
-                .onHover { isHovering in
-                    if isHovering {
-                        hoveredScope = scope
-                    } else if hoveredScope == scope {
-                        hoveredScope = nil
+        ScrollView {
+            LazyVStack(spacing: 4) {
+                ForEach(rows) { scope in
+                    HStack(spacing: 0) {
+                        makeSpacer(pathDepths(scope))
+                        rowForScope(scope)
+                    }
+                    .background(hoveredScope == scope ? .blue.opacity(0.05) : .clear)
+                    .onHover { isHovering in
+                        if isHovering {
+                            hoveredScope = scope
+                        } else if hoveredScope == scope {
+                            hoveredScope = nil
+                        }
                     }
                 }
             }
-            .listRowSeparator(.hidden)
         }
-        #if os(macOS)
-        .listStyle(.plain)
-        #else
-        .listStyle(.plain)
-        #endif
     }
 }
 
 private extension FileBrowserView {
+    
     @ViewBuilder
     func rowForScope(_ scope: FileBrowser.Scope) -> some View {
         switch scope {
@@ -155,7 +157,6 @@ private extension FileBrowserView {
             } else {
                 Spacer()
                     .frame(width: depth.cg * 8.0)
-//                    .padding(.leading, depth.cg * 16.0)
             }
         }
     }
@@ -168,34 +169,58 @@ private extension FileBrowserView {
                 .aspectRatio(contentMode: .fit)
                 .font(.footnote)
                 .padding(1)
+                .padding(.leading, 12)
             Text(path.lastPathComponent)
                 .fontWeight(.light)
             Spacer()
         }
-        .listRowBackground(Color(red: 0.1, green: 0.1, blue: 0.1, opacity: 0.8))
     }
     
     @ViewBuilder
     func directoryView(_ scope: FileBrowser.Scope, _ path: URL) -> some View {
-        HStack {
+        HStack(spacing: 2) {
             Text(DirectoryIconCollapsed)
+                .font(.footnote)
+                .frame(width: 12)
+            
+            Image(systemName: "folder")
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .font(.footnote)
+                .padding(1)
+            
             Text(path.lastPathComponent)
+            
             Spacer()
-            showDirectoryButton(path)
+            
+            if isHovered(scope) {
+                showDirectoryButton(path)
+            }
         }
-        .listRowBackground(Color(red: 0.1, green: 0.1, blue: 0.1, opacity: 0.3))
     }
     
     @ViewBuilder
     func expandedDirectoryView(_ scope: FileBrowser.Scope, _ path: URL) -> some View {
-        HStack {
+        HStack(spacing: 2) {
             Text(DirectoryIconExpanded)
+                .font(.footnote)
+                .frame(width: 12)
+            
+            Image(systemName: "folder")
+                .renderingMode(.template)
+                .aspectRatio(contentMode: .fit)
+                .font(.footnote)
+                .padding(1)
+            
             Text(path.lastPathComponent)
                 .bold()
+            
             Spacer()
-            showDirectoryButton(path)
+
+            if isHovered(scope) {
+                showDirectoryButton(path)
+            }
         }
-        .listRowBackground(Color(red: 0.1, green: 0.1, blue: 0.1, opacity: 0.5))
     }
     
     func showDirectoryButton(
@@ -225,6 +250,27 @@ private extension FileBrowserView {
             NSPasteboard.general.setString(path.path, forType: .string)
         })
         #endif
+    }
+}
+
+extension FileBrowser.Scope {
+    var cachedGrid: CodeGrid? {
+        GlobalInstances
+            .gridStore
+            .gridCache
+            .get(path)
+    }
+}
+
+extension GridInteractionState {
+    func isScopeBookmarked(_ scope: FileBrowser.Scope) -> Bool {
+        scope.cachedGrid.map { cached in
+            GlobalInstances
+                .gridStore
+                .gridInteractionState
+                .bookmarkedGrids
+                .contains(cached)
+        } ?? false
     }
 }
 
@@ -262,15 +308,9 @@ struct RectangleDivider: View {
 #if DEBUG
 struct FileBrowserView_Previews: PreviewProvider {
     
-    static let testPaths = [
-        "/Users/ivanlugo/rapiddev/_personal/LatComponents/"
+    static let testPaths: [FileBrowser.Scope] = [
+        .directory(URL(fileURLWithPath: "/Users/lugo/localdev/viz")),
     ]
-    
-    static let testFiles = {
-        testPaths.reduce(into: [FileBrowser.Scope]()) { result, path in
-            result.append(.directory(URL(fileURLWithPath: path)))
-        }
-    }()
     
     static let testState: FileBrowserViewState = {
         let state = FileBrowserViewState()
@@ -281,13 +321,9 @@ struct FileBrowserView_Previews: PreviewProvider {
     static var previews: some View {
         FileBrowserView(browserState: testState)
             .onAppear {
-                testState.files = testFiles
-                for file in testFiles {
-                    DispatchQueue.main.async {
-                        GlobalInstances.fileBrowser.onScopeSelected(file)
-                    }
-                }
+                GlobalInstances.fileBrowser.setRootScope(testPaths[0].path)
             }
+            .frame(width: 600, height: 600)
     }
 }
 #endif
