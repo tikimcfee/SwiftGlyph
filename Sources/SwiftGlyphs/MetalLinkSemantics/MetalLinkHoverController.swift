@@ -146,7 +146,7 @@ private extension MetalLinkHoverController {
         glyphID: InstanceIDType,
         lastGlyphEvent: NodePickingState.Event
     ) -> NodePickingState.Event {
-        guard let node = targetGrid.rootNode[glyphID] else {
+        guard let node = targetGrid.rootNode.createWrappedNode(for: glyphID) else {
             return .useLast(last: lastGlyphEvent.latestState)
         }
         

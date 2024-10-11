@@ -17,11 +17,8 @@ import MetalLink
 //typealias CodeGridNodes = Set<GlyphNode>
 public typealias CodeGridNodes = [GlyphNode]
 public class CodeGridTokenCache: LockingCache<String, CodeGridNodes> {
-    public override func make(
-        _ key: String,
-        _ store: inout [String : CodeGridNodes]
-    ) -> CodeGridNodes {
-        laztrace(#fileID,#function,key,store)
+    public override func make(_ key: Key) -> Value {
+        laztrace(#fileID,#function,key)
         
         let set = CodeGridNodes()
         return set

@@ -44,7 +44,7 @@ public class BasicSyntaxColorizer: MetalLinkReader {
     public let queryRootUrl: URL
     
     public let language: Language
-    public var cachedQueries = [ColorizerQuery: Query]()
+    public var cachedQueries = ConcurrentDictionary<ColorizerQuery, Query>()
     
     private lazy var pipelineState = CachedValue<MTLComputePipelineState?>(update: {
         do {
