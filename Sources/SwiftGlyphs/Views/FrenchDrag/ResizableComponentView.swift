@@ -57,7 +57,7 @@ public struct ResizableComponentView<Content: View>: View {
         ZStack {
             VStack(spacing: 0) {
                 dragBar
-                    .frame(maxWidth: .infinity, maxHeight: 28)
+                    .frame(maxWidth: .infinity, maxHeight: 24)
                     .overlay(alignment: .leading) {
                         dragBarOverlay
                     }
@@ -74,6 +74,7 @@ public struct ResizableComponentView<Content: View>: View {
                 onSave(model)
             }
         }
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .frame(
             width: model.widthForCardComponent(),
             height: model.heightForCardComponent()

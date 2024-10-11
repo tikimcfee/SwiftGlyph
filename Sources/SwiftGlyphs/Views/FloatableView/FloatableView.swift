@@ -158,7 +158,7 @@ struct SwitchModeButtons: View {
             switch displayMode {
             case .displayedAsSibling:
                 buttonView
-                    .foregroundStyle(.green.opacity(0.8))
+                    .foregroundStyle(.yellow.opacity(0.8))
                     .onTapGesture {
                         displayMode = .displayedAsWindow
                     }

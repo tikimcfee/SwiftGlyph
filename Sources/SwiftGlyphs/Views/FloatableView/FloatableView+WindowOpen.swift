@@ -47,7 +47,6 @@ class FloatableWindow: NSWindow {
             .titled,
             .fullSizeContentView,
             .resizable,
-            .closable,
             .miniaturizable
         ],
         backing backingStoreType: NSWindow.BackingStoreType = .buffered,
@@ -55,9 +54,13 @@ class FloatableWindow: NSWindow {
     ) {
         self.key = key
         self.mode = mode
+        var updatedStyle = style
+        if key != .windowControls {
+            updatedStyle.formUnion(.closable)
+        }
         super.init(
             contentRect: contentRect,
-            styleMask: style,
+            styleMask: updatedStyle,
             backing: backingStoreType,
             defer: flag
         )
