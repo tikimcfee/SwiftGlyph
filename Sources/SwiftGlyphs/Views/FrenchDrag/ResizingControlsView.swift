@@ -26,11 +26,19 @@ public struct ResizingControlsView: View {
     let dragged: (ResizePoint, CGFloat, CGFloat) -> Void
     let dragEnded: () -> Void
     
+    @State var hoveredPoint: ResizePoint?
     
     public var body: some View {
+        #if os(macOS)
+        resizeBody
+//            .padding(-8)
+        #else
         if isResizing {
             resizeBody
+                .padding(-8)
         }
+        #endif
+        
     }
     
     @ViewBuilder
@@ -38,6 +46,8 @@ public struct ResizingControlsView: View {
         VStack(spacing: 0.0) {
             HStack(spacing: 0.0) {
                 grabView(resizePoint: .topLeft)
+                    .disabled(true)
+                
                 Spacer()
                 grabView(resizePoint: .topMiddle)
                 Spacer()
@@ -60,7 +70,23 @@ public struct ResizingControlsView: View {
         }
     }
     
+    
     private func grabView(resizePoint: ResizePoint) -> some View {
+        grabViewContent(resizePoint: resizePoint)
+        #if os(macOS)
+            .opacity(hoveredPoint == resizePoint ? 1.0: 0)
+            .onHover(perform: { isHovered in
+                if isHovered {
+                    hoveredPoint = resizePoint
+                } else if hoveredPoint == resizePoint {
+                    hoveredPoint = nil
+                }
+            })
+        #else
+        #endif
+    }
+    
+    private func grabViewContent(resizePoint: ResizePoint) -> some View {
         var offsetX: CGFloat = 0.0
         var offsetY: CGFloat = 0.0
         let halfDiameter = diameter / 2.0
@@ -100,6 +126,7 @@ public struct ResizingControlsView: View {
             .offset(x: offsetX, y: offsetY)
             .gesture(dragGesture(point: resizePoint))
         #endif
+        
     }
     
     private func dragGesture(point: ResizePoint) -> some Gesture {

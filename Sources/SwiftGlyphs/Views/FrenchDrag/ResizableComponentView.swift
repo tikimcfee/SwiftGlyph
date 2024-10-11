@@ -20,6 +20,10 @@ public struct ResizableComponentView<Content: View>: View {
     @State var isHovered: Bool = false
     @State var model: ComponentModel
     @State var isResizing: Bool = false
+    
+    let displayMode: Binding<FloatableViewMode>?
+    let windowKey: GlobalWindowKey?
+    
     let onSave: (ComponentModel) -> Void
     @ViewBuilder let content: () -> Content
         
@@ -31,12 +35,33 @@ public struct ResizableComponentView<Content: View>: View {
         self._model = State(wrappedValue: model())
         self.onSave = onSave
         self.content = content
+        self.displayMode = nil
+        self.windowKey = nil
+    }    
+    
+    public init(
+        displayMode: Binding<FloatableViewMode>,
+        windowKey: GlobalWindowKey,
+        model: @escaping () -> ComponentModel,
+        onSave: @escaping (ComponentModel) -> Void,
+        content: @escaping () -> Content
+    ) {
+        self._model = State(wrappedValue: model())
+        self.onSave = onSave
+        self.content = content
+        self.displayMode = displayMode
+        self.windowKey = windowKey
     }
     
     public var body: some View {
         ZStack {
-            VStack {
+            VStack(spacing: 0) {
                 dragBar
+                    .frame(maxWidth: .infinity, maxHeight: 28)
+                    .overlay(alignment: .leading) {
+                        dragBarOverlay
+                    }
+
                 content()
             }
             ResizingControlsView(
@@ -59,11 +84,27 @@ public struct ResizableComponentView<Content: View>: View {
         )
     }
     
+    @ViewBuilder
+    var dragBarOverlay: some View {
+        if let displayMode, let windowKey,
+           displayMode.wrappedValue == .displayedAsSibling
+        {
+            SwitchModeButtons(
+                displayMode: displayMode,
+                windowKey: windowKey
+            )
+            .padding(4)
+        }
+    }
+    
     var dragBar: some View {
         Color.gray
-            .frame(maxWidth: .infinity, maxHeight: 20)
-            .opacity(isHovered ? 0.8 : 0.4)
-            .onHover { isHovered = $0 }
+            .opacity(isHovered ? 0.5 : 0.4)
+            .onHover { hovered in
+                withAnimation(.easeInOut(duration: 1 / 12)) {
+                    isHovered = hovered
+                }
+            }
             .contentShape(Rectangle())
             .gesture(dragGesture)
             .onTapGesture(count: 2, perform: {

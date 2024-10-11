@@ -25,8 +25,6 @@ extension SwiftGlyphRoot {
         var currentDataCollection: CodeGrid? = nil
         let dataStream = PassthroughSubject<Data, Never>()
         
-        let maxLengthTest = 95
-        
         // Create a renderer for the data stream.
         let renderer = DataStreamRenderer(
             link: link,
@@ -64,6 +62,7 @@ extension SwiftGlyphRoot {
                 let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
                 
                 do {
+//                    let maxLengthTest = 95
 //                    var string = NSAttributedString(input).string
 //                    let range = string.strideAll(by: maxLengthTest) {
 //                        string.insert("\n", at: $0)

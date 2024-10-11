@@ -88,14 +88,10 @@ public extension FloatableView {
     func makePlatformBody() -> some View {
         if resizableAsSibling {
             ResizableComponentView(
-                model: {
-                    windowKey.getDragState()
-                },
-                onSave: { model in
-                    windowKey.setDragState(model)
-                },
+                model: windowKey.getDragState,
+                onSave: windowKey.setDragState,
                 content: {
-                    innerViewBuilder()
+                    coreContent(isWindow: false)
                 }
             )
         } else {
@@ -115,17 +111,12 @@ public extension FloatableView {
             
         case .displayedAsSibling:
             ResizableComponentView(
-                model: {
-                    windowKey.getDragState()
-                },
-                onSave: { model in
-                    windowKey.setDragState(model)
-                },
+                displayMode: $displayMode,
+                windowKey: windowKey, 
+                model: windowKey.getDragState,
+                onSave: windowKey.setDragState,
                 content: {
-                    VStack(alignment: .leading, spacing: 0) {
-                        switchModeButton()
-                        innerViewBuilder()
-                    }
+                    coreContent(isWindow: false)
                 }
             )
             .onAppear { performDock() }
@@ -135,6 +126,81 @@ public extension FloatableView {
                 .onAppear { performUndock() }
                 .onDisappear { performDock() }
         }
+    }
+    
+    @ViewBuilder
+    func coreContent(isWindow: Bool) -> some View {
+        innerViewBuilder()
+            .padding(isWindow ? 8 : 0)
+            .border(.black, width: isWindow ? 0.0 : 1.0)
+            .background(
+                isWindow
+                    ? nil
+                    : Color(red: 0.2, green: 0.2, blue: 0.2, opacity: 0.2)
+            )
+    }
+}
+
+struct SwitchModeButtons: View {
+    @Binding var displayMode: FloatableViewMode
+    let windowKey: GlobalWindowKey
+    
+    var body: some View {
+        HStack {
+            if windowKey != .windowControls {
+                buttonView
+                    .foregroundStyle(.red.opacity(0.8))
+                    .onTapGesture {
+                        displayMode = .hidden
+                    }
+            }
+
+            switch displayMode {
+            case .displayedAsSibling:
+                buttonView
+                    .foregroundStyle(.green.opacity(0.8))
+                    .onTapGesture {
+                        displayMode = .displayedAsWindow
+                    }
+                
+                
+            case .displayedAsWindow:
+                buttonView
+                    .foregroundStyle(.yellow.opacity(0.8))
+                    .onTapGesture {
+                        displayMode = .displayedAsSibling
+                    }
+                
+            case .hidden:
+                EmptyView()
+            }
+        }
+    }
+    
+    var buttonView: some View {
+        Circle()
+            .frame(width: 12, height: 12)
+
+    }
+}
+
+extension FloatableView {
+    var delegate: GlobalWindowDelegate { GlobalWindowDelegate.instance }
+
+    // `Undock` is called when review is rebuilt, check state before calling window actions
+    func performUndock() {
+        guard !delegate.windowIsDisplayed(for: windowKey) else { return }
+        displayWindowWithNewBuilderInstance()
+    }
+    
+    // `Dock` is called when review is rebuilt, check state before calling window actions
+    func performDock() {
+        delegate.dismissWindow(for: windowKey)
+    }
+    
+    func displayWindowWithNewBuilderInstance() {
+        coreContent(isWindow: true)
+            .openInWindow(key: windowKey, mode: $displayMode)
     }
 }
 #endif

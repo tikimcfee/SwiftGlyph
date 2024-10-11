@@ -54,7 +54,6 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     private func register(_ key: GlobalWindowKey, _ window: NSWindow) {
         knownWindowMap[key] = window
         window.orderFrontRegardless()
-//        rootWindow?.addChildWindow(window, ordered: .above)
         window.delegate = self
     }
     

@@ -18,9 +18,9 @@ public struct AppStatusView: View {
     }
     
     public var body: some View {
-        mainView
-            .zIndex(1)
-//            .transition(.move(edge: .top))
+        ScrollView {
+            mainView
+        }
     }
     
     @ViewBuilder
@@ -30,11 +30,11 @@ public struct AppStatusView: View {
                 VStack (alignment: .leading) {
                     Text(statusText)
                         .font(.headline)
-                        .frame(width: textWidth, alignment: .leading)
+                        .frame(alignment: .leading)
                     
                     Text(status.progress.message)
                         .font(.subheadline)
-                        .frame(width: textWidth, alignment: .leading)
+                        .frame(alignment: .leading)
                         .lineLimit(2, reservesSpace: true)
                 }
             }
@@ -72,7 +72,6 @@ public struct AppStatusView: View {
             label: { EmptyView() }
         )
         .labelsHidden()
-        .frame(maxWidth: textWidth)
         .opacity(status.progress.isActive ? 1 : 0)
     }
 }

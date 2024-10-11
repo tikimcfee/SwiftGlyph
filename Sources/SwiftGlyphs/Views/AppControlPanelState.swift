@@ -37,7 +37,7 @@ public class AppControlPanelState: ObservableObject {
     public var fileBrowserState = FileBrowserViewState()
 
     // Visible subsections
-    @Published public var visiblePanelStates = CodableAutoCache<PanelSections, FloatableViewMode>() {
+    @Published public var visiblePanelStates = AppStatePreferences.shared.panelStates {
         didSet {
             AppStatePreferences.shared.panelStates = visiblePanelStates
         }
@@ -46,24 +46,7 @@ public class AppControlPanelState: ObservableObject {
     private var bag = Set<AnyCancellable>()
     
     public init() {
-        self.visiblePanelStates = AppStatePreferences.shared.panelStates ?? Self.defaultStates()
-        
         setupBindings()
-    }
-    
-    private static func defaultStates() -> CodableAutoCache<PanelSections, FloatableViewMode> {
-        PanelSections.allCases.reduce(
-            into: CodableAutoCache<PanelSections, FloatableViewMode>()
-        ) { cache, section in
-            switch section {
-            case .windowControls,
-                    .directories,
-                    .appStatusInfo:
-                cache.source[section] = .displayedAsWindow
-            default:
-                cache.source[section] = .hidden
-            }
-        }
     }
 }
 

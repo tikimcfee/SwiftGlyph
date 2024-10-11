@@ -35,8 +35,6 @@ extension AppControlPanelView {
             resizableAsSibling: true,
             innerViewBuilder: {
                 panelView(for: panel)
-                    .border(.black, width: 2.0)
-                    .background(Color(red: 0.2, green: 0.2, blue: 0.2, opacity: 0.2))
             }
         )
     }
