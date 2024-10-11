@@ -40,7 +40,6 @@ public struct GlyphCollectionSyntaxConsumer {
             write(
                 "This file's just too big right now: \(size)",
                 "raw-text-\(UUID().uuidString)",
-                .green,
                 &trashNodes
             )
             targetGrid.rootNode.setRootMesh()
@@ -49,7 +48,7 @@ public struct GlyphCollectionSyntaxConsumer {
         
         var nodes = CodeGridNodes()
         let id = "raw-text-path-\(UUID().uuidString)"
-        write(fullString, id, NSUIColor.white, &nodes)
+        write(fullString, id, &nodes)
         targetGrid.tokenCache[id] = nodes
         return targetGrid
     }
@@ -57,7 +56,7 @@ public struct GlyphCollectionSyntaxConsumer {
     public func consumeText(text fullString: String) -> CodeGrid {
         var nodes = CodeGridNodes()
         let id = "raw-text-\(UUID().uuidString)"
-        write(fullString, id, NSUIColor.white, &nodes)
+        write(fullString, id, &nodes)
         targetGrid.tokenCache[id] = nodes
         return targetGrid
     }
@@ -65,12 +64,10 @@ public struct GlyphCollectionSyntaxConsumer {
     public func write(
         _ string: String,
         _ nodeID: NodeSyntaxID,
-        _ color: NSUIColor,
         _ writtenNodeSet: inout CodeGridNodes
     ) {
         for newCharacter in string {
-            let glyphKey = GlyphCacheKey(source: newCharacter, color)
-            if let node = writer.writeGlyphToState(glyphKey) {
+            if let node = writer.writeGlyphToState(newCharacter) {
                 node.meta.syntaxID = nodeID
                 writtenNodeSet.append(node)
                 targetCollection.renderer.insert(node)

@@ -1,7 +1,26 @@
 //  
 //
 //  Created on 12/17/23.
-//  
+//
+
+extension SyntaxType: Hashable, Equatable { }
+extension ConditionalType: Hashable, Equatable { }
+extension ConstructorType: Hashable, Equatable { }
+extension DefinitionType: Hashable, Equatable { }
+extension FloatType: Hashable, Equatable { }
+extension FunctionType: Hashable, Equatable { }
+extension IncludeType: Hashable, Equatable { }
+extension KeywordType: Hashable, Equatable { }
+extension LocalType: Hashable, Equatable { }
+extension MethodType: Hashable, Equatable { }
+extension NameType: Hashable, Equatable { }
+extension NumberType: Hashable, Equatable { }
+extension OperatorType: Hashable, Equatable { }
+extension ParameterType: Hashable, Equatable { }
+extension PropertyType: Hashable, Equatable { }
+extension PunctuationType: Hashable, Equatable { }
+extension TypeType: Hashable, Equatable { }
+extension VariableType: Hashable, Equatable { }
 
 enum SyntaxType {
     case unknown

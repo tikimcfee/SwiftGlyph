@@ -67,12 +67,11 @@ public struct AppControlPanelToggles: View {
                 section.setDragState(
                     ComponentModel(
                         componentInfo: ComponentState(
-                            origin: .init(x: 256, y: 256),
-                            size: .init(width: 100, height: 100)
+                            origin: .init(x: 1024, y: 1024),
+                            size: .init(width: 500, height: 500)
                         )
                     )
                 )
-                
             },
             label: {
                 Text("⊜")

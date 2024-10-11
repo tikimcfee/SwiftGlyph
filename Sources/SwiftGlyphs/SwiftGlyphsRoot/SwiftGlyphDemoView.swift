@@ -183,7 +183,7 @@ public struct SwiftGlyphDemoView : View {
                     .zIndex(1)
                 
             case .showActions:
-                actionsContent
+                MenuActions()
                     .padding(.horizontal)
                     .zIndex(2)
                 
@@ -223,39 +223,6 @@ public struct SwiftGlyphDemoView : View {
                 .padding(.top, 8)
         }
     }
-
-    var actionsContent: some View {
-        List {
-            Section("Atlas") {
-                LabeledContent("Save texture atlas", content: {
-                    saveAtlasButton
-                })
-                
-                LabeledContent("Totally clear atlas", content: {
-                    deleteAtlas
-                })
-                
-                LabeledContent("Run preload (autosaves)", content: {
-                    preloadAtlasButton
-                })
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            
-            Section("Configs") {
-                saveDefaultConfigButton
-                resetDefaultConfigButton
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-        }
-        #if os(iOS)
-        .listStyle(.grouped)
-        #endif
-        .buttonStyle(.bordered)
-        .tint(Color.primaryForeground)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
     
     func buttonImage(_ name: String) -> some View {
         Image(systemName: name)
@@ -281,36 +248,6 @@ public struct SwiftGlyphDemoView : View {
             "square.and.arrow.down.fill"
         ) {
             setScreen(.showGitFetch)
-        }
-    }
-    
-    var deleteAtlas: some View {
-        Button("Clear") {
-            GlobalInstances.resetAtlas()
-        }
-    }
-    
-    var saveAtlasButton: some View {
-        Button("Save") {
-            GlobalInstances.defaultAtlas.save()
-        }
-    }
-    
-    var preloadAtlasButton: some View {
-        Button("Preload") {
-            GlobalInstances.defaultAtlas.preload()
-        }
-    }
-    
-    var saveDefaultConfigButton: some View {
-        Button("Save Default") {
-            GlobalLiveConfig.saveDefault()
-        }
-    }
-    
-    var resetDefaultConfigButton: some View {
-        Button("Reset Default") {
-            GlobalLiveConfig.saveDefault()
         }
     }
     

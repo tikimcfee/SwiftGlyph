@@ -76,8 +76,7 @@ extension CodeGrid {
     // it adds caches layer glyphs motivated by display requirements inherited by those clients.
     @discardableResult
     func consume(
-        text: String,
-        color: NSUIColor = .white
+        text: String
     ) -> (CodeGrid, CodeGridNodes) {
         var nodes = CodeGridNodes()
         GlyphCollectionSyntaxConsumer(
@@ -85,7 +84,6 @@ extension CodeGrid {
         ).write(
             text,
             "raw-text-\(UUID().uuidString)",
-            color,
             &nodes
         )
         rootNode.setRootMesh()

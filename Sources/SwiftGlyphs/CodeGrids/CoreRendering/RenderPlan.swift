@@ -232,34 +232,40 @@ private extension RenderPlan {
     func cacheCollectionAsGrid(from result: EncodeResult) {
         switch result.collection {
         case .built(let collection):
-            builder
+            let grid = builder
                 .createGrid(around: collection)
                 .withSourcePath(result.sourceURL)
                 .withFileName(result.sourceURL.lastPathComponent)
                 .applyName()
-                .applying {
-                    if result.sourceURL == rootPath {
-                        print("<Found source grid url>")
-                        targetParent.add(child: $0.rootNode)
-                    } else {
-                        let parentUrl = result.sourceURL.deletingLastPathComponent()
-                        guard let parentGroup = state.directoryGroups[parentUrl] else {
-                            fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
-                        }
-                        
-                        parentGroup.addChildGrid($0)
-                        gridCache.insertGrid($0)
-                        hoverController.attachPickingStream(to: $0)
-                        $0.updateBackground()
+            
+            grid.applying { grid in
+                if result.sourceURL == rootPath {
+                    print("<Found source grid url>")
+                    targetParent.add(child: grid.rootNode)
+                } else {
+                    let parentUrl = result.sourceURL.deletingLastPathComponent()
+                    guard let parentGroup = state.directoryGroups[parentUrl] else {
+                        fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
                     }
+                    
+                    parentGroup.addChildGrid(grid)
+                    gridCache.insertGrid(grid)
+                    hoverController.attachPickingStream(to: grid)
+                    grid.updateBackground()
                 }
-            do {
-                try GlobalInstances.colorizer.runColorizer(
-                    colorizerQuery: .highlights,
-                    on: collection
-                )
-            } catch {
-                print("lol internet")
+            }
+
+            // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
+            // the general render, since colorizing huge files takes forever
+            WorkerPool.shared.nextConcurrentWorker().async {
+                do {
+                   try GlobalInstances.colorizer.runColorizer(
+                       colorizerQuery: .highlights,
+                       on: grid
+                   )
+               } catch {
+                   print("lol internet")
+               }
             }
             
         case .notBuilt:

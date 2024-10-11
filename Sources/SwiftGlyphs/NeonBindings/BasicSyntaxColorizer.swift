@@ -44,7 +44,6 @@ public class BasicSyntaxColorizer: MetalLinkReader {
     public let queryRootUrl: URL
     
     public let language: Language
-    public let parser: Parser
     public var cachedQueries = [ColorizerQuery: Query]()
     
     private lazy var pipelineState = CachedValue<MTLComputePipelineState?>(update: {
@@ -69,42 +68,25 @@ public class BasicSyntaxColorizer: MetalLinkReader {
             .appendingPathComponent("Contents/Resources/queries/")
         
         self.language = Language(language: tree_sitter_swift())
-        self.parser = Parser()
     }
     
     public func runColorizer(
         colorizerQuery: ColorizerQuery,
-        on collection: GlyphCollection
+        on grid: CodeGrid
     ) throws {
-        // Grab the pointer as source of truth
-        let (count, pointer) = collection.instancePointerPair
-        let atlas = GlobalInstances.defaultAtlas
-        
-        // Try to rebuild the string (lol)..
-        var rebuiltString = Substring(stringLiteral: "")
-        for index in (0..<count) {
-            let instanceUnicodeData = pointer[index].unicodeHash
-            
-            if instanceUnicodeData == 10 {
-                rebuiltString.append("\n")
-                continue
-            }
-            
-            let instanceKey = atlas.builder.cacheRef.unicodeMap[instanceUnicodeData]
-            guard let instanceKey else {
-                continue
-            }
-            rebuiltString.append(contentsOf: instanceKey.glyph)
-        }
+        guard let source = grid.sourcePath,
+              source.isSupportedFileType,
+              let rebuiltString = try? String(contentsOf: source)
+        else { return }
         
         // Make the color buffer, blitit
         let colorBuffer = try execute(
             colorizerQuery: colorizerQuery,
-            for: String(rebuiltString)
+            for: rebuiltString
         )
         try blitColors(
             from: colorBuffer,
-            into: collection
+            into: grid.rootNode
         )
     }
     
@@ -121,9 +103,9 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         }()
         
         // If the langauge isn't set, try.
-        if parser.language == nil {
-            try parser.setLanguage(language)
-        }
+        // 'Parser' isn't thread safe, so just make a new one.
+        let parser = Parser()
+        try parser.setLanguage(language)
         
         // Read the file (lol... why am I even here...)
         // ... parse it.
@@ -155,17 +137,19 @@ public class BasicSyntaxColorizer: MetalLinkReader {
                 //
                 // Try to parse the syntax type from the components,
                 // grab its color, and then write the color out to the entire buffer.
-                // This will get copied over into the
+                // This will get copied over into the constants with another compute blit.
                 let matchedType = SyntaxType.fromComponents(capture.nameComponents)
-                if case .unknown = matchedType {
-                    continue
-                }
+                let range = capture.range
+                guard
+                    range.length > 0
+//                    range.lowerBound < loadedText.count
+                else { continue }
                 
                 let foregroundColor = matchedType.foregroundColor.vector
-                let newPointer = outputPointer.advanced(by: capture.range.lowerBound)
+                let newPointer = outputPointer.advanced(by: range.lowerBound)
                 newPointer.update(
                     repeating: foregroundColor,
-                    count: capture.range.length
+                    count: range.length
                 )
             }
         }

@@ -18,6 +18,7 @@ public class AppStatus: ObservableObject {
             withAnimation(.easeOut(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
                 self.progress = current
             }
+            
             self.history = self.history.suffix(24) + [current]
         }
     }

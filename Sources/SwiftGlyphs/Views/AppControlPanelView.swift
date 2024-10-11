@@ -76,9 +76,17 @@ extension AppControlPanelView {
             
         case .focusState:
             focusState
+            
+        case .menuActions:
+            menuActions
         }
     }
     
+    
+    @ViewBuilder
+    var menuActions: some View {
+        MenuActions()
+    }
     
     @ViewBuilder
     var focusState: some View {
