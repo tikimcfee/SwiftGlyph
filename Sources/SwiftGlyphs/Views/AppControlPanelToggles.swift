@@ -16,16 +16,18 @@ public struct AppControlPanelToggles: View {
     }
     
     public var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Divider()
-            VStack(alignment: .leading) {
-                ForEach(PanelSections.sorted, id: \.self) { section in
-                    sectionRow(section)
-                    Divider()
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                Divider()
+                VStack(alignment: .leading) {
+                    ForEach(PanelSections.sorted, id: \.self) { section in
+                        sectionRow(section)
+                        Divider()
+                    }
                 }
             }
+            .padding()
         }
-        .padding()
     }
     
     @ViewBuilder
@@ -63,15 +65,15 @@ public struct AppControlPanelToggles: View {
     func resetControl(_ section: PanelSections) -> some View {
         Button(
             action: {
-                state[section] = .displayedAsSibling
                 section.setDragState(
                     ComponentModel(
                         componentInfo: ComponentState(
-                            origin: .init(x: 1024, y: 1024),
-                            size: .init(width: 500, height: 500)
+                            origin: .init(x: 512, y: 512),
+                            size: .init(width: 300, height: 300)
                         )
                     )
                 )
+                state[section] = .displayedAsSibling
             },
             label: {
                 Text("⊜")
