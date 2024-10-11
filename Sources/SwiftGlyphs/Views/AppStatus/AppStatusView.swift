@@ -21,6 +21,7 @@ public struct AppStatusView: View {
         ScrollView {
             mainView
         }
+        .padding(8)
     }
     
     @ViewBuilder

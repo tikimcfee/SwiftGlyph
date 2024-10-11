@@ -31,7 +31,7 @@ public struct ResizingControlsView: View {
     public var body: some View {
         #if os(macOS)
         resizeBody
-//            .padding(-8)
+            .padding(8)
         #else
         if isResizing {
             resizeBody
