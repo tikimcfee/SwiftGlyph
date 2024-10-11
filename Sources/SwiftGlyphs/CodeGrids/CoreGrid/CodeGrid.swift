@@ -113,7 +113,7 @@ public class CodeGrid: Identifiable, Equatable {
     
     @discardableResult
     public func updateWalls() -> CodeGrid {
-        var childBounds = childGrids
+        let childBounds = childGrids
             .reduce(into: Bounds.forBaseComputing) {
                 $0.union(with: $1.sizeBounds)
             }

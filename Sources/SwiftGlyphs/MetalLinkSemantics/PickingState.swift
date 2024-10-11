@@ -61,10 +61,10 @@ public struct GridPickingState {
             case .notFound:
                 "NotFound"
             case .useLast(let last):
-                "UseLast - \(last?.targetGrid.id)"
-            case .matchesLast(let last, let new):
+                "UseLast - \(last?.targetGrid.id ?? "none")"
+            case .matchesLast(_, let new):
                 "MatchesLast - \(new.targetGrid.id)"
-            case .foundNew(let last, let new):
+            case .foundNew(_, let new):
                 "FoundNew - \(new.targetGrid.id)"
             }
         }
