@@ -18,6 +18,7 @@ class RenderPlan: MetalLinkReader {
     var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
     var gridCache: GridCache { GlobalInstances.gridStore.gridCache }
     var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
+    var colorizeOnLoad: Bool { false }
     
     let targetParent = MetalLinkNode()
     
@@ -252,24 +253,30 @@ private extension RenderPlan {
                     gridCache.insertGrid(grid)
                     hoverController.attachPickingStream(to: grid)
                     grid.updateBackground()
+                    
+                    colorizeIfEnabled(grid)
                 }
-            }
-
-            // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
-            // the general render, since colorizing huge files takes forever
-            WorkerPool.shared.nextConcurrentWorker().async {
-                do {
-                   try GlobalInstances.colorizer.runColorizer(
-                       colorizerQuery: .highlights,
-                       on: grid
-                   )
-               } catch {
-                   print("lol internet")
-               }
             }
             
         case .notBuilt:
             break
+        }
+    }
+    
+    func colorizeIfEnabled(_ grid: CodeGrid) {
+        if colorizeOnLoad {
+            // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
+            // the general render, since colorizing huge files takes forever
+            WorkerPool.shared.nextConcurrentWorker().async {
+                do {
+                    try GlobalInstances.colorizer.runColorizer(
+                        colorizerQuery: .highlights,
+                        on: grid
+                    )
+                } catch {
+                    print("lol internet")
+                }
+            }
         }
     }
 }
