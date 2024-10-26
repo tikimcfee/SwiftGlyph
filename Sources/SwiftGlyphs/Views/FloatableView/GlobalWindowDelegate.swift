@@ -19,10 +19,13 @@ public class GlobalWindowDelegate: NSObject {
 
 #if os(macOS)
 // TODO: just use the WindowGroup API..
+public typealias WindowType = FloatableWindow
+
 public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     public static let instance = GlobalWindowDelegate()
+    public var isTerminating = false
     
-    public private(set) var knownWindowMap = BiMap<GlobalWindowKey, NSWindow>()
+    public private(set) var knownWindowMap = BiMap<GlobalWindowKey, WindowType>()
     public private(set) var rootWindow: NSWindow?
     
     override private init() {
@@ -39,7 +42,7 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     
     public func window(
         for key: GlobalWindowKey,
-        _ makeWindow: @autoclosure () -> NSWindow) -> NSWindow {
+        _ makeWindow: @autoclosure () -> FloatableWindow) -> FloatableWindow {
         knownWindowMap[key] ?? {
             let newWindow = makeWindow()
             register(key, newWindow)
@@ -49,16 +52,17 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     
     public func dismissWindow(for key: GlobalWindowKey) {
         knownWindowMap[key]?.close()
+//        knownWindowMap[key]?.performClose("manual-dismiss")
     }
     
-    private func register(_ key: GlobalWindowKey, _ window: NSWindow) {
+    private func register(_ key: GlobalWindowKey, _ window: FloatableWindow) {
         knownWindowMap[key] = window
         window.orderFrontRegardless()
         window.delegate = self
     }
     
     public func windowWillClose(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow else {
+        guard let window = notification.object as? FloatableWindow else {
             print("Missing window on close!", notification)
             return
         }

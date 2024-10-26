@@ -30,7 +30,7 @@ extension View {
     }
 }
 
-class FloatableWindow: NSWindow {
+public class FloatableWindow: NSWindow {
     let key: GlobalWindowKey
     let mode: Binding<FloatableViewMode>
     
@@ -76,14 +76,15 @@ class FloatableWindow: NSWindow {
         isReleasedWhenClosed = false
     }
     
-    override func close() {
+    public override func close() {
         super.close()
         
         guard mode.wrappedValue == .displayedAsWindow else { return }
+        guard !GlobalWindowDelegate.instance.isTerminating else { return }
         mode.wrappedValue = .hidden
     }
     
-    override func miniaturize(_ sender: Any?) {
+    public override func miniaturize(_ sender: Any?) {
         guard mode.wrappedValue == .displayedAsWindow else { return }
         mode.wrappedValue = .displayedAsSibling
     }
