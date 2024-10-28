@@ -11,8 +11,6 @@ import BitHandling
 #if os(iOS)
 public class GlobalWindowDelegate: NSObject {
     static let instance = GlobalWindowDelegate()
-    
-    var rootWindow: UIWindow? { UIApplication.shared.keyWindow }
 }
 #endif
 

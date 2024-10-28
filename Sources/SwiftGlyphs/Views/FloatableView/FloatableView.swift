@@ -97,7 +97,18 @@ public extension FloatableView {
         } else {
             innerViewBuilder()
         }
+    }
     
+    @ViewBuilder
+    func coreContent(isWindow: Bool) -> some View {
+        innerViewBuilder()
+            .padding(isWindow ? 8 : 0)
+            .border(.black, width: isWindow ? 0.0 : 1.0)
+            .background(
+                isWindow
+                    ? nil
+                    : Color(red: 0.2, green: 0.2, blue: 0.2, opacity: 0.2)
+            )
     }
 }
 #elseif os(macOS)

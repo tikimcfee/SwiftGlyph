@@ -125,7 +125,7 @@ extension SwiftGlyphRoot {
         camera.position = LFloat3(0, 0, 300)
         
         var lastPlan: RenderPlan?
-        directoryAddPipeline { url in
+        renderPlanPipeline { url in
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
             GlobalInstances.rootCustomMTKView.isPaused = true
             GlobalInstances.defaultRenderer.paused = true
@@ -193,65 +193,35 @@ extension SwiftGlyphRoot {
 // MARK: - Test load pipeline
 
 extension SwiftGlyphRoot {
-    func basicGridPipeline(_ childPath: URL) -> GlyphCollectionSyntaxConsumer {
-        let consumer = GlobalInstances.gridStore.builder.createConsumerForNewGrid()
-        consumer.consume(url: childPath)
-        consumer.targetGrid.fileName = childPath.fileName
-        
-        GlobalInstances.gridStore
-            .nodeHoverController
-            .attachPickingStream(to: consumer.targetGrid)
-        
-        return consumer
-    }
-    
-    func basicAddPipeline(_ action: @escaping (URL) -> Void) {
-        GlobalInstances.fileBrowser.$fileSelectionEvents.sink { event in
-            switch event {
-            case let .newMultiCommandRecursiveAllLayout(rootPath, _):
-                FileBrowser.recursivePaths(rootPath)
-                    .filter { !$0.isDirectory }
-                    .forEach { childPath in
-                        action(childPath)
-                    }
-                
-            case let .newSingleCommand(url, selection):
-                switch selection {
-                case .removeFromWorld:
-                    if let grid = GlobalInstances.gridStore.gridCache.get(url) {
-                        grid.parent?.remove(child: grid.rootNode)
-                    }
-                default:
-                    action(url)
-                }
-                
-            default:
-                break
-            }
-        }.store(in: &bag)
-    }
-    
-    func directoryAddPipeline(_ action: @escaping (URL) -> Void) {
+    func renderPlanPipeline(_ action: @escaping (URL) -> Void) {
         let cache = GlobalInstances.gridStore.gridCache
-        GlobalInstances.fileBrowser.$fileSelectionEvents.sink { event in
-            switch event {
-            case let .newMultiCommandRecursiveAllLayout(rootPath, _):
-                action(rootPath)
-                
-            case let .newSingleCommand(url, .focusOnExistingGrid):
-                if let grid = cache.get(url) {
-                    self.focus.state = .set(grid)
-                } else {
-                    action(url)
+        GlobalInstances
+            .fileBrowser
+            .$fileSelectionEvents
+            .compactMap { $0 }
+            .sink { event in
+                switch event.action {
+                case .addToWorld:
+                    action(event.scope.path)
+                    
+                case .removeFromWorld:
+                    event.scope.cachedGrid?.applying {
+                        $0.rootNode.removeFromParent()
+                        cache.removeGrid($0)
+                    }
+                    
+                case .toggle:
+                    if let grid = event.scope.cachedGrid {
+                        grid.applying {
+                            $0.rootNode.removeFromParent()
+                            cache.removeGrid($0)
+                        }
+                    } else {
+                        action(event.scope.path)
+                    }
                 }
-                
-            case let .newSingleCommand(url, _):
-                action(url)
-                
-            default:
-                break
             }
-        }.store(in: &bag)
+            .store(in: &bag)
     }
 }
 

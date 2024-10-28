@@ -90,11 +90,13 @@ public struct ResizableComponentView<Content: View>: View {
         if let displayMode, let windowKey,
            displayMode.wrappedValue == .displayedAsSibling
         {
+            #if os(macOS)
             SwitchModeButtons(
                 displayMode: displayMode,
                 windowKey: windowKey
             )
             .padding(4)
+            #endif
         }
     }
     

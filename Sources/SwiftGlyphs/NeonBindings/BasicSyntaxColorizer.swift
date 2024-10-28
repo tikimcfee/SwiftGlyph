@@ -141,8 +141,8 @@ public class BasicSyntaxColorizer: MetalLinkReader {
                 let matchedType = SyntaxType.fromComponents(capture.nameComponents)
                 let range = capture.range
                 guard
-                    range.length > 0
-//                    range.lowerBound < loadedText.count
+                    range.length > 0,
+                    range.location < loadedText.count
                 else { continue }
                 
                 let foregroundColor = matchedType.foregroundColor.vector

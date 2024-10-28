@@ -78,10 +78,6 @@ public struct SwiftGlyphDemoView : View {
         }
         #if os(iOS)
         .ignoresSafeArea()
-        .safeAreaInset(edge: .top, alignment: .leading) {
-            topSafeAreaContent
-                .padding()
-        }
         #endif
     }
     
@@ -110,34 +106,46 @@ public struct SwiftGlyphDemoView : View {
     #if os(iOS)
     @ViewBuilder
     private var iOSContent: some View {
-        VStack(alignment: .trailing) {
+        VStack(alignment: .trailing, spacing: 0) {
             Spacer()
+                .frame(minHeight: 120)
+                .layoutPriority(0)
+            
             screenView
+                .transition(.move(edge: .trailing))
+                .zIndex(5)
                 .frame(maxHeight: 600)
-                
-            HStack(alignment: .top) {
-                Spacer()
-                let image = showBottomControls
-                    ? "chevron.right"
-                    : "chevron.left"
-                
-                buttonImage(image).onTapGesture {
-                    withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
-                        showBottomControls.toggle()
+            
+            VStack(spacing: 0) {
+                HStack(alignment: .top) {
+                    Spacer()
+                    let image = showBottomControls
+                        ? "chevron.right"
+                        : "chevron.left"
+                    
+                    buttonImage(image).onTapGesture {
+                        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
+                            showBottomControls.toggle()
+                        }
+                    }
+                    .padding([.leading, .bottom, .trailing], 24)
+                    
+                    if showBottomControls {
+                        bottomSafeAreaContent
+                            .padding([.trailing, .bottom], 24)
+                            .frame(maxWidth: .infinity)
+                            .transition(
+                                .move(edge: .trailing)
+                                    .combined(with: .slide)
+                            )
+                            .layoutPriority(1)
+                            .zIndex(1)
                     }
                 }
-                .padding([.leading, .bottom, .trailing], 24)
-                
                 if showBottomControls {
-                    bottomSafeAreaContent
-                        .padding([.trailing, .bottom], 24)
-                        .frame(maxWidth: .infinity)
-                        .transition(
-                            .move(edge: .trailing)
-                                .combined(with: .slide)
-                        )
-                        .layoutPriority(1)
-                        .zIndex(1)
+                    AppStatusView(status: GlobalInstances.appStatus)
+                        .frame(maxWidth: .infinity, maxHeight: 120)
+                        .padding(.bottom, 20)
                 }
             }
             .padding(.top)
@@ -170,34 +178,26 @@ public struct SwiftGlyphDemoView : View {
         }
     }
     
-    var topSafeAreaContent: some View {
-        AppStatusView(status: GlobalInstances.appStatus)
-    }
-    
     @ViewBuilder
     var screenView: some View {
-        Group {
-            switch screen {
-            case .fileBrowser:
-                fileBrowserContentView
-                    .zIndex(1)
-                
-            case .showActions:
-                MenuActions()
-                    .padding(.horizontal)
-                    .zIndex(2)
-                
-            case .showGitFetch:
-                GitHubClientView()
-                    .zIndex(3)
-                
-            case .root:
-                EmptyView()
-                    .zIndex(4)
-            }
+        switch screen {
+        case .fileBrowser:
+            fileBrowserContentView
+                .zIndex(1)
+            
+        case .showActions:
+            MenuActions()
+                .padding(.horizontal)
+                .zIndex(2)
+            
+        case .showGitFetch:
+            GitHubClientView()
+                .zIndex(3)
+            
+        case .root:
+            EmptyView()
+                .zIndex(4)
         }
-        .transition(.move(edge: .trailing))
-        .zIndex(5)
     }
     
     var bottomSafeAreaContent: some View {
@@ -205,7 +205,6 @@ public struct SwiftGlyphDemoView : View {
             buttonImage("gearshape.fill").onTapGesture {
                 setScreen(.showActions)
             }
-
             Spacer()
             VStack(alignment: .trailing) {
                 showFileBrowserButton

@@ -129,6 +129,9 @@ private extension RenderPlan {
         if rootIsFile {
             // Render the root file as well
             allFileURLs.append(rootPath)
+            if rootPath.deletingLastPathComponent().isDirectory {
+                allDirectoryURLs.append(rootPath.deletingLastPathComponent())
+            }
         } else {
             // Render the root file as normal directory, then look for it
             allDirectoryURLs.append(rootPath)
@@ -162,13 +165,15 @@ private extension RenderPlan {
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
         
-        if !rootIsFile {
-            // Now look for root group. Big problems if we miss it.
-            guard let rootGroup = state.directoryGroups[rootPath] else {
-                fatalError("But where did the root go")
-            }
-            targetParent.add(child: rootGroup.globalRootGrid.rootNode)
+        let rootGroup = rootIsFile
+            ? state.directoryGroups[rootPath.deletingLastPathComponent()]
+            : state.directoryGroups[rootPath]
+        
+        // Now look for root group. Big problems if we miss it.
+        guard let rootGroup else {
+            fatalError("But where did the root go")
         }
+        targetParent.add(child: rootGroup.globalRootGrid.rootNode)
         
         // Then ask kindly of the gpu to go 'ham'
         do {
@@ -240,22 +245,17 @@ private extension RenderPlan {
                 .applyName()
             
             grid.applying { grid in
-                if result.sourceURL == rootPath {
-                    print("<Found source grid url>")
-                    targetParent.add(child: grid.rootNode)
-                } else {
-                    let parentUrl = result.sourceURL.deletingLastPathComponent()
-                    guard let parentGroup = state.directoryGroups[parentUrl] else {
-                        fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
-                    }
-                    
-                    parentGroup.addChildGrid(grid)
-                    gridCache.insertGrid(grid)
-                    hoverController.attachPickingStream(to: grid)
-                    grid.updateBackground()
-                    
-                    colorizeIfEnabled(grid)
+                let parentUrl = result.sourceURL.deletingLastPathComponent()
+                guard let parentGroup = state.directoryGroups[parentUrl] else {
+                    fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
                 }
+                
+                parentGroup.addChildGrid(grid)
+                gridCache.insertGrid(grid)
+                hoverController.attachPickingStream(to: grid)
+                grid.updateBackground()
+                
+                colorizeIfEnabled(grid)
             }
             
         case .notBuilt:

@@ -41,6 +41,13 @@ public class GridCache {
         }
     }
     
+    public func removeGrid(_ key: CodeGrid) {
+        cachedGrids[key.id] = nil
+        if let source = key.sourcePath {
+            cachedFiles[source] = nil
+        }
+    }
+    
     public func setCache(_ key: URL, _ requester: String = #function) -> CodeGrid {
         let newGrid: CodeGrid
         if key.isDirectory {
