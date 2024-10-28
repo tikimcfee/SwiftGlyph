@@ -22,6 +22,19 @@ class RenderPlan: MetalLinkReader {
     
     let targetParent = MetalLinkNode()
     
+    var rootGroup: CodeGridGroup {
+        let rootGroup = rootPath.isFileURL
+            ? state.directoryGroups[rootPath.deletingLastPathComponent()]
+            : state.directoryGroups[rootPath]
+        
+        // Now look for root group. Big problems if we miss it.
+        guard let rootGroup else {
+            fatalError("But where did the root go")
+        }
+        
+        return rootGroup
+    }
+    
     class State {
         var directoryGroups = [URL: CodeGridGroup]()
     }
@@ -165,14 +178,6 @@ private extension RenderPlan {
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
         
-        let rootGroup = rootIsFile
-            ? state.directoryGroups[rootPath.deletingLastPathComponent()]
-            : state.directoryGroups[rootPath]
-        
-        // Now look for root group. Big problems if we miss it.
-        guard let rootGroup else {
-            fatalError("But where did the root go")
-        }
         targetParent.add(child: rootGroup.globalRootGrid.rootNode)
         
         // Then ask kindly of the gpu to go 'ham'

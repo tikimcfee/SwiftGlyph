@@ -41,6 +41,8 @@ public class CodeGrid: Identifiable, Equatable {
     public private(set) var childGrids: [CodeGrid] = []
 
     // Walls leaking into grids, 's'cool
+    var parentGroup: CodeGridGroup?
+    
     private lazy var groupWalls = {
         var walls = [
             BackgroundQuad(rootNode.link), // top
@@ -143,7 +145,9 @@ public class CodeGrid: Identifiable, Equatable {
     
     public func setNameNode(_ node: WordNode) {
         if let nameNode {
+            print("-- Resetting name on \(String(describing: sourcePath))")
             targetNode.remove(child: nameNode)
+            nameNode.parentGrid = nil
         }
         targetNode.add(child: node)
         self.nameNode = node
@@ -164,6 +168,13 @@ public class CodeGrid: Identifiable, Equatable {
             .setLeading(size.leading)
             .setTop(size.top)
             .setFront(back - 0.39269)
+    }
+    
+    @discardableResult
+    public func removeFromParent() -> CodeGrid {
+        rootNode.removeFromParent()
+        parentGroup?.removeChild(self)
+        return self
     }
     
     public func addChildGrid(_ other: CodeGrid) {

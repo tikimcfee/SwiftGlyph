@@ -124,7 +124,6 @@ extension SwiftGlyphRoot {
     func setupRenderPlanTest() throws {
         camera.position = LFloat3(0, 0, 300)
         
-        var lastPlan: RenderPlan?
         renderPlanPipeline { url in
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
             GlobalInstances.rootCustomMTKView.isPaused = true
@@ -206,14 +205,23 @@ extension SwiftGlyphRoot {
                     
                 case .removeFromWorld:
                     event.scope.cachedGrid?.applying {
-                        $0.rootNode.removeFromParent()
+                        $0.removeFromParent()
                         cache.removeGrid($0)
                     }
                     
                 case .toggle:
+                    // TODO: Memory leaks baby!
+                    // The second I started thinking about removing, I knew there'd be leaks. And there are.
+                    // The grids as files are retained in gridCache, hover controller, et al.
                     if let grid = event.scope.cachedGrid {
                         grid.applying {
-                            $0.rootNode.removeFromParent()
+                            let lastRootChild = self.lastPlan?.rootGroup.childGrids ?? []
+                            if lastRootChild.count == 1 && lastRootChild.first!.id == grid.id {
+                                self.lastPlan?.rootGroup.removeRootFromParent()
+                                self.lastPlan = nil
+                            } else {
+                                $0.removeFromParent()
+                            }
                             cache.removeGrid($0)
                         }
                     } else {

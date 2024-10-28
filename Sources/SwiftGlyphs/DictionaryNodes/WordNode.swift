@@ -12,7 +12,7 @@ import MetalLinkHeaders
 public class WordNode: MetalLinkNode {
     public let sourceWord: String
     public var glyphs: CodeGridNodes
-    public var parentGrid: CodeGrid
+    public weak var parentGrid: CodeGrid?
 
     public override var hasIntrinsicSize: Bool {
         true

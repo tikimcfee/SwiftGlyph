@@ -46,6 +46,18 @@ class CodeGridGroup {
     
     var gridsPerColumn = 5
     
+    func removeRootFromParent() {
+        globalRootGrid.removeFromParent()
+    }
+    
+    func removeChild(_ grid: CodeGrid) {
+        childGrids.removeAll(where: { $0.id == grid.id })
+        
+        if childGrids.isEmpty && childGroups.isEmpty {
+            removeRootFromParent()
+        }
+    }
+    
     func applyAllConstraints() {
         for childGroup in childGroups {
             childGroup.applyAllConstraints()
@@ -97,6 +109,7 @@ class CodeGridGroup {
         let isNewGridTaller = (lastRowTallestGrid?.bounds.height ?? 0) < grid.bounds.height
         lastRowTallestGrid = isNewGridTaller ? grid : lastRowTallestGrid
         
+        grid.parentGroup = self
         childGrids.append(grid)
         globalRootGrid.addChildGrid(grid)
     }
