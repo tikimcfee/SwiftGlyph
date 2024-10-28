@@ -30,35 +30,7 @@ extension FileBrowser.Scope {
     }
 }
 
-extension FileBrowser.Scope {
-    var path: URL {
-        switch self {
-        case .file(let url),
-             .directory(let url),
-             .expandedDirectory(let url):
-            return url
-        }
-    }
 
-    var isFile: Bool {
-        if case .file = self { return true }
-        return false
-    }
-
-    var isDirectory: Bool {
-        if case .directory = self { return true }
-        return false
-    }
-
-    var isExpandedDirectory: Bool {
-        if case .expandedDirectory = self { return true }
-        return false
-    }
-
-    var isDirectoryType: Bool {
-        isDirectory || isExpandedDirectory
-    }
-}
 
 extension FileBrowser.Scope {
     var directoryStateIconName: String {

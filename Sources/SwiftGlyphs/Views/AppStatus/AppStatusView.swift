@@ -20,6 +20,18 @@ public struct AppStatusView: View {
     public var body: some View {
         ScrollView {
             mainView
+            LazyVStack {
+                ForEach(status.history) { progress in
+                    VStack {
+                        HStack {
+                            Text(progress.message)
+                                .font(.subheadline)
+                                .frame(alignment: .leading)
+                                .lineLimit(2, reservesSpace: true)
+                        }
+                    }
+                }
+            }
         }
         .padding(8)
     }

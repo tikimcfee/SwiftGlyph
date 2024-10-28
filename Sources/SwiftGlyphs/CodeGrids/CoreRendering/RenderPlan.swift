@@ -20,12 +20,14 @@ class RenderPlan: MetalLinkReader {
     var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
     var colorizeOnLoad: Bool { false }
     
-    let targetParent = MetalLinkNode()
+    var targetParent: MetalLinkNode {
+        rootGroup.globalRootGrid.rootNode
+    }
     
     var rootGroup: CodeGridGroup {
-        let rootGroup = rootPath.isFileURL
-            ? state.directoryGroups[rootPath.deletingLastPathComponent()]
-            : state.directoryGroups[rootPath]
+        let rootGroup = rootPath.isDirectory
+            ? state.directoryGroups[rootPath]
+            : state.directoryGroups[rootPath.deletingLastPathComponent()]
         
         // Now look for root group. Big problems if we miss it.
         guard let rootGroup else {
@@ -122,7 +124,7 @@ private extension RenderPlan {
             $0.totalValue += 1
             $0.message = "Jump in the line..."
         }
-        state.directoryGroups[rootPath]?.addLines(targetParent)
+        state.directoryGroups[rootPath]?.addLines(rootGroup.globalRootGrid.rootNode)
 //        state.directoryGroups[rootPath]?.addAllWalls()
     }
 }
@@ -177,8 +179,6 @@ private extension RenderPlan {
         
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
-        
-        targetParent.add(child: rootGroup.globalRootGrid.rootNode)
         
         // Then ask kindly of the gpu to go 'ham'
         do {

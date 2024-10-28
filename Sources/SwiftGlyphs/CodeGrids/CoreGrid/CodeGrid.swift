@@ -173,7 +173,11 @@ public class CodeGrid: Identifiable, Equatable {
     @discardableResult
     public func removeFromParent() -> CodeGrid {
         rootNode.removeFromParent()
-        parentGroup?.removeChild(self)
+        
+        let toRemove = parentGroup
+        parentGroup = nil
+        toRemove?.removeChild(self)
+        
         return self
     }
     

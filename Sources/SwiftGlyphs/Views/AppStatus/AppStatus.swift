@@ -13,13 +13,14 @@ public class AppStatus: ObservableObject {
     func update(_ receiver: @escaping (inout AppProgress) -> Void) {
         DispatchQueue.main.async {
             var current = self.progress
+            current.id = .init()
             receiver(&current)
             
             withAnimation(.easeOut(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
                 self.progress = current
             }
             
-            self.history = self.history.suffix(24) + [current]
+            self.history = self.history.suffix(500) + [current]
         }
     }
     
@@ -31,7 +32,8 @@ public class AppStatus: ObservableObject {
 }
 
 public extension AppStatus {
-    struct AppProgress {
+    struct AppProgress: Identifiable {
+        public var id = UUID()
         var message: String = ""
         var detail: String = ""
         var totalValue: Double = 0

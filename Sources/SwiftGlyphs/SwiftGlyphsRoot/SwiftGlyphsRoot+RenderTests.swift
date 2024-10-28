@@ -193,43 +193,44 @@ extension SwiftGlyphRoot {
 
 extension SwiftGlyphRoot {
     func renderPlanPipeline(_ action: @escaping (URL) -> Void) {
-        let cache = GlobalInstances.gridStore.gridCache
         GlobalInstances
             .fileBrowser
             .$fileSelectionEvents
             .compactMap { $0 }
             .sink { event in
-                switch event.action {
-                case .addToWorld:
-                    action(event.scope.path)
-                    
-                case .removeFromWorld:
-                    event.scope.cachedGrid?.applying {
-                        $0.removeFromParent()
-                        cache.removeGrid($0)
-                    }
-                    
-                case .toggle:
-                    // TODO: Memory leaks baby!
-                    // The second I started thinking about removing, I knew there'd be leaks. And there are.
-                    // The grids as files are retained in gridCache, hover controller, et al.
-                    if let grid = event.scope.cachedGrid {
-                        grid.applying {
-                            let lastRootChild = self.lastPlan?.rootGroup.childGrids ?? []
-                            if lastRootChild.count == 1 && lastRootChild.first!.id == grid.id {
-                                self.lastPlan?.rootGroup.removeRootFromParent()
-                                self.lastPlan = nil
-                            } else {
-                                $0.removeFromParent()
-                            }
-                            cache.removeGrid($0)
-                        }
-                    } else {
-                        action(event.scope.path)
-                    }
-                }
+                self.onFileEvent(event, action)
             }
             .store(in: &bag)
+    }
+    
+    func onFileEvent(
+        _ event: FileBrowserEvent,
+        _ action: @escaping (URL) -> Void
+    ) {
+        let cache = GlobalInstances.gridStore.gridCache
+        
+        switch event.action {
+        case .addToWorld:
+            action(event.scope.path)
+            
+        case .removeFromWorld:
+            event.scope.cachedGrid?.applying {
+                $0.removeFromParent()
+                cache.removeGrid($0)
+            }
+            
+        case .toggle:
+            // TODO: Memory leaks baby!
+            // The second I started thinking about removing, I knew there'd be leaks. And there are.
+            // The grids as files are retained in gridCache, hover controller, et al.
+            guard let grid = event.scope.cachedGrid else {
+                action(event.scope.path)
+                return
+            }
+            
+            grid.removeFromParent()
+            cache.removeGrid(grid)
+        }
     }
 }
 

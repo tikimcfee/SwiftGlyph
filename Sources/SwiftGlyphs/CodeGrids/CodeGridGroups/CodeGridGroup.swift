@@ -46,15 +46,24 @@ class CodeGridGroup {
     
     var gridsPerColumn = 5
     
-    func removeRootFromParent() {
+    func undoRenderAsRoot() {
         globalRootGrid.removeFromParent()
+        for childGroup in childGroups {
+            childGroup.undoRenderAsRoot()
+        }
+        for childGrid in childGrids {
+            GlobalInstances.gridStore.gridCache.removeGrid(childGrid)
+        }
+        GlobalInstances.gridStore.gridCache.removeGrid(globalRootGrid)
     }
     
     func removeChild(_ grid: CodeGrid) {
-        childGrids.removeAll(where: { $0.id == grid.id })
+        childGrids.removeAll(where: {
+            $0.id == grid.id
+        })
         
         if childGrids.isEmpty && childGroups.isEmpty {
-            removeRootFromParent()
+            undoRenderAsRoot()
         }
     }
     

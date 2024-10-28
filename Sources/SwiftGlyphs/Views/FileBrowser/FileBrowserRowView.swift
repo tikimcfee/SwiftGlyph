@@ -37,7 +37,15 @@ struct FileBrowserRowView: View {
         }
         .onTapGesture {
             if scope.isDirectoryType {
-                GlobalInstances.fileBrowser.onScopeSelected(scope)
+                GlobalInstances.fileBrowser.onScopeSelected(
+                    scope,
+                    recursive: GlobalInstances
+                        .debugCamera
+                        .interceptor
+                        .state
+                        .currentModifiers
+                        .contains(.shift)
+                )
             } else {
                 onEvent(.init(scope, .toggle))
             }
@@ -93,7 +101,7 @@ struct FileBrowserRowView: View {
     func showDirectoryButton(_ scope: FileBrowser.Scope) -> some View {
         Button(
             action: {
-                onEvent(.init(scope, .addToWorld))
+                onEvent(.init(scope, .toggle))
             },
             label: {
                 Text("Show All")
