@@ -83,11 +83,11 @@ private extension MetalLinkHoverController {
         }.store(in: &bag)
         
         link.gridPickingTexture.sharedPickingHover.sink { gridID in
-            self.doGridPicking(gridID: gridID)
+            self.doGridPicking(gridID: gridID.id)
         }.store(in: &bag)
     }
     
-    func doGlyphPicking(glyphID: InstanceIDType) {
+    func doGlyphPicking(glyphID: PickingTextureOutputWrapper) {
         guard let grid = lastGridEvent.newState?.targetGrid else { return }
         
         lastGlyphEvent = Self.computeNodePickingEvent(
@@ -143,7 +143,7 @@ private extension MetalLinkHoverController {
 private extension MetalLinkHoverController {
     static func computeNodePickingEvent(
         in targetGrid: CodeGrid,
-        glyphID: InstanceIDType,
+        glyphID: PickingTextureOutputWrapper,
         lastGlyphEvent: NodePickingState.Event
     ) -> NodePickingState.Event {
         guard let node = targetGrid.rootNode.createWrappedNode(for: glyphID) else {
@@ -153,7 +153,7 @@ private extension MetalLinkHoverController {
         // Create a new state to test against
         let newState = NodePickingState(
             targetGrid: targetGrid,
-            nodeID: glyphID,
+            nodeID: glyphID.id,
             node: node
         )
 
