@@ -140,22 +140,18 @@ extension SwiftGlyphRoot {
             RenderPlan(
                 mode: .cacheAndLayout,
                 rootPath: url,
-                editor: self.editor,
-                focus: self.focus
+                editor: editor,
+                focus: focus
             )
             .startRender(onRenderComplete)
         }
         
         func onRenderComplete(_ plan: RenderPlan) {
-            if let lastPlan {
-                plan.targetParent
-                    .setTop(lastPlan.targetParent.top)
-                    .setLeading(lastPlan.targetParent.trailing + 16)
-                    .setFront(lastPlan.targetParent.front)
-            }
+            focus.editor.transformedByAdding(
+                .inNextRow(plan.rootGroup.globalRootGrid)
+            )
             
             self.root.add(child: plan.targetParent)
-            lastPlan = plan
             
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = false
             GlobalInstances.rootCustomMTKView.isPaused = false
@@ -228,6 +224,7 @@ extension SwiftGlyphRoot {
                 return
             }
             
+            editor.remove(grid)
             grid.removeFromParent()
             cache.removeGrid(grid)
         }

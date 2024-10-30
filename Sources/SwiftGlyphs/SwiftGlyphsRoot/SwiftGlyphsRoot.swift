@@ -26,7 +26,6 @@ public class SwiftGlyphRoot: MetalLinkReader {
     public let link: MetalLink
     
     var bag = Set<AnyCancellable>()
-    var lastPlan: RenderPlan?
     
     lazy var root = RootNode(camera)
     

@@ -18,7 +18,7 @@ class RenderPlan: MetalLinkReader {
     var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
     var gridCache: GridCache { GlobalInstances.gridStore.gridCache }
     var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
-    var colorizeOnLoad: Bool { false }
+    var colorizeOnLoad: Bool { true }
     
     var targetParent: MetalLinkNode {
         rootGroup.globalRootGrid.rootNode
