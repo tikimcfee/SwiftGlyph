@@ -144,8 +144,9 @@ class CodeGridGroup {
             controller.add(LiveConstraint(
                 sourceNode: MetalLinkNode(),
                 targetNode: group.globalRootGrid.rootNode,
-                action: { node in
-                    LFloat3(
+                action: { [weak self] node in
+                    guard let self else { return .zero }
+                    return LFloat3(
                         x: 0,
                         y: self.nextRowStartY,
                         z: -256

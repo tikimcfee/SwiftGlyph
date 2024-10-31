@@ -47,6 +47,8 @@ public class AppControlPanelState: ObservableObject {
     
     public init() {
         setupBindings()
+        
+//        visiblePanelStates.source[.windowControls] = .displayedAsWindow
     }
 }
 

@@ -19,9 +19,10 @@ CodeGrid(\(id))
 
 public class CodeGrid: Identifiable, Equatable {
     
-    public lazy var id = {
-        "CodeGrid-'\(fileName)'-\(UUID().uuidString)"
-    }()
+    public var uuid = UUID()
+    public var id: String {
+        "CodeGrid-'\(fileName)'-\(uuid.uuidString)"
+    }
     
     public var fileName: String = ""
     public var sourcePath: URL?
@@ -98,6 +99,8 @@ public class CodeGrid: Identifiable, Equatable {
     
     @discardableResult
     public func applyName() -> CodeGrid {
+//        guard false else { return self }
+        
         guard nameNode == nil else { return self }
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
@@ -225,7 +228,7 @@ public class CodeGrid: Identifiable, Equatable {
 // MARK: - Hashing
 extension CodeGrid {
     func copyDisplayState(from other: CodeGrid) {
-        self.id = other.id
+        self.uuid = other.uuid
         self.position = other.position
         self.rotation = other.rotation
         self.sourcePath = other.sourcePath

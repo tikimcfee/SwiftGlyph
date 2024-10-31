@@ -96,6 +96,7 @@ extension SwiftGlyphRoot {
         
         func doAddFilePath(_ url: URL) {
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = true
+            GlobalInstances.defaultLink.glyphPickingTexture.pickingPaused = true
             GlobalInstances.rootCustomMTKView.isPaused = true
             GlobalInstances.defaultRenderer.paused = true
             
@@ -116,6 +117,7 @@ extension SwiftGlyphRoot {
             self.root.add(child: plan.targetParent)
             
             GlobalInstances.defaultLink.gridPickingTexture.pickingPaused = false
+            GlobalInstances.defaultLink.glyphPickingTexture.pickingPaused = false
             GlobalInstances.rootCustomMTKView.isPaused = false
             GlobalInstances.defaultRenderer.paused = false
                         
