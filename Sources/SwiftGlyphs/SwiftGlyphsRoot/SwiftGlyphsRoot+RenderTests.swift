@@ -81,44 +81,6 @@ extension SwiftGlyphRoot {
                 
             }
             .store(in: &bag)
-        
-        
-
-//        Task {
-////            let testFile = ___RAW___SOURCE___
-////            _ = try GlobalInstances.colorizer.execute(
-////                colorizerQuery: .highlights,
-////                for: testFile
-////            )
-//            let file = AppFiles.file(named: "testStreamData", in: AppFiles.glyphSceneDirectory)
-//            dataSubject.send(try! Data(contentsOf: file))
-//        }
-        
-        // I'm gonna setup a pipe to just render any stream of UTF-8 data.
-//        var rawOutput = ""
-//        var rawOutput: [String] = []
-//        func addLine(_ message: String) {
-//            rawOutput.append(message + "\n")
-//        }
-//        for match in cursor {
-//            addLine("match: \(match.id), \(match.patternIndex)")
-//            for capture in match.captures {
-//                addLine("\t>> [\(capture)] <<")
-//                addLine("\t\t\(capture.nameComponents)")
-//                addLine("\t\t\(capture.name ?? "<!> no name")")
-//            }
-//        }
-//        let final = rawOutput.joined().data(using: .utf8)!
-//        
-//        dataSubject.send(final)
-//        
-//        QuickLooper(
-//            interval: .milliseconds(10),
-//            queue: .global()
-//        ) {
-//        }.runUntil(
-//            stopIf: { true }
-//        )
     }
     
     func setupRenderPlanTest() throws {
@@ -227,6 +189,7 @@ extension SwiftGlyphRoot {
             editor.remove(grid)
             grid.removeFromParent()
             cache.removeGrid(grid)
+            print("removed \(grid)")
         }
     }
 }

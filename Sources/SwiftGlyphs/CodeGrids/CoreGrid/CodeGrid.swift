@@ -9,9 +9,6 @@ import Foundation
 import MetalLink
 import MetalLinkHeaders
 
-let kCodeGridContainerName = "CodeGrid"
-let kWhitespaceNodeName = "XxX420blazeitspaceXxX"
-
 extension CodeGrid: CustomStringConvertible {
     public var description: String {
 """
@@ -22,7 +19,9 @@ CodeGrid(\(id))
 
 public class CodeGrid: Identifiable, Equatable {
     
-    public lazy var id = { "\(kCodeGridContainerName)-\(UUID().uuidString)" }()
+    public lazy var id = {
+        "CodeGrid-'\(fileName)'-\(UUID().uuidString)"
+    }()
     
     public var fileName: String = ""
     public var sourcePath: URL?
@@ -41,7 +40,7 @@ public class CodeGrid: Identifiable, Equatable {
     public private(set) var childGrids: [CodeGrid] = []
 
     // Walls leaking into grids, 's'cool
-    var parentGroup: CodeGridGroup?
+    weak var parentGroup: CodeGridGroup?
     
     private lazy var groupWalls = {
         var walls = [
@@ -72,9 +71,29 @@ public class CodeGrid: Identifiable, Equatable {
     ) {
         self.rootNode = rootNode
         self.tokenCache = tokenCache
-        self.gridBackground = BackgroundQuad(rootNode.link) // TODO: Link dependency feels lame
+        self.gridBackground = BackgroundQuad(rootNode.link)
         
         setupOnInit()
+    }
+    
+    public func derez_global() {
+        derez(
+            cache: GlobalInstances.gridStore.gridCache,
+            controller: GlobalInstances.gridStore.nodeHoverController,
+            editor: GlobalInstances.gridStore.editor
+        )
+    }
+    
+    public func derez(
+        cache: GridCache,
+        controller: MetalLinkHoverController,
+        editor: WorldGridEditor
+    ) {
+        cache.removeGrid(self)
+        controller.detachPickingStream(from: self)
+        editor.remove(self)
+//        rootNode.clearChildren()
+        removeBackground()
     }
     
     @discardableResult
@@ -105,6 +124,7 @@ public class CodeGrid: Identifiable, Equatable {
         
         nameNode.position = namePosition
         nameNode.scale = LFloat3(repeating: nameScale)
+        
         nameNode.glyphs.forEach {
             $0.instanceConstants?.addedColor = nameColor
         }

@@ -137,7 +137,12 @@ public class WorldGridEditor {
             history.removeAll()
         }
         
-//        snapping.detachRetaining(toRemove)
+        history.filter {
+            $0.grid.id == toRemove.id
+        }.forEach {
+            snapping.detachRetaining($0.grid)
+        }
+        snapping.detachRetaining(toRemove)
         
         return self
     }

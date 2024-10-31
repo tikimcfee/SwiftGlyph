@@ -47,20 +47,30 @@ class CodeGridGroup {
     var gridsPerColumn = 5
     
     func undoRenderAsRoot() {
-        globalRootGrid.removeFromParent()
         for childGroup in childGroups {
             childGroup.undoRenderAsRoot()
         }
         for childGrid in childGrids {
-            GlobalInstances.gridStore.gridCache.removeGrid(childGrid)
+            childGrid.derez_global()
         }
-        GlobalInstances.gridStore.gridCache.removeGrid(globalRootGrid)
+        
+        childGrids = []
+        childGroups = []
+        globalRootGrid.derez_global()
+        globalRootGrid.removeFromParent()
+        controller = LinearConstraintController()
     }
     
     func removeChild(_ grid: CodeGrid) {
-        childGrids.removeAll(where: {
-            $0.id == grid.id
-        })
+        let toRemove = childGrids
+            .reversed()
+            .enumerated()
+            .filter { $0.element.id == grid.id }
+        
+        toRemove.forEach {
+            $0.element.derez_global()
+            childGrids.remove(at: $0.offset)
+        }
         
         if childGrids.isEmpty && childGroups.isEmpty {
             undoRenderAsRoot()

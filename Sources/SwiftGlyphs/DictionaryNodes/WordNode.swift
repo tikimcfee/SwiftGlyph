@@ -29,7 +29,8 @@ public class WordNode: MetalLinkNode {
     public init(
         sourceWord: String,
         glyphs: CodeGridNodes,
-        parentGrid: CodeGrid
+        parentGrid: CodeGrid,
+        verticalLayout: Bool = false
     ) {
         self.sourceWord = sourceWord
         self.glyphs = glyphs
@@ -37,13 +38,18 @@ public class WordNode: MetalLinkNode {
         super.init()
         
         var xOffset: Float = 0
+        var yOffset: Float = 0
         for glyph in glyphs {
             // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
             glyph.instanceConstants?.useParentMatrix = .zero
             glyph.instanceConstants?.ignoreHover = 1
             glyph.parent = self
-            glyph.position = LFloat3(x: xOffset, y: 0, z: 0)
-            xOffset += glyph.boundsWidth
+            glyph.position = LFloat3(x: xOffset, y: yOffset, z: 0)
+            if verticalLayout {
+                yOffset -= glyph.boundsHeight
+            } else {
+                xOffset += glyph.boundsWidth
+            }
         }
     }
     

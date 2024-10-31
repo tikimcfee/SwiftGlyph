@@ -12,8 +12,8 @@ protocol BasicConstraint {
 }
 
 open class BasicOffsetConstraint: BasicConstraint {
-    var sourceNode: MetalLinkNode
-    var targetNode: MetalLinkNode
+    weak var sourceNode: MetalLinkNode?
+    weak var targetNode: MetalLinkNode?
     var offset: LFloat3
     
     init(
@@ -27,6 +27,11 @@ open class BasicOffsetConstraint: BasicConstraint {
     }
     
     open func apply() {
+        guard
+            let targetNode,
+            let sourceNode
+        else { return }
+        
         targetNode.position =
             sourceNode.position.translated(
                 dX: offset.x,
@@ -37,8 +42,8 @@ open class BasicOffsetConstraint: BasicConstraint {
 }
 
 open class LiveConstraint: BasicConstraint {
-    var sourceNode: MetalLinkNode
-    var targetNode: MetalLinkNode
+    weak var sourceNode: MetalLinkNode?
+    weak var targetNode: MetalLinkNode?
     let action: (MetalLinkNode) -> LFloat3
     
     init(
@@ -52,6 +57,11 @@ open class LiveConstraint: BasicConstraint {
     }
     
     open func apply() {
+        guard
+            let targetNode,
+            let sourceNode
+        else { return }
+        
         targetNode.position = action(sourceNode)
     }
 }
@@ -79,6 +89,11 @@ struct LinearConstraints {
     class ToTrailingOf: BasicOffsetConstraint {
         static let xOffset: Float = 16.0
         open override func apply() {
+            guard
+                let targetNode,
+                let sourceNode
+            else { return }
+            
             targetNode.setTop(sourceNode.top + offset.y)
             targetNode.setLeading(sourceNode.trailing + Self.xOffset + offset.x)
             targetNode.setFront(sourceNode.front + offset.z)
@@ -88,6 +103,11 @@ struct LinearConstraints {
     class ToFrontOf: BasicOffsetConstraint {
         static let xOffset: Float = 16.0
         open override func apply() {
+            guard
+                let targetNode,
+                let sourceNode
+            else { return }
+            
             targetNode.setTop(sourceNode.top + offset.y)
             targetNode.setLeading(sourceNode.leading + Self.xOffset + offset.x)
             targetNode.setBack(sourceNode.front + offset.z)
@@ -97,6 +117,11 @@ struct LinearConstraints {
     class Behind: BasicOffsetConstraint {
         static let depth: Float = -128.0
         open override func apply() {
+            guard
+                let targetNode,
+                let sourceNode
+            else { return }
+            
             targetNode.setTop(sourceNode.top + offset.y)
             targetNode.setLeading(sourceNode.leading + offset.x)
             targetNode.setFront(sourceNode.back + Self.depth + offset.z)
@@ -106,6 +131,11 @@ struct LinearConstraints {
     class Underneath: BasicOffsetConstraint {
         static let yOffset: Float = -16.0
         open override func apply() {
+            guard
+                let targetNode,
+                let sourceNode
+            else { return }
+            
             targetNode.setTop(sourceNode.bottom + Self.yOffset + offset.y)
             targetNode.setLeading(sourceNode.leading + offset.x)
             targetNode.setBack(sourceNode.back + offset.z)
