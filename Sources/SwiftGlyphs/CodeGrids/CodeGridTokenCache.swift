@@ -14,13 +14,12 @@ import MetalLink
 // - given a token, return the nodes that represent it
 // - use that set to highlight, move, do stuff to
 
-//typealias CodeGridNodes = Set<GlyphNode>
-public typealias CodeGridNodes = [GlyphNode]
-public class CodeGridTokenCache: LockingCache<String, CodeGridNodes> {
+//typealias [GlyphNode] = Set<GlyphNode>
+public class CodeGridTokenCache: LockingCache<String, [GlyphNode]> {
     public override func make(_ key: Key) -> Value {
         laztrace(#fileID,#function,key)
         
-        let set = CodeGridNodes()
+        let set = [GlyphNode]()
         return set
     }
 }

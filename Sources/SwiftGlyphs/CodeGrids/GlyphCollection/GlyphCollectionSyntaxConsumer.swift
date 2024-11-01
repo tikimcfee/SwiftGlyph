@@ -36,7 +36,7 @@ public struct GlyphCollectionSyntaxConsumer {
         guard size < 1_000_000 else {
             print("Yo dude that's just like too many letters and stuff: \(textPath)")
             
-            var trashNodes = CodeGridNodes()
+            var trashNodes = [GlyphNode]()
             write(
                 "This file's just too big right now: \(size)",
                 "raw-text-\(UUID().uuidString)",
@@ -46,7 +46,7 @@ public struct GlyphCollectionSyntaxConsumer {
             return targetGrid
         }
         
-        var nodes = CodeGridNodes()
+        var nodes = [GlyphNode]()
         let id = "raw-text-path-\(UUID().uuidString)"
         write(fullString, id, &nodes)
         targetGrid.tokenCache[id] = nodes
@@ -54,7 +54,7 @@ public struct GlyphCollectionSyntaxConsumer {
     }
     
     public func consumeText(text fullString: String) -> CodeGrid {
-        var nodes = CodeGridNodes()
+        var nodes = [GlyphNode]()
         let id = "raw-text-\(UUID().uuidString)"
         write(fullString, id, &nodes)
         targetGrid.tokenCache[id] = nodes
@@ -64,7 +64,7 @@ public struct GlyphCollectionSyntaxConsumer {
     public func write(
         _ string: String,
         _ nodeID: NodeSyntaxID,
-        _ writtenNodeSet: inout CodeGridNodes
+        _ writtenNodeSet: inout [GlyphNode]
     ) {
         for newCharacter in string {
             if let node = writer.writeGlyphToState(newCharacter) {

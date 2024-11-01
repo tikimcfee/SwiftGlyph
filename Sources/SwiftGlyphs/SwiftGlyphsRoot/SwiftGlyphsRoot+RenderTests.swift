@@ -183,15 +183,11 @@ extension SwiftGlyphRoot {
             // TODO: Memory leaks baby!
             // The second I started thinking about removing, I knew there'd be leaks. And there are.
             // The grids as files are retained in gridCache, hover controller, et al.
-            guard let grid = event.scope.cachedGrid else {
+            if let grid = event.scope.cachedGrid {
+                grid.derez_global()
+            } else {
                 action(event.scope.path)
-                return
             }
-            
-            editor.remove(grid)
-            grid.removeFromParent()
-            cache.removeGrid(grid)
-            print("removed \(grid)")
         }
     }
 }

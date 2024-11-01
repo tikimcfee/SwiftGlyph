@@ -77,8 +77,8 @@ extension CodeGrid {
     @discardableResult
     func consume(
         text: String
-    ) -> (CodeGrid, CodeGridNodes) {
-        var nodes = CodeGridNodes()
+    ) -> (CodeGrid, [GlyphNode]) {
+        var nodes = [GlyphNode]()
         GlyphCollectionSyntaxConsumer(
             targetGrid: self
         ).write(

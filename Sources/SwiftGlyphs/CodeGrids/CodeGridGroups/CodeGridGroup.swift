@@ -10,11 +10,13 @@ import MetalLink
 import MetalLinkHeaders
 import BitHandling
 
+extension CodeGridGroup: MeasuresDelegating, MetalLinkReader {
+    var delegateTarget: any Measures { globalRootGrid }
+    var link: MetalLink { globalRootGrid.rootNode.link }
+}
+
 class CodeGridGroup {
-    
     let globalRootGrid: CodeGrid
-    var controller = LinearConstraintController()
-    
     var childGrids = [CodeGrid]()
     var childGroups = [CodeGridGroup]()
     
@@ -29,7 +31,7 @@ class CodeGridGroup {
             .attachPickingStream(to: globalRootGrid)
     }
     
-    var lastRowTallestGrid: CodeGrid? {
+    var gridWithGreatestHeight: CodeGrid? {
         get { snapping.gridReg2 }
         set { snapping.gridReg2 = newValue }
     }
@@ -40,11 +42,15 @@ class CodeGridGroup {
     }
     
     var nextRowStartY: Float {
-        lastRowTallestGrid.map { $0.bottom - 32.0 }
+        gridWithGreatestHeight.map { $0.bottom - 32.0 }
         ?? 0
     }
     
     var gridsPerColumn = 5
+    
+    func assignAsRootParent() {
+        globalRootGrid.parentGroup = self
+    }
     
     func undoRenderAsRoot() {
         for childGroup in childGroups {
@@ -54,11 +60,11 @@ class CodeGridGroup {
             childGrid.derez_global()
         }
         
-        childGrids = []
-        childGroups = []
+//        childGrids = []
+//        childGroups = []
         globalRootGrid.derez_global()
         globalRootGrid.removeFromParent()
-        controller = LinearConstraintController()
+//        controller = LinearConstraintController()
     }
     
     func removeChild(_ grid: CodeGrid) {
@@ -81,7 +87,34 @@ class CodeGridGroup {
         for childGroup in childGroups {
             childGroup.applyAllConstraints()
         }
-        controller.applyConsecutiveConstraints()
+
+        var lastGrid: CodeGrid?
+        for (offset, grid) in childGrids.enumerated() {
+            if let lastGrid {
+                if offset > 0 && offset % 5 == 0 {
+                    let lastTop = childGrids[offset - 5]
+                    grid.setTop(lastTop.top)
+                    grid.setFront(lastTop.front)
+                    grid.setLeading(lastTop.trailing + 32)
+                } else {
+                    grid.setTop(lastGrid.top)
+                    grid.setFront(lastGrid.back - 256)
+                    grid.setLeading(lastGrid.leading)
+                }
+                
+            }
+            lastGrid = grid
+        }
+        
+        var lastGroup: CodeGridGroup?
+        for childGroup in childGroups {
+            childGroup.setTop(nextRowStartY - 32)
+            if let lastGroup {
+                childGroup.setLeading(lastGroup.trailing + 32)
+                childGroup.setFront(lastGroup.front)
+            }
+            lastGroup = childGroup
+        }
     }
     
     func addAllWalls() {
@@ -91,42 +124,36 @@ class CodeGridGroup {
         globalRootGrid.updateWalls()
     }
     
-    func addLines(_ root: MetalLinkNode) {
+    func addLines(root: MetalLinkNode) {
         for childGroup in childGroups {
-            let line = MetalLinkLine(globalRootGrid.rootNode.link)
+            let line = MetalLinkLine(link)
             line.setColor(LFloat4(1.0, 0.0, 0.5, 1.0))
-            line.appendSegment(about: globalRootGrid.rootNode.worldPosition.translated(dX: -8, dY: 8, dZ: 4))
-            line.appendSegment(about: LFloat3(childGroup.globalRootGrid.rootNode.worldPosition.x,
-                                              globalRootGrid.rootNode.worldPosition.y + 8,
-                                              globalRootGrid.rootNode.worldPosition.z + 4))
-            line.appendSegment(about: childGroup.globalRootGrid.rootNode.worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: childGroup.globalRootGrid.rootNode.worldPosition.translated(dX: -2))
-            root.add(child: line)
+            line.appendSegment(about: worldPosition.translated(dX: -8, dY: 8, dZ: 4))
+            line.appendSegment(about: LFloat3(childGroup.worldPosition.x,
+                                                         worldPosition.y + 8,
+                                                         worldPosition.z + 4))
+            line.appendSegment(about: childGroup.worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: childGroup.worldPosition.translated(dX: -2))
             
-            childGroup.addLines(root)
+            root.add(child: line)
+            childGroup.addLines(root: root)
         }
         
         for grid in childGrids {
-            let line = MetalLinkLine(globalRootGrid.rootNode.link)
+            let line = MetalLinkLine(link)
             line.setColor(LFloat4(0.2, 0.2, 0.8, 1.0))
-            line.appendSegment(about: globalRootGrid.rootNode.worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: grid.rootNode.worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: grid.rootNode.worldPosition.translated(dX: -2))
+            line.appendSegment(about: worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: grid.worldPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: grid.worldPosition.translated(dX: -2))
+            
+            
             root.add(child: line)
         }
     }
     
-    func addChildGrid(_ grid: CodeGrid) {
-        if let lastGrid = childGrids.last {
-            controller.add(LinearConstraints.Behind(
-                sourceNode: lastGrid.rootNode,
-                targetNode: grid.rootNode
-            ))
-        }
-        
-        lastRowStartingGrid = lastRowStartingGrid ?? grid
-        let isNewGridTaller = (lastRowTallestGrid?.bounds.height ?? 0) < grid.bounds.height
-        lastRowTallestGrid = isNewGridTaller ? grid : lastRowTallestGrid
+    func addChildGrid(_ grid: CodeGrid) {        
+        let newGridHeightIsGreater = (gridWithGreatestHeight?.bounds.height ?? 0) < grid.bounds.height
+        gridWithGreatestHeight = newGridHeightIsGreater ? grid : gridWithGreatestHeight
         
         grid.parentGroup = self
         childGrids.append(grid)
@@ -134,26 +161,6 @@ class CodeGridGroup {
     }
     
     func addChildGroup(_ group: CodeGridGroup) {
-        if let lastGroup = childGroups.last {
-            controller.add(LinearConstraints.ToTrailingOf(
-                sourceNode: lastGroup.globalRootGrid.rootNode,
-                targetNode: group.globalRootGrid.rootNode,
-                offset: LFloat3(0, 0, 0)
-            ))
-        } else {
-            controller.add(LiveConstraint(
-                sourceNode: MetalLinkNode(),
-                targetNode: group.globalRootGrid.rootNode,
-                action: { [weak self] node in
-                    guard let self else { return .zero }
-                    return LFloat3(
-                        x: 0,
-                        y: self.nextRowStartY,
-                        z: -256
-                    )
-                }
-            ))
-        }
         childGroups.append(group)
         globalRootGrid.addChildGrid(group.globalRootGrid)
     }

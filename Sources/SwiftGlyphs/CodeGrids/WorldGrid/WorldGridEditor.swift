@@ -25,8 +25,6 @@ public class WorldGridEditor {
     
     public var lastFocusedGrid: CodeGrid?
     
-    public var history: [AddStyle] = []
-    
     public init() {
         
     }
@@ -92,8 +90,6 @@ public class WorldGridEditor {
     
     @discardableResult
     public func transformedByAdding(_ style: AddStyle) -> WorldGridEditor {
-        history.append(style)
-        
         switch (style, layoutStrategy, lastFocusedGrid) {
         case (_, _, .none):
             style.grid.translated(dX: -30, dY: 30, dZ: -100)
@@ -114,36 +110,11 @@ public class WorldGridEditor {
     }
     
     @discardableResult
-    public func undoLastTransform() -> WorldGridEditor {
-        if let lastTransform = history.last {
-            if lastFocusedGrid?.id == lastTransform.grid.id {
-                snapping.detachRetaining(lastTransform.grid)
-                lastFocusedGrid = history.popLast()?.grid
-            }
-        }
-        
-        return self
-    }
-    
-    @discardableResult
     public func remove(_ toRemove: CodeGrid) -> WorldGridEditor {
-        if let lastTransform = history.last {
-            if toRemove.id == lastTransform.grid.id {
-                _ = history.popLast() // drop this one and set to last
-                lastFocusedGrid = history.popLast()?.grid
-            }
-        } else if lastFocusedGrid?.id == toRemove.id {
+        if lastFocusedGrid?.id == toRemove.id {
             lastFocusedGrid = nil
-            history.removeAll()
-        }
-        
-        history.filter {
-            $0.grid.id == toRemove.id
-        }.forEach {
-            snapping.detachRetaining($0.grid)
         }
         snapping.detachRetaining(toRemove)
-        
         return self
     }
 }

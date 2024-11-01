@@ -14,7 +14,7 @@ public extension SemanticInfoMap {
     func doOnAssociatedNodes(
         _ nodeId: SyntaxIdentifier,
         _ cache: CodeGridTokenCache,
-        _ receiver: ((SemanticInfo, CodeGridNodes)) throws -> Void
+        _ receiver: ((SemanticInfo, [GlyphNode])) throws -> Void
     ) rethrows {
         try walkFlattenedNonEscaping(from: nodeId, in: cache) { infoForNodeSet, nodeSet in
             try receiver((infoForNodeSet, nodeSet))
@@ -39,7 +39,7 @@ public extension SemanticInfoMap {
     func tokenNodes(
         from syntaxIdentifer: SyntaxIdentifier,
         in cache: CodeGridTokenCache,
-        _ walker: @escaping (SemanticInfo, CodeGridNodes) throws -> Void
+        _ walker: @escaping (SemanticInfo, [GlyphNode]) throws -> Void
     ) rethrows {
         // Just get all nodes directly underneath this one
 //        guard let originalSynax = flattenedSyntax[syntaxIdentifer] else {
@@ -53,7 +53,7 @@ public extension SemanticInfoMap {
     func walkFlattened(
         from syntaxIdentifer: SyntaxIdentifier,
         in cache: CodeGridTokenCache,
-        _ walker: @escaping (SemanticInfo, CodeGridNodes) throws -> Void
+        _ walker: @escaping (SemanticInfo, [GlyphNode]) throws -> Void
     ) rethrows {
 //        guard let toWalk = flattenedSyntax[syntaxIdentifer] else {
 //            print("Cache missing on id: \(syntaxIdentifer)")
@@ -66,7 +66,7 @@ public extension SemanticInfoMap {
     func walkFlattenedNonEscaping(
         from syntaxIdentifer: SyntaxIdentifier,
         in cache: CodeGridTokenCache,
-        _ walker: (SemanticInfo, CodeGridNodes) throws -> Void
+        _ walker: (SemanticInfo, [GlyphNode]) throws -> Void
     ) rethrows {
 //        guard let toWalk = flattenedSyntax[syntaxIdentifer] else {
 //            print("Cache missing on id: \(syntaxIdentifer)")

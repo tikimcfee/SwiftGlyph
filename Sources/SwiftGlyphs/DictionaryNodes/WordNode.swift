@@ -11,7 +11,7 @@ import MetalLinkHeaders
 
 public class WordNode: MetalLinkNode {
     public let sourceWord: String
-    public var glyphs: CodeGridNodes
+    public var glyphs: [GlyphNode]
     public weak var parentGrid: CodeGrid?
 
     public override var hasIntrinsicSize: Bool {
@@ -28,7 +28,7 @@ public class WordNode: MetalLinkNode {
     
     public init(
         sourceWord: String,
-        glyphs: CodeGridNodes,
+        glyphs: [GlyphNode],
         parentGrid: CodeGrid,
         verticalLayout: Bool = false
     ) {

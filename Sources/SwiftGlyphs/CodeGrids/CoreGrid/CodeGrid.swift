@@ -9,19 +9,11 @@ import Foundation
 import MetalLink
 import MetalLinkHeaders
 
-extension CodeGrid: CustomStringConvertible {
-    public var description: String {
-"""
-CodeGrid(\(id))
-""".trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
 public class CodeGrid: Identifiable, Equatable {
     
     public var uuid = UUID()
     public var id: String {
-        "CodeGrid-'\(fileName)'-\(uuid.uuidString)"
+        "CodeGrid-\(uuid.uuidString)"
     }
     
     public var fileName: String = ""
@@ -32,7 +24,6 @@ public class CodeGrid: Identifiable, Equatable {
     public let semanticInfoBuilder: SemanticInfoBuilder = SemanticInfoBuilder()
     
     public private(set) var rootNode: GlyphCollection
-    public var targetNode: MetalLinkNode { rootNode }
     
     public private(set) var nameNode: WordNode?
     public let tokenCache: CodeGridTokenCache
@@ -90,6 +81,18 @@ public class CodeGrid: Identifiable, Equatable {
         controller: MetalLinkHoverController,
         editor: WorldGridEditor
     ) {
+        let toDerez = childGrids
+        childGrids = []
+        
+        for child in toDerez {
+            child.derez(
+                cache: cache,
+                controller: controller,
+                editor: editor
+            )
+        }
+        
+        removeFromParent()
         cache.removeGrid(self)
         controller.detachPickingStream(from: self)
         editor.remove(self)
@@ -169,10 +172,10 @@ public class CodeGrid: Identifiable, Equatable {
     public func setNameNode(_ node: WordNode) {
         if let nameNode {
             print("-- Resetting name on \(String(describing: sourcePath))")
-            targetNode.remove(child: nameNode)
+            rootNode.remove(child: nameNode)
             nameNode.parentGrid = nil
         }
-        targetNode.add(child: node)
+        rootNode.add(child: node)
         self.nameNode = node
         node.parentGrid = self
     }
@@ -184,7 +187,7 @@ public class CodeGrid: Identifiable, Equatable {
     }
     
     public func updateBackground() {
-        let size = targetNode.bounds
+        let size = rootNode.bounds
         gridBackground.size = LFloat2(x: size.width, y: size.height)
         
         gridBackground
@@ -247,104 +250,8 @@ extension CodeGrid: Hashable {
 }
 
 // MARK: - Builder-style configuration
-// NOTE: - Word of warning
-// Grids can describe an entire glyph collection, or represent
-// a set of nodes in a collection. Because of this dual job and
-// from how the clearinghouse went, Grids owned a reference
-// to a collection now, and assume they are the representing object.
-// TODO: Add another `GroupMode` to switch between rootNode and collection node updates
-extension CodeGrid: Measures {
-    public var worldBounds: Bounds {
-        targetNode.worldBounds
-    }
-    
-    public var asNode: MetalLinkNode {
-        targetNode
-    }
-    
-    public var bounds: Bounds {
-        targetNode.bounds
-    }
-    
-    public var boundsCacheKey: MetalLinkNode {
-        targetNode
-    }
-    
-    public var sizeBounds: Bounds {
-        targetNode.sizeBounds
-    }
-
-    public var hasIntrinsicSize: Bool {
-        targetNode.hasIntrinsicSize
-    }
-    
-    public var contentBounds: Bounds {
-        targetNode.contentBounds
-    }
-    
-    public var nodeId: String {
-        targetNode.nodeId
-    }
-    
-    public var position: LFloat3 {
-        get {
-            targetNode.position
-        }
-        set {
-            targetNode.position = newValue
-        }
-    }
-    
-    public var worldPosition: LFloat3 {
-        get {
-            targetNode.worldPosition
-        }
-        set {
-            targetNode.worldPosition = newValue
-        }
-    }
-    
-    public var rotation: LFloat3 {
-        get {
-            targetNode.rotation
-        }
-        set {
-            targetNode.rotation = newValue
-        }
-    }
-    
-    public var lengthX: Float {
-        targetNode.lengthX
-    }
-    
-    public var lengthY: Float {
-        targetNode.lengthY
-    }
-    
-    public var lengthZ: Float {
-        targetNode.lengthZ
-    }
-    
-    public var parent: MetalLinkNode? {
-        get {
-            targetNode.parent
-        }
-        set {
-            targetNode.parent = newValue
-        }
-    }
-    
-    public func convertPosition(_ position: LFloat3, to: MetalLinkNode?) -> LFloat3 {
-        targetNode.convertPosition(position, to: to)
-    }
-    
-    public var centerPosition: LFloat3 {
-        targetNode.centerPosition
-    }
-}
 
 public extension CodeGrid {
-    
     @discardableResult
     func zeroedPosition() -> CodeGrid {
         position = .zero
@@ -388,5 +295,17 @@ public extension CodeGrid {
     func withSourcePath(_ filePath: URL) -> Self {
         self.sourcePath = filePath
         return self
+    }
+}
+
+extension CodeGrid: MeasuresDelegating {
+    public var delegateTarget: any Measures { rootNode }
+}
+
+extension CodeGrid: CustomStringConvertible {
+    public var description: String {
+"""
+CodeGrid(\(id))
+""".trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

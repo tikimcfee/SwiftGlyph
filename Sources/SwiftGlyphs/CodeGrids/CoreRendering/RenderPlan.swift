@@ -115,17 +115,19 @@ private extension RenderPlan {
         
         statusObject.update {
             $0.totalValue += 1
-            $0.message = "Starting layout.. this is the slow part."
+            $0.message = "Starting layout..."
         }
-        state.directoryGroups[rootPath]?.applyAllConstraints()
+        rootGroup.applyAllConstraints()
         
         statusObject.update {
             $0.currentValue += 1
             $0.totalValue += 1
             $0.message = "Jump in the line..."
         }
-        state.directoryGroups[rootPath]?.addLines(rootGroup.globalRootGrid.rootNode)
-//        state.directoryGroups[rootPath]?.addAllWalls()
+        
+        rootGroup.addLines(root: rootGroup.asNode)
+        rootGroup.assignAsRootParent()
+//        rootGroup.addAllWalls()
     }
 }
 
@@ -138,6 +140,7 @@ private extension RenderPlan {
         // Gather all the files and directories at once.
         // Threads. Heh.
         var allFileURLs = [URL]()
+        var unsupportedFileURLs = [URL]()
         var allDirectoryURLs = [URL]()
         let rootIsFile = rootPath.isSupportedFileType
         
@@ -158,8 +161,12 @@ private extension RenderPlan {
                 .forEach {
                     if $0.isDirectory {
                         allDirectoryURLs.append($0)
-                    } else if $0.isSupportedFileType {
-                        allFileURLs.append($0)
+                    } else {
+                        if $0.isSupportedFileType {
+                            allFileURLs.append($0)
+                        } else {
+                            unsupportedFileURLs.append($0)
+                        }
                     }
                 }
         }
@@ -179,6 +186,19 @@ private extension RenderPlan {
         
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
+        
+        // Now manually build the unsupported URLs with manual content
+        for unsupportedFileURL in unsupportedFileURLs {
+            cacheCollectionAsGrid(
+                collection: builder.getCollection(),
+                sourceURL: unsupportedFileURL
+            ).applying {
+                $0.consume(text: """
+                Unsupported file:
+                \(unsupportedFileURL)
+                """)
+            }
+        }
         
         // Then ask kindly of the gpu to go 'ham'
         do {
@@ -243,14 +263,28 @@ private extension RenderPlan {
     func cacheCollectionAsGrid(from result: EncodeResult) {
         switch result.collection {
         case .built(let collection):
-            let grid = builder
-                .createGrid(around: collection)
-                .withSourcePath(result.sourceURL)
-                .withFileName(result.sourceURL.lastPathComponent)
-                .applyName()
+            cacheCollectionAsGrid(
+                collection: collection,
+                sourceURL: result.sourceURL
+            )
             
-            grid.applying { grid in
-                let parentUrl = result.sourceURL.deletingLastPathComponent()
+        case .notBuilt:
+            break
+        }
+    }
+    
+    @discardableResult
+    func cacheCollectionAsGrid(
+        collection: GlyphCollection,
+        sourceURL: URL
+    ) -> CodeGrid {
+        builder
+            .createGrid(around: collection)
+            .withSourcePath(sourceURL)
+            .withFileName(sourceURL.lastPathComponent)
+            .applyName()
+            .applying { grid in
+                let parentUrl = sourceURL.deletingLastPathComponent()
                 guard let parentGroup = state.directoryGroups[parentUrl] else {
                     fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
                 }
@@ -262,10 +296,6 @@ private extension RenderPlan {
                 
                 colorizeIfEnabled(grid)
             }
-            
-        case .notBuilt:
-            break
-        }
     }
     
     func colorizeIfEnabled(_ grid: CodeGrid) {
