@@ -305,7 +305,15 @@ extension CodeGrid: MeasuresDelegating {
 extension CodeGrid: CustomStringConvertible {
     public var description: String {
 """
-CodeGrid(\(id))
+CodeGrid(
+    \(id),
+    \(sourcePath?.path() ?? fileName),
+    in global cache:  \(sourcePath.map { GlobalInstances.gridStore.gridCache.contains($0) } ?? false ),
+    is hover tracked: \(GlobalInstances.gridStore.nodeHoverController.contains(self)),
+    \(parentGroup.map { "parentGroup: \($0.nodeId)" } ??  "no parent group"),
+    \(parent.map { "parent: \($0.nodeId)" } ??  "no parent node"),
+    \(!childGrids.isEmpty ? "children: \(childGrids.count)": "no child grids"),
+)
 """.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

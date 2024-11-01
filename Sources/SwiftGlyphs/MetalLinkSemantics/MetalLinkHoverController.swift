@@ -35,6 +35,10 @@ public class MetalLinkHoverController: ObservableObject {
         setupControlsStream()
     }
     
+    public func contains(_ grid: CodeGrid) -> Bool {
+        trackedGrids.contains(grid.id)
+    }
+    
     public func attachPickingStream(to newGrid: CodeGrid) {
         guard trackedGrids[newGrid.id] == nil else { return }
         trackedGrids[newGrid.id] = newGrid

@@ -76,6 +76,11 @@ public class GridCache {
         return setCache(key)
     }
     
+    public func contains(_ key: URL) -> Bool {
+        guard let cachedId = cachedFiles[key] else { return false }
+        return cachedGrids[cachedId] != nil
+    }
+    
     public func get(_ key: URL) -> CacheValue? {
         guard let cachedId = cachedFiles[key] else { return nil }
         return cachedGrids[cachedId]

@@ -64,6 +64,9 @@ class CodeGridGroup {
 //        childGroups = []
         globalRootGrid.derez_global()
         globalRootGrid.removeFromParent()
+        GlobalInstances.gridStore
+            .nodeHoverController
+            .detachPickingStream(from: globalRootGrid)
 //        controller = LinearConstraintController()
     }
     
@@ -188,7 +191,7 @@ protocol LayoutTarget {
 }
 
 extension LayoutTarget {
-    var grids: [MetalLinkNode] {
+    var zgrids: [MetalLinkNode] {
         layoutNode.children.compactMap {
            $0 as? GlyphCollection
         }
