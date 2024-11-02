@@ -146,7 +146,7 @@ private extension RenderPlan {
         
         rootGroup.addLines(root: rootGroup.asNode)
         rootGroup.assignAsRootParent()
-//        rootGroup.addAllWalls()
+        rootGroup.addAllWalls()
     }
 }
 

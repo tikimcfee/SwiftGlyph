@@ -91,26 +91,24 @@ class CodeGridGroup {
             childGroup.applyAllConstraints()
         }
 
+        let sortedGrids = childGrids.sorted(by: {
+            $0.rootNode.planeAreaXY < $1.rootNode.planeAreaXY
+        })
         var lastGrid: CodeGrid?
-        for (offset, grid) in childGrids.enumerated() {
+        for (_, grid) in sortedGrids.enumerated() {
             if let lastGrid {
-                if offset > 0 && offset % 5 == 0 {
-                    let lastTop = childGrids[offset - 5]
-                    grid.setTop(lastTop.top)
-                    grid.setFront(lastTop.front)
-                    grid.setLeading(lastTop.trailing + 32)
-                } else {
-                    grid.setTop(lastGrid.top)
-                    grid.setFront(lastGrid.back - 256)
-                    grid.setLeading(lastGrid.leading)
-                }
-                
+                grid.setTop(lastGrid.top)
+                grid.setFront(lastGrid.back - 128)
+                grid.setLeading(lastGrid.leading)
             }
             lastGrid = grid
         }
         
+        let sortedGroups = childGroups.sorted(by: {
+            $0.asNode.planeAreaXY > $1.asNode.planeAreaXY
+        })
         var lastGroup: CodeGridGroup?
-        for childGroup in childGroups {
+        for childGroup in sortedGroups {
             childGroup.setTop(nextRowStartY - 32)
             if let lastGroup {
                 childGroup.setLeading(lastGroup.trailing + 32)
