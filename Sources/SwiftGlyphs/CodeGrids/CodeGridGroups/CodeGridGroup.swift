@@ -191,7 +191,7 @@ protocol LayoutTarget {
 }
 
 extension LayoutTarget {
-    var zgrids: [MetalLinkNode] {
+    var grids: [MetalLinkNode] {
         layoutNode.children.compactMap {
            $0 as? GlyphCollection
         }
