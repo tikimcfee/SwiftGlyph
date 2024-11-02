@@ -58,11 +58,13 @@ private extension GridInteractionState {
     }
     
     func focusGlyphState(_ nodeState: NodePickingState) {
-        nodeState.node.instanceConstants?.addedColor = LFloat4(0.0, 0.3, 0.0, 0.0)
+        LFloat4(0.0, 0.9, 0.0, 0.0)
+            .setAddedColor(on: &nodeState.node.instanceConstants)
     }
     
     func defocusGlyphState(_ nodeState: NodePickingState) {
-        nodeState.node.instanceConstants?.addedColor = LFloat4(0.0, 0.0, 0.0, 0.0)
+        LFloat4(0.0, 0.0, 0.0, 0.0)
+            .setAddedColor(on: &nodeState.node.instanceConstants)
     }
     
     private func updateGlyphState(_ pickingState: NodePickingState, _ action: (GlyphNode) -> Void) {

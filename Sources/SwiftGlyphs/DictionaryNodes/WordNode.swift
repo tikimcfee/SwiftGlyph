@@ -41,8 +41,8 @@ public class WordNode: MetalLinkNode {
         var yOffset: Float = 0
         for glyph in glyphs {
             // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
-            glyph.instanceConstants?.useParentMatrix = .zero
-            glyph.instanceConstants?.ignoreHover = 1
+            glyph.instanceConstants?.setFlag(.useParent, false)
+            glyph.instanceConstants?.setFlag(.ignoreHover, true)
             glyph.parent = self
             glyph.position = LFloat3(x: xOffset, y: yOffset, z: 0)
             if verticalLayout {

@@ -181,7 +181,7 @@ extension DictionaryController {
             : self.scaleVector
         
         wordNode.glyphs.forEach { toUpdate in
-            toUpdate.instanceConstants?.addedColor = self.focusedColor
+            self.focusedColor.setAddedColor(on: &toUpdate.instanceConstants)
         }
     }
     
@@ -193,7 +193,7 @@ extension DictionaryController {
         wordNode.position.translateBy(dZ: self.inversePositionVector.z)
         wordNode.scale = self.inverseScaleVector
         wordNode.glyphs.forEach { toUpdate in
-            toUpdate.instanceConstants?.addedColor = .zero
+            LFloat4.zero.setAddedColor(on: &toUpdate.instanceConstants)
         }
     }
 }

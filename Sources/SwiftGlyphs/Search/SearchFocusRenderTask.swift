@@ -78,7 +78,7 @@ private extension SearchFocusRenderTask {
                 next.rootNode.scale = LFloat3(1, 1, 1)
                 
                 next.updateAllNodeConstants { node, stopFlag in
-                    node.instanceConstants?.addedColor = .zero
+                    LFloat4.zero.setAddedColor(on: &node.instanceConstants)
                     node.instanceConstants?.modelMatrix.columns.3.z = 1.0
                     if self.task.isCancelled {
                         stopFlag = true
@@ -177,7 +177,7 @@ private extension SearchFocusRenderTask {
             for node in targetNodes {
                 try self.throwIfCancelled()
                 if info.syntaxId == matchingSemanticInfo {
-                    node.instanceConstants?.addedColor += self.matchAddition
+                    self.matchAddition.setAddedColor(on: &node.instanceConstants)
                 }
 //                else {
 //                    node.instanceConstants?.addedColor += self.focusAddition
@@ -199,9 +199,9 @@ private extension SearchFocusRenderTask {
                 for node in targetNodes {
                     try self.throwIfCancelled()
                     if clearFocus {
-                        node.instanceConstants?.addedColor = .zero
+                        LFloat4.zero.setAddedColor(on: &node.instanceConstants)
                     } else {
-                        node.instanceConstants?.addedColor -= self.focusAddition
+                        self.focusAddition.setAddedColor(on: &node.instanceConstants)
                     }
                     node.position.z = 1
                 }

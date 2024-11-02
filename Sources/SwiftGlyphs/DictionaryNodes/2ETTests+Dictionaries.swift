@@ -66,7 +66,7 @@ extension SwiftGlyphRoot {
                         controller.nodeMap[word] = sourceNode
                         
                         let color = colorFloats[word] ?? .zero
-                        sourceNode.instanceConstants?.addedColor = color
+                        color.setAddedColor(on: &sourceNode.instanceConstants)
                     }
                     chunkGroup.leave()
                 }

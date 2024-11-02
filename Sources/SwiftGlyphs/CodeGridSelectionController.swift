@@ -11,11 +11,13 @@ import BitHandling
 
 public class GlobalNodeController {
     public func focus(_ node: GlyphNode) {
-        node.instanceConstants?.addedColor += LFloat4(0.2, 0.2, 0.2, 1)
+        LFloat4(0.2, 0.2, 0.2, 1)
+            .setAddedColor(on: &node.instanceConstants)
     }
     
     public func unfocus(_ node: GlyphNode) {
-        node.instanceConstants?.addedColor -= LFloat4(0.2, 0.2, 0.2, 1)
+        LFloat4(0, 0, 0, 1)
+            .setAddedColor(on: &node.instanceConstants)
     }
 }
 

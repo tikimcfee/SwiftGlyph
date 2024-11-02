@@ -136,8 +136,9 @@ public class CodeGrid: Identifiable, Equatable {
         nameNode.position = namePosition
         nameNode.scale = LFloat3(repeating: nameScale)
         nameNode.glyphs.forEach {
-            $0.instanceConstants?.addedColor = nameColor
+            nameColor.setAddedColor(on: &$0.instanceConstants)
         }
+        
         
         setNameNode(nameNode)
         return self
