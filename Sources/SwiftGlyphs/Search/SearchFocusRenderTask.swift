@@ -79,7 +79,7 @@ private extension SearchFocusRenderTask {
                 
                 next.updateAllNodeConstants { node, stopFlag in
                     LFloat4.zero.setAddedColor(on: &node.instanceConstants)
-                    node.instanceConstants?.modelMatrix.columns.3.z = 1.0
+                    node.instanceConstants?.positionOffset.z = 1.0
                     if self.task.isCancelled {
                         stopFlag = true
                     }
@@ -182,7 +182,8 @@ private extension SearchFocusRenderTask {
 //                else {
 //                    node.instanceConstants?.addedColor += self.focusAddition
 //                }
-                node.instanceConstants?.modelMatrix.translate(vector: self.focusPosition)
+                node.instanceConstants?.positionOffset.z += 1.5
+//                node.instanceConstants?.modelMatrix.translate(vector: self.focusPosition)
             }
         }
     }

@@ -10,6 +10,7 @@ import OrderedCollections
 import MetalLink
 import MetalKit
 import BitHandling
+import Combine
 
 class RenderPlan: MetalLinkReader {
     var link: MetalLink { GlobalInstances.defaultLink }
@@ -20,6 +21,7 @@ class RenderPlan: MetalLinkReader {
     var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
     var colorizeOnLoad: Bool { true }
     
+    var bag = Set<AnyCancellable>()
     var targetParent: MetalLinkNode {
         rootGroup.globalRootGrid.rootNode
     }
@@ -46,6 +48,7 @@ class RenderPlan: MetalLinkReader {
         case cacheOnly
         case layoutOnly
         case cacheAndLayout
+        case cacheAndLayoutStream
     }
     let mode: Mode
     
@@ -68,13 +71,14 @@ class RenderPlan: MetalLinkReader {
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
-        WorkerPool.shared.nextWorker().async {
-            self.onStart()
-            onComplete(self)
+        WorkerPool.shared.nextConcurrentWorker().async {
+            self.onStart(onComplete)
         }
     }
     
-    private func onStart() {
+    private func onStart(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
         statusObject.resetProgress()
         
         statusObject.update {
@@ -83,9 +87,7 @@ class RenderPlan: MetalLinkReader {
             $0.isActive = true
         }
         
-        WatchWrap.startTimer("\(rootPath.fileName)")
-        renderTaskForMode()
-        WatchWrap.stopTimer("\(rootPath.fileName)")
+        renderTaskForMode(onComplete)
         
         statusObject.update {
             $0.message = "Render complete!"
@@ -96,17 +98,36 @@ class RenderPlan: MetalLinkReader {
 }
 
 private extension RenderPlan {
-    func renderTaskForMode() {
+    func renderTaskForMode(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
         switch mode {
+        case .cacheAndLayoutStream:
+            WatchWrap.startTimer("\(self.rootPath.fileName)")
+            computeAllTheGrids_stream({ _ in
+                WatchWrap.stopTimer("\(self.rootPath.fileName)")
+                self.bag = .init()
+                onComplete(self)
+            })
+            
         case .cacheAndLayout:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             cacheGrids_V2()
             doGridLayout()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
 
         case .cacheOnly:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             cacheGrids_V2()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
             
         case .layoutOnly:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             doGridLayout()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
         }
     }
     
@@ -138,7 +159,6 @@ private extension RenderPlan {
         // Gather all the files and directories at once.
         // Threads. Heh.
         var allFileURLs = [URL]()
-        var unsupportedFileURLs = [URL]()
         var allDirectoryURLs = [URL]()
         let rootIsFile = rootPath.isSupportedFileType
         
@@ -161,11 +181,7 @@ private extension RenderPlan {
                     if $0.isDirectory {
                         allDirectoryURLs.append($0)
                     } else {
-                        if $0.isSupportedFileType {
-                            allFileURLs.append($0)
-                        } else {
-                            unsupportedFileURLs.append($0)
-                        }
+                        allFileURLs.append($0)
                     }
                 }
         }
@@ -185,19 +201,6 @@ private extension RenderPlan {
         
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
-        
-        // Now manually build the unsupported URLs with manual content
-        for unsupportedFileURL in unsupportedFileURLs {
-            cacheCollectionAsGrid(
-                collection: builder.getCollection(),
-                sourceURL: unsupportedFileURL
-            ).applying {
-                $0.consume(text: """
-                Unsupported file:
-                \(unsupportedFileURL)
-                """)
-            }
-        }
         
         // Then ask kindly of the gpu to go 'ham'
         do {
@@ -236,6 +239,83 @@ private extension RenderPlan {
             
         } catch {
             fatalError("Crash for now, my man: \(error)")
+        }
+    }
+    
+    func computeAllTheGrids_stream(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
+        // Gather all the files and directories at once.
+        // Threads. Heh.
+        var allFileURLs = [URL]()
+        var allDirectoryURLs = [URL]()
+        let rootIsFile = rootPath.isSupportedFileType
+        
+        if rootIsFile {
+            // Render the root file as well
+            allFileURLs.append(rootPath)
+            let parent = rootPath.deletingLastPathComponent()
+            if parent.isDirectory {
+                allDirectoryURLs.append(parent)
+            }
+        } else {
+            // Render the root file as normal directory, then look for it
+            allDirectoryURLs.append(rootPath)
+            
+            // Find all recursive files and directories of the root.
+            // Sort them out.
+            FileBrowser
+                .recursivePaths(rootPath)
+                .forEach {
+                    if $0.isDirectory {
+                        allDirectoryURLs.append($0)
+                    } else {
+                        allFileURLs.append($0)
+                    }
+                }
+        }
+        
+        // Check we have something to render
+        guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
+            statusObject.update {
+                $0.currentValue += 1
+                $0.message = "Didn't find any supported files to render."
+            }
+            return
+        }
+        
+        statusObject.update {
+            $0.message = "Found \(allFileURLs.count) files to render."
+        }
+        
+        // Setup all the directory relationships first
+        cacheCodeGroups(for: allDirectoryURLs)
+        
+        // Then ask kindly of the gpu to go 'ham'
+        let results = compute.executeManyWithAtlas_Stream(
+            atlas: builder.atlas
+        )
+        let remaining = ConcurrentArray<URL>(allFileURLs)
+        
+        let cacheStream = results.out
+            .handleEvents(
+                receiveOutput: { collectionResult in
+                    self.cacheCollectionAsGrid(from: collectionResult)
+                    remaining.directWriteAccess {
+                        $0.removeAll(where: { $0 == collectionResult.sourceURL })
+                    }
+                    if remaining.isEmpty {
+                        self.doGridLayout()
+                        onComplete(self)
+                    }
+                }
+            )
+        cacheStream.sink(receiveValue: { result in
+            print("Completed: \(result.sourceURL.lastPathComponent)")
+        }).store(in: &bag)
+        
+        for url in allFileURLs {
+            results.in.send(url)
         }
     }
     
