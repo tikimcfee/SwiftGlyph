@@ -111,8 +111,6 @@ private extension RenderPlan {
     }
     
     func doGridLayout() {        
-        guard rootPath.isDirectory else { return }
-        
         statusObject.update {
             $0.totalValue += 1
             $0.message = "Starting layout..."
@@ -147,8 +145,9 @@ private extension RenderPlan {
         if rootIsFile {
             // Render the root file as well
             allFileURLs.append(rootPath)
-            if rootPath.deletingLastPathComponent().isDirectory {
-                allDirectoryURLs.append(rootPath.deletingLastPathComponent())
+            let parent = rootPath.deletingLastPathComponent()
+            if parent.isDirectory {
+                allDirectoryURLs.append(parent)
             }
         } else {
             // Render the root file as normal directory, then look for it

@@ -15,6 +15,9 @@ public class CodeGrid: Identifiable, Equatable {
     public var id: String {
         "CodeGrid-\(uuid.uuidString)"
     }
+    public var nodeId: String {
+        "CodeGrid(node)-\(rootNode.nodeId)"
+    }
     
     public var fileName: String = ""
     public var sourcePath: URL?
@@ -32,7 +35,11 @@ public class CodeGrid: Identifiable, Equatable {
     public private(set) var childGrids: [CodeGrid] = []
 
     // Walls leaking into grids, 's'cool
-    weak var parentGroup: CodeGridGroup?
+    weak var weakParentGroup: CodeGridGroup?
+    var strongParentGroup: CodeGridGroup?
+    var parentGroup: CodeGridGroup? {
+        get { strongParentGroup ?? weakParentGroup }
+    }
     
     private lazy var groupWalls = {
         var walls = [
@@ -103,7 +110,6 @@ public class CodeGrid: Identifiable, Equatable {
     @discardableResult
     public func applyName() -> CodeGrid {
 //        guard false else { return self }
-        
         guard nameNode == nil else { return self }
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
@@ -127,10 +133,8 @@ public class CodeGrid: Identifiable, Equatable {
             ? LFloat3(0.0, 16.0, 0.0)
             : LFloat3(0.0, 4.0, 0.0)
         
-        
         nameNode.position = namePosition
         nameNode.scale = LFloat3(repeating: nameScale)
-        
         nameNode.glyphs.forEach {
             $0.instanceConstants?.addedColor = nameColor
         }
@@ -201,7 +205,8 @@ public class CodeGrid: Identifiable, Equatable {
         rootNode.removeFromParent()
         
         let toRemove = parentGroup
-        parentGroup = nil
+        weakParentGroup = nil
+        strongParentGroup = nil
         toRemove?.removeChild(self)
         
         return self

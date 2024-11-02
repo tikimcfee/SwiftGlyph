@@ -49,12 +49,12 @@ class CodeGridGroup {
     var gridsPerColumn = 5
     
     func assignAsRootParent() {
-        globalRootGrid.parentGroup = self
+        globalRootGrid.strongParentGroup = self
     }
     
-    func undoRenderAsRoot() {
+    func derez_global() {
         for childGroup in childGroups {
-            childGroup.undoRenderAsRoot()
+            childGroup.derez_global()
         }
         for childGrid in childGrids {
             childGrid.derez_global()
@@ -72,8 +72,8 @@ class CodeGridGroup {
     
     func removeChild(_ grid: CodeGrid) {
         let toRemove = childGrids
-            .reversed()
             .enumerated()
+            .reversed()
             .filter { $0.element.id == grid.id }
         
         toRemove.forEach {
@@ -82,7 +82,7 @@ class CodeGridGroup {
         }
         
         if childGrids.isEmpty && childGroups.isEmpty {
-            undoRenderAsRoot()
+            derez_global()
         }
     }
     
@@ -158,7 +158,7 @@ class CodeGridGroup {
         let newGridHeightIsGreater = (gridWithGreatestHeight?.bounds.height ?? 0) < grid.bounds.height
         gridWithGreatestHeight = newGridHeightIsGreater ? grid : gridWithGreatestHeight
         
-        grid.parentGroup = self
+        grid.weakParentGroup = self
         childGrids.append(grid)
         globalRootGrid.addChildGrid(grid)
     }
