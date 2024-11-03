@@ -60,7 +60,6 @@ extension MultipeerStreamController {
 //MARK: - Setup
 class MultipeerStreamController: NSObject {
 
-    private let stateQueue = DispatchQueue(label: "StreamController")
     let bundle: ConnectionBundle
     let manager: MultipeerConnectionManager
     
@@ -74,24 +73,23 @@ class MultipeerStreamController: NSObject {
     
     private func streamOpened(_ stream: Stream) {
         print("Stream opened - \(stream)")
-        stateQueue.async {
-            if let inputStream = stream as? InputStream {
-                guard let openStream = self.manager.inputStreamBiMap[inputStream] else {
-                    print("We missed an input stream somehow!")
-                    return
-                }
-                print("InputStream to '\(openStream.target.displayName)' opened")
-                
-                QuickLooper(loop: { print(stream.whyIsItBroken) } )
-                    .runUntil { stream.streamError != nil || stream.streamStatus == .atEnd }
-                
-            } else if let outputStream = stream as? OutputStream {
-                guard let openStream = self.manager.outputStreamBiMap[outputStream] else {
-                    print("We missed an output stream somehow!")
-                    return
-                }
-                print("OutputStream to '\(openStream.target.displayName)' opened")
+        
+        if let inputStream = stream as? InputStream {
+            guard let openStream = self.manager.inputStreamBiMap[inputStream] else {
+                print("We missed an input stream somehow!")
+                return
             }
+            print("InputStream to '\(openStream.target.displayName)' opened")
+            
+            QuickLooper(loop: { print(stream.whyIsItBroken) } )
+                .runUntil { stream.streamError != nil || stream.streamStatus == .atEnd }
+            
+        } else if let outputStream = stream as? OutputStream {
+            guard let openStream = self.manager.outputStreamBiMap[outputStream] else {
+                print("We missed an output stream somehow!")
+                return
+            }
+            print("OutputStream to '\(openStream.target.displayName)' opened")
         }
     }
 
@@ -121,24 +119,22 @@ class MultipeerStreamController: NSObject {
 
     private func streamEnded(_ stream: Stream) {
         print("Stream ended - \(stream)")
-        stateQueue.async {
-            guard let openStream = self.manager.outputStreamBiMap[stream] else {
-                print("No recorded stream!")
-                return
-            }
-            print("Stream to '\(openStream.target.displayName)' ended")
+        
+        guard let openStream = self.manager.outputStreamBiMap[stream] else {
+            print("No recorded stream!")
+            return
         }
+        print("Stream to '\(openStream.target.displayName)' ended")
     }
 
     private func streamError(_ stream: Stream) {
         print("!! Stream error - \(String(describing: stream.streamError))")
-        stateQueue.async {
-            guard let openStream = self.manager.outputStreamBiMap[stream] else {
-                print("No recorded stream for error!")
-                return
-            }
-            print("Stream to '\(openStream.target.displayName)' errored.")
+        
+        guard let openStream = self.manager.outputStreamBiMap[stream] else {
+            print("No recorded stream for error!")
+            return
         }
+        print("Stream to '\(openStream.target.displayName)' errored.")
     }
 
     private func streamReportedUnknownEvent(_ stream: Stream, _ code: Stream.Event) {

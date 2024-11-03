@@ -5,16 +5,39 @@
 //  Created by Ivan Lugo on 5/21/22.
 //
 
-import SwiftSyntax
 import Foundation
 import OrderedCollections
 import MetalLink
+import MetalKit
 import BitHandling
+import Combine
 
-class RenderPlan {
+class RenderPlan: MetalLinkReader {
+    var link: MetalLink { GlobalInstances.defaultLink }
     var statusObject: AppStatus { GlobalInstances.appStatus }
     var compute: ConvertCompute { GlobalInstances.gridStore.sharedConvert }
-    let targetParent = MetalLinkNode()
+    var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
+    var gridCache: GridCache { GlobalInstances.gridStore.gridCache }
+    var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
+    var colorizeOnLoad: Bool { true }
+    
+    var bag = Set<AnyCancellable>()
+    var targetParent: MetalLinkNode {
+        rootGroup.globalRootGrid.rootNode
+    }
+    
+    var rootGroup: CodeGridGroup {
+        let rootGroup = rootPath.isDirectory
+            ? state.directoryGroups[rootPath]
+            : state.directoryGroups[rootPath.deletingLastPathComponent()]
+        
+        // Now look for root group. Big problems if we miss it.
+        guard let rootGroup else {
+            fatalError("But where did the root go")
+        }
+        
+        return rootGroup
+    }
     
     class State {
         var directoryGroups = [URL: CodeGridGroup]()
@@ -25,89 +48,105 @@ class RenderPlan {
         case cacheOnly
         case layoutOnly
         case cacheAndLayout
+        case cacheAndLayoutStream
     }
     let mode: Mode
     
     let rootPath: URL
-    let builder: CodeGridGlyphCollectionBuilder
     let editor: WorldGridEditor
     let focus: WorldGridFocusController
-    let hoverController: MetalLinkHoverController
     
     init(
         mode: Mode,
         rootPath: URL,
-        builder: CodeGridGlyphCollectionBuilder,
         editor: WorldGridEditor,
-        focus: WorldGridFocusController,
-        hoverController: MetalLinkHoverController
+        focus: WorldGridFocusController
     ) {
         self.mode = mode
         self.rootPath = rootPath
-        self.builder = builder
         self.editor = editor
         self.focus = focus
-        self.hoverController = hoverController
     }
     
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
         WorkerPool.shared.nextConcurrentWorker().async {
-            self.onStart()
-            onComplete(self)
+            self.onStart(onComplete)
         }
     }
     
-    private func onStart() {
+    private func onStart(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
         statusObject.resetProgress()
         
         statusObject.update {
             $0.totalValue += 1 // pretend there's at least one unfinished task
             $0.message = "Your computer is about to explode <3"
+            $0.isActive = true
         }
         
-        WatchWrap.startTimer("\(rootPath.fileName)")
-        renderTaskForMode()
-        WatchWrap.stopTimer("\(rootPath.fileName)")
+        renderTaskForMode(onComplete)
         
         statusObject.update {
             $0.message = "Render complete!"
             $0.currentValue = $0.totalValue
+            $0.isActive = false
         }
     }
 }
 
 private extension RenderPlan {
-    func renderTaskForMode() {
+    func renderTaskForMode(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
         switch mode {
+        case .cacheAndLayoutStream:
+            WatchWrap.startTimer("\(self.rootPath.fileName)")
+            computeAllTheGrids_stream({ _ in
+                WatchWrap.stopTimer("\(self.rootPath.fileName)")
+                self.bag = .init()
+                onComplete(self)
+            })
+            
         case .cacheAndLayout:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             cacheGrids_V2()
             doGridLayout()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
 
         case .cacheOnly:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             cacheGrids_V2()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
             
         case .layoutOnly:
+            WatchWrap.startTimer("\(rootPath.fileName)")
             doGridLayout()
+            onComplete(self)
+            WatchWrap.stopTimer("\(rootPath.fileName)")
         }
     }
     
-    func doGridLayout() {
-        guard rootPath.isDirectory else { return }
-        
+    func doGridLayout() {        
         statusObject.update {
             $0.totalValue += 1
-            $0.message = "Starting layout.. this is the slow part."
+            $0.message = "Starting layout..."
         }
-        state.directoryGroups[rootPath]?.applyAllConstraints()
+        rootGroup.applyAllConstraints()
         
         statusObject.update {
             $0.currentValue += 1
             $0.totalValue += 1
             $0.message = "Jump in the line..."
         }
-        state.directoryGroups[rootPath]?.addLines(targetParent)
+        
+        rootGroup.addLines(root: rootGroup.asNode)
+        rootGroup.assignAsRootParent()
+        rootGroup.addAllWalls()
     }
 }
 
@@ -126,6 +165,10 @@ private extension RenderPlan {
         if rootIsFile {
             // Render the root file as well
             allFileURLs.append(rootPath)
+            let parent = rootPath.deletingLastPathComponent()
+            if parent.isDirectory {
+                allDirectoryURLs.append(parent)
+            }
         } else {
             // Render the root file as normal directory, then look for it
             allDirectoryURLs.append(rootPath)
@@ -137,7 +180,7 @@ private extension RenderPlan {
                 .forEach {
                     if $0.isDirectory {
                         allDirectoryURLs.append($0)
-                    } else if $0.isSupportedFileType {
+                    } else {
                         allFileURLs.append($0)
                     }
                 }
@@ -159,16 +202,9 @@ private extension RenderPlan {
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
         
-        if !rootIsFile {
-            // Now look for root group. Big problems if we miss it.
-            guard let rootGroup = state.directoryGroups[rootPath] else {
-                fatalError("But where did the root go")
-            }
-            targetParent.add(child: rootGroup.globalRootGrid.rootNode)
-        }
-        
         // Then ask kindly of the gpu to go 'ham'
         do {
+            onDebugStart()
             let allMappedAtlasResults = try compute.executeManyWithAtlas(
                 sources: allFileURLs,
                 atlas: builder.atlas,
@@ -199,10 +235,106 @@ private extension RenderPlan {
                     $0.currentValue += 1
                 }
             }
+            onDebugStop()
             
         } catch {
             fatalError("Crash for now, my man: \(error)")
         }
+    }
+    
+    func computeAllTheGrids_stream(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
+        // Gather all the files and directories at once.
+        // Threads. Heh.
+        var allFileURLs = [URL]()
+        var allDirectoryURLs = [URL]()
+        let rootIsFile = rootPath.isSupportedFileType
+        
+        if rootIsFile {
+            // Render the root file as well
+            allFileURLs.append(rootPath)
+            let parent = rootPath.deletingLastPathComponent()
+            if parent.isDirectory {
+                allDirectoryURLs.append(parent)
+            }
+        } else {
+            // Render the root file as normal directory, then look for it
+            allDirectoryURLs.append(rootPath)
+            
+            // Find all recursive files and directories of the root.
+            // Sort them out.
+            FileBrowser
+                .recursivePaths(rootPath)
+                .forEach {
+                    if $0.isDirectory {
+                        allDirectoryURLs.append($0)
+                    } else {
+                        allFileURLs.append($0)
+                    }
+                }
+        }
+        
+        // Check we have something to render
+        guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
+            statusObject.update {
+                $0.currentValue += 1
+                $0.message = "Didn't find any supported files to render."
+            }
+            return
+        }
+        
+        statusObject.update {
+            $0.message = "Found \(allFileURLs.count) files to render."
+        }
+        
+        // Setup all the directory relationships first
+        cacheCodeGroups(for: allDirectoryURLs)
+        
+        // Then ask kindly of the gpu to go 'ham'
+        let results = compute.executeManyWithAtlas_Stream(
+            atlas: builder.atlas
+        )
+        let remaining = ConcurrentArray<URL>(allFileURLs)
+        
+        let cacheStream = results.out
+            .handleEvents(
+                receiveOutput: { collectionResult in
+                    self.cacheCollectionAsGrid(from: collectionResult)
+                    remaining.directWriteAccess {
+                        $0.removeAll(where: { $0 == collectionResult.sourceURL })
+                    }
+                    if remaining.isEmpty {
+                        self.doGridLayout()
+                        onComplete(self)
+                    }
+                }
+            )
+        cacheStream.sink(receiveValue: { result in
+            print("Completed: \(result.sourceURL.lastPathComponent)")
+        }).store(in: &bag)
+        
+        for url in allFileURLs {
+            results.in.send(url)
+        }
+    }
+    
+    
+    private func onDebugStart(_ captureManager: MTLCaptureManager = .shared()) {
+//        do {
+//            let captureDescriptor = MTLCaptureDescriptor()
+//            captureDescriptor.captureObject = commandQueue
+//            captureDescriptor.destination = .developerTools
+//            try captureManager.startCapture(with: captureDescriptor)
+//        } catch {
+//            print(error)
+//        }
+    }
+    
+    private func onDebugStop(_ captureManager: MTLCaptureManager = .shared()) {
+//        if captureManager.isCapturing {
+//            captureManager.stopCapture()
+//        }
     }
     
     // MARK: - Encode result processing
@@ -210,35 +342,55 @@ private extension RenderPlan {
     func cacheCollectionAsGrid(from result: EncodeResult) {
         switch result.collection {
         case .built(let collection):
-            CodeGrid(
-                rootNode: collection,
-                tokenCache: builder.sharedTokenCache
+            cacheCollectionAsGrid(
+                collection: collection,
+                sourceURL: result.sourceURL
             )
-            .withSourcePath(result.sourceURL)
-            .withFileName(result.sourceURL.lastPathComponent)
-            .applyName()
-            .applying {
-                if result.sourceURL == rootPath {
-                    print("<Found source grid url>")
-                    targetParent.add(child: $0.rootNode)
-                } else {
-                    guard let parentGroup = state.directoryGroups[
-                        result
-                            .sourceURL
-                            .deletingLastPathComponent()
-                    ] else {
-                        fatalError("YOU WERE THE CHOSEN ONE")
-                    }
-                    
-                    parentGroup.addChildGrid($0)
-                    builder.sharedGridCache.insertGrid($0)
-                    hoverController.attachPickingStream(to: $0)
-                    $0.updateBackground()
-                }
-            }
             
         case .notBuilt:
             break
+        }
+    }
+    
+    @discardableResult
+    func cacheCollectionAsGrid(
+        collection: GlyphCollection,
+        sourceURL: URL
+    ) -> CodeGrid {
+        builder
+            .createGrid(around: collection)
+            .withSourcePath(sourceURL)
+            .withFileName(sourceURL.lastPathComponent)
+            .applyName()
+            .applying { grid in
+                let parentUrl = sourceURL.deletingLastPathComponent()
+                guard let parentGroup = state.directoryGroups[parentUrl] else {
+                    fatalError("YOU WERE THE CHOSEN ONE: \(parentUrl)")
+                }
+                
+                parentGroup.addChildGrid(grid)
+                gridCache.insertGrid(grid)
+                hoverController.attachPickingStream(to: grid)
+                grid.updateBackground()
+                
+                colorizeIfEnabled(grid)
+            }
+    }
+    
+    func colorizeIfEnabled(_ grid: CodeGrid) {
+        if colorizeOnLoad {
+            // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
+            // the general render, since colorizing huge files takes forever
+            WorkerPool.shared.nextConcurrentWorker().async {
+                do {
+                    try GlobalInstances.colorizer.runColorizer(
+                        colorizerQuery: .highlights,
+                        on: grid
+                    )
+                } catch {
+                    print("lol internet")
+                }
+            }
         }
     }
 }
@@ -249,7 +401,7 @@ private extension RenderPlan {
     func cacheCodeGroups(for directories: [URL]) {
         // Double pass; build out groups...
         for directoryURL in directories {
-            let grid = builder.sharedGridCache
+            let grid = gridCache
                 .setCache(directoryURL)
                 .withSourcePath(directoryURL)
                 .withFileName(directoryURL.fileName)
@@ -257,7 +409,6 @@ private extension RenderPlan {
                 .removeBackground()
             
             let group = CodeGridGroup(globalRootGrid: grid)
-//            grid.rootNode.pausedInvalidate = true
             state.directoryGroups[directoryURL] = group
         }
         
@@ -302,25 +453,5 @@ class WatchWrap {
         stopwatch.stop()
         let time = Self.stopwatch.elapsedTimeString()
         print("[* Stopwatch *] Time for \(name): \(time)")
-    }
-}
-
-// MARK: - Focus Style
-
-extension LFloat3 {
-    var magnitude: Float {
-        sqrt(x * x + y * y + z * z)
-    }
-    
-    var normalized: LFloat3 {
-        let magnitude = magnitude
-        return magnitude == 0
-            ? .zero
-            : self / magnitude
-    }
-    
-    mutating func normalize() -> LFloat3 {
-        self = self / magnitude
-        return self
     }
 }

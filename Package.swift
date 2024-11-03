@@ -4,39 +4,47 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftGlyphs",
+    name: "SwiftGlyph",
     platforms: [
-        .iOS(.v16),
-        .macOS(.v13),
+        .iOS(.v17),
+        .macOS(.v14),
     ],
     products: [
         .library(
-            name: "SwiftGlyphs",
-            targets: ["SwiftGlyphs"]
+            name: "SwiftGlyph",
+            targets: ["SwiftGlyph"]
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
-        .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
-        .package(path: "../MetalLink"),
+        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
+        .package(url: "https://github.com/ChimeHQ/SwiftTreeSitter.git", exact: "0.8.0"),
+        .package(url: "https://github.com/alex-pinkus/tree-sitter-swift", branch: "with-generated-files"),
+        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
+        .package(url: "https://github.com/tikimcfee/STTextView.git", branch: "main"),
+        .package(url: "https://github.com/apple/swift-algorithms.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "SwiftGlyphs",
+            name: "SwiftGlyph",
             dependencies: [
                 "BitHandling",
                 "MetalLink",
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "TreeSitterSwift", package: "tree-sitter-swift"),
+                .product(name: "SwiftTreeSitter", package: "SwiftTreeSitter"),
+                .product(name: "STTextView", package: "STTextView"),
+                .product(name: "Algorithms", package: "swift-algorithms"),
+            ],
+            resources: [
+                .process("Resources/Assets.xcassets")
             ]
         ),
         .testTarget(
-            name: "SwiftGlyphsTests",
+            name: "SwiftGlyphTests",
             dependencies: [
-                "SwiftGlyphs",
-                "BitHandling",
+                "SwiftGlyph",
+                "BitHandling"
             ]
         ),
     ]

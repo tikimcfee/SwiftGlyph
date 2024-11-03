@@ -1,7 +1,8 @@
 //
-//  SwiftGlyphsRoot.swift
+//  SwiftGlyphRoot.swift
 //  MetalSimpleInstancing
 //
+//  `TwoETime` and `2ETRoot`
 //  Created by Ivan Lugo on 8/6/22.
 //  Copyright © 2022 Metal by Example. All rights reserved.
 //
@@ -12,30 +13,21 @@
 import Combine
 import MetalKit
 import SwiftUI
-import SwiftParser
-import SwiftSyntax
 import MetalLink
 import BitHandling
 
-extension SwiftGlyphsRoot: MetalLinkRendererDelegate {
-    public func performDelegatedEncode(with pass: inout SafeDrawPass) {
-        delegatedEncode(in: &pass)
+extension SwiftGlyphRoot: MetalLinkRendererDelegate {
+    public func performDelegatedEncode(with pass: SafeDrawPass) {
+        delegatedEncode(in: pass)
     }
 }
 
-public class SwiftGlyphsRoot: MetalLinkReader {
+public class SwiftGlyphRoot: MetalLinkReader {
     public let link: MetalLink
     
     var bag = Set<AnyCancellable>()
     
     lazy var root = RootNode(camera)
-    
-    lazy var builder = try! CodeGridGlyphCollectionBuilder(
-        link: link,
-        sharedSemanticMap: GlobalInstances.gridStore.globalSemanticMap,
-        sharedTokenCache: GlobalInstances.gridStore.globalTokenCache,
-        sharedGridCache: GlobalInstances.gridStore.gridCache
-    )
     
     var camera: DebugCamera {
         GlobalInstances.debugCamera
@@ -49,24 +41,34 @@ public class SwiftGlyphsRoot: MetalLinkReader {
         GlobalInstances.gridStore.worldFocusController
     }
     
+    var builder: CodeGridGlyphCollectionBuilder {
+        GlobalInstances.gridStore.builder
+    }
+    
     public init(link: MetalLink) throws {
         self.link = link
         view.clearColor = MTLClearColorMake(0.03, 0.1, 0.2, 1.0)
         
         camera.interceptor.onNewFileOperation = handleDirectory
         camera.interceptor.onNewFocusChange = handleFocus
-
-        try setupRenderPlanTest()
         
         GlobalInstances.defaultAtlas.load()
+        
+        try setupRenderPlanTest()
+//        try setupRenderStreamTest()
+//        try setupWordWarePLA()
+        
+        QuickLooper(interval: .milliseconds(1000)) {
+            print("~~ Debug loop ~~")
+        }.runUntil { false }
     }
     
-    func delegatedEncode(in sdp: inout SafeDrawPass) {
+    func delegatedEncode(in sdp: SafeDrawPass) {
         let dT =  1.0 / Float(link.view.preferredFramesPerSecond)
         
         // TODO: Make update and render a single pass to avoid repeated child loops
         root.update(deltaTime: dT)
-        root.render(in: &sdp)
+        root.render(in: sdp)
     }
     
     func handleFocus(_ direction: SelfRelativeDirection) {

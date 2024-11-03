@@ -9,7 +9,6 @@
 //
 
 import Foundation
-import SwiftSyntax
 
 // A mapping of a category to an array of tuples that associate a given SyntaxID
 // with all of the other IDs related to it.

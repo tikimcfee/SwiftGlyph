@@ -11,8 +11,8 @@ import MetalLinkHeaders
 
 public class WordNode: MetalLinkNode {
     public let sourceWord: String
-    public var glyphs: CodeGridNodes
-    public let parentGrid: CodeGrid
+    public var glyphs: [GlyphNode]
+    public weak var parentGrid: CodeGrid?
 
     public override var hasIntrinsicSize: Bool {
         true
@@ -28,8 +28,9 @@ public class WordNode: MetalLinkNode {
     
     public init(
         sourceWord: String,
-        glyphs: CodeGridNodes,
-        parentGrid: CodeGrid
+        glyphs: [GlyphNode],
+        parentGrid: CodeGrid,
+        verticalLayout: Bool = false
     ) {
         self.sourceWord = sourceWord
         self.glyphs = glyphs
@@ -37,11 +38,18 @@ public class WordNode: MetalLinkNode {
         super.init()
         
         var xOffset: Float = 0
+        var yOffset: Float = 0
         for glyph in glyphs {
-            glyph.instanceConstants?.useParentMatrix = .zero
+            // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
+            glyph.instanceConstants?.setFlag(.useParent, false)
+            glyph.instanceConstants?.setFlag(.ignoreHover, true)
             glyph.parent = self
-            glyph.position = LFloat3(x: xOffset, y: 0, z: 0)
-            xOffset += glyph.boundsWidth
+            glyph.position = LFloat3(x: xOffset, y: yOffset, z: 0)
+            if verticalLayout {
+                yOffset -= glyph.boundsHeight
+            } else {
+                xOffset += glyph.boundsWidth
+            }
         }
     }
     
@@ -50,19 +58,7 @@ public class WordNode: MetalLinkNode {
         set { glyphs = newValue as? [MetalLinkGlyphNode] ?? glyphs }
     }
     
-    public override func render(in sdp: inout SafeDrawPass) {
+    public override func render(in sdp: SafeDrawPass) {
         // Don't render me
-    }
-}
-
-
-public extension WordNode {
-    func hideNode() {
-        
-        
-    }
-    
-    func showNode() {
-        
     }
 }

@@ -6,8 +6,6 @@
 //
 
 import Foundation
-import SceneKit
-import SwiftSyntax
 import MetalLink
 
 class ColorGenerator {
@@ -78,36 +76,17 @@ extension CodeGrid {
     // it adds caches layer glyphs motivated by display requirements inherited by those clients.
     @discardableResult
     func consume(
-        text: String,
-        color: NSUIColor = .white
-    ) -> (CodeGrid, CodeGridNodes) {
-        var nodes = CodeGridNodes()
+        text: String
+    ) -> (CodeGrid, [GlyphNode]) {
+        var nodes = [GlyphNode]()
         GlyphCollectionSyntaxConsumer(
             targetGrid: self
         ).write(
             text,
             "raw-text-\(UUID().uuidString)",
-            color,
             &nodes
         )
         rootNode.setRootMesh()
         return (self, nodes)
-    }
-}
-
-//MARK: -- Consume Syntax
-public extension CodeGrid {
-    @discardableResult
-    func consume(rootSyntaxNode: Syntax) -> CodeGrid {
-        doSyntaxConsume(rootSyntaxNode: rootSyntaxNode)
-        return self
-    }
-    
-    @discardableResult
-    private func doSyntaxConsume(rootSyntaxNode: Syntax) -> CodeGrid {
-        let consumer = GlyphCollectionSyntaxConsumer(targetGrid: self)
-        consumer.consume(rootSyntaxNode: rootSyntaxNode)
-        consumedRootSyntaxNodes.append(rootSyntaxNode)
-        return self
     }
 }

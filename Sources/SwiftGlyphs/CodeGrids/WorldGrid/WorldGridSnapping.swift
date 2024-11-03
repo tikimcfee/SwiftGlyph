@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import SceneKit
 import MetalLink
+import BitHandling
 
 public class WorldGridSnapping {
 //    // map the relative directions you can go from a grid
@@ -114,7 +114,7 @@ public extension WorldGridSnapping {
     
     func detachRetaining(_ targetGrid: CodeGrid) {
         guard let detachedRelationships = mapping.removeValue(forKey: targetGrid) else {
-            print("Nothing to detach for \(targetGrid)")
+//            print("Nothing to detach for \(targetGrid)")
             return
         }
         

@@ -11,33 +11,82 @@ import SwiftUI
 extension View {
     
     @discardableResult
-    func openInWindow(key: GlobalWindowKey, sender: Any?) -> NSWindow {
-        let window = GlobablWindowDelegate.instance
-            .window(for: key, makeNewWindow(for: key))
+    func openInWindow(
+        key: GlobalWindowKey,
+        mode: Binding<FloatableViewMode>
+    ) -> NSWindow {
+        let window = GlobalWindowDelegate
+            .instance
+            .window(
+                for: key,
+                FloatableWindow(
+                    key: key,
+                    mode: mode
+                )
+            )
+        
         window.contentView = NSHostingView(rootView: self)
         return window
     }
+}
+
+public class FloatableWindow: NSWindow {
+    let key: GlobalWindowKey
+    let mode: Binding<FloatableViewMode>
     
-    private func makeNewWindow(for key: GlobalWindowKey) -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 600),
-            styleMask: [.titled, .fullSizeContentView, .resizable],
-            backing: .buffered,
-            defer: false
+    init(
+        key: GlobalWindowKey,
+        mode: Binding<FloatableViewMode>,
+        contentRect: NSRect = NSRect(
+            x: 0,
+            y: 0,
+            width: 480,
+            height: 600
+        ),
+        styleMask style: NSWindow.StyleMask = [
+            .titled,
+            .fullSizeContentView,
+            .resizable,
+            .miniaturizable
+        ],
+        backing backingStoreType: NSWindow.BackingStoreType = .buffered,
+        defer flag: Bool = false
+    ) {
+        self.key = key
+        self.mode = mode
+        var updatedStyle = style
+        if key != .windowControls {
+            updatedStyle.formUnion(.closable)
+        }
+        super.init(
+            contentRect: contentRect,
+            styleMask: updatedStyle,
+            backing: backingStoreType,
+            defer: flag
         )
-        // TODO: make this configurable. Options object, attached to key, something
-        window.setFrameAutosaveName(key.title)
-//        window.level = .modalPanel
-        window.title = key.title
+        
+        setFrameAutosaveName(key.title)
+        title = key.title
         
         // THIS IS CRITICAL!
         // The window lifecycle is fragile here, and the window
         // can and will crash if it is immediately released on close.
         // Allow it to stick around long enough for the willClose notification
         // to come around and then clear the store then.
-        window.isReleasedWhenClosed = false
+        isReleasedWhenClosed = false
+    }
+    
+    public override func close() {
+        super.close()
         
-        return window
+        guard mode.wrappedValue == .displayedAsWindow else { return }
+        guard !GlobalWindowDelegate.instance.isTerminating else { return }
+        mode.wrappedValue = .hidden
+    }
+    
+    public override func miniaturize(_ sender: Any?) {
+        guard mode.wrappedValue == .displayedAsWindow else { return }
+        mode.wrappedValue = .displayedAsSibling
     }
 }
 #endif

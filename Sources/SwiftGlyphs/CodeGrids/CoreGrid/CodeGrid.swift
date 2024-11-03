@@ -6,25 +6,18 @@
 //
 
 import Foundation
-import SceneKit
-import SwiftSyntax
 import MetalLink
 import MetalLinkHeaders
 
-let kCodeGridContainerName = "CodeGrid"
-let kWhitespaceNodeName = "XxX420blazeitspaceXxX"
-
-extension CodeGrid: CustomStringConvertible {
-    public var description: String {
-"""
-CodeGrid(\(id))
-""".trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-}
-
 public class CodeGrid: Identifiable, Equatable {
     
-    public lazy var id = { "\(kCodeGridContainerName)-\(UUID().uuidString)" }()
+    public var uuid = UUID()
+    public var id: String {
+        "CodeGrid-\(uuid.uuidString)"
+    }
+    public var nodeId: String {
+        "CodeGrid(node)-\(rootNode.nodeId)"
+    }
     
     public var fileName: String = ""
     public var sourcePath: URL?
@@ -34,14 +27,42 @@ public class CodeGrid: Identifiable, Equatable {
     public let semanticInfoBuilder: SemanticInfoBuilder = SemanticInfoBuilder()
     
     public private(set) var rootNode: GlyphCollection
+    
     public private(set) var nameNode: WordNode?
     public let tokenCache: CodeGridTokenCache
     public let gridBackground: BackgroundQuad
-    
-    public var targetNode: MetalLinkNode { rootNode }
     public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
-    
     public private(set) var childGrids: [CodeGrid] = []
+
+    // Walls leaking into grids, 's'cool
+    weak var weakParentGroup: CodeGridGroup?
+    var strongParentGroup: CodeGridGroup?
+    var parentGroup: CodeGridGroup? {
+        get { strongParentGroup ?? weakParentGroup }
+    }
+    
+    private lazy var groupWalls = {
+        var walls = [
+            BackgroundQuad(rootNode.link), // top
+            BackgroundQuad(rootNode.link), // leading
+            BackgroundQuad(rootNode.link), // trailing
+            BackgroundQuad(rootNode.link), // bottom
+            BackgroundQuad(rootNode.link)  // front
+        ]
+        walls.forEach {
+            rootNode.add(child: $0)
+            $0.constants.pickingId = gridBackground.constants.pickingId
+        }
+        walls.append(gridBackground) // <--   default is back wall
+        return walls
+    }()
+    public var wallsTop: BackgroundQuad { groupWalls[0] }
+    public var wallsLeading: BackgroundQuad { groupWalls[1] }
+    public var wallsTrailing: BackgroundQuad { groupWalls[2] }
+    public var wallsBottom: BackgroundQuad { groupWalls[3] }
+    public var wallsFront: BackgroundQuad { groupWalls[4] }
+    public var wallsBack: BackgroundQuad { groupWalls[5] }
+    // ----------------------------------------------
     
     public init(
         rootNode: GlyphCollection,
@@ -49,13 +70,46 @@ public class CodeGrid: Identifiable, Equatable {
     ) {
         self.rootNode = rootNode
         self.tokenCache = tokenCache
-        self.gridBackground = BackgroundQuad(rootNode.link) // TODO: Link dependency feels lame
+        self.gridBackground = BackgroundQuad(rootNode.link)
         
         setupOnInit()
     }
     
+    public func derez_global() {
+        derez(
+            cache: GlobalInstances.gridStore.gridCache,
+            controller: GlobalInstances.gridStore.nodeHoverController,
+            editor: GlobalInstances.gridStore.editor
+        )
+    }
+    
+    public func derez(
+        cache: GridCache,
+        controller: MetalLinkHoverController,
+        editor: WorldGridEditor
+    ) {
+        let toDerez = childGrids
+        childGrids = []
+        
+        for child in toDerez {
+            child.derez(
+                cache: cache,
+                controller: controller,
+                editor: editor
+            )
+        }
+        
+        removeFromParent()
+        cache.removeGrid(self)
+        controller.detachPickingStream(from: self)
+        editor.remove(self)
+//        rootNode.clearChildren()
+        removeBackground()
+    }
+    
     @discardableResult
     public func applyName() -> CodeGrid {
+//        guard false else { return self }
         guard nameNode == nil else { return self }
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
@@ -79,31 +133,56 @@ public class CodeGrid: Identifiable, Equatable {
             ? LFloat3(0.0, 16.0, 0.0)
             : LFloat3(0.0, 4.0, 0.0)
         
-        
         nameNode.position = namePosition
         nameNode.scale = LFloat3(repeating: nameScale)
         nameNode.glyphs.forEach {
-            $0.instanceConstants?.addedColor = nameColor
+            nameColor.setAddedColor(on: &$0.instanceConstants)
         }
+        
         
         setNameNode(nameNode)
         return self
     }
     
+    @discardableResult
+    public func updateWalls() -> CodeGrid {
+        let childBounds = childGrids
+            .reduce(into: Bounds.forBaseComputing) {
+                $0.union(with: $1.sizeBounds)
+            }
+        
+        wallsLeading.applyLeading(childBounds)
+        wallsLeading.position.x -= 4
+        wallsLeading.setColor(LFloat4(0.2, 0.1, 0.1, 1.0))
+
+        wallsTrailing.applyTrailing(childBounds)
+        wallsTrailing.position.x += 4
+        wallsTrailing.setColor(LFloat4(0.1, 0.1, 0.1, 1.0))
+        
+//        childBounds.applyTop(wallsTop)
+//        wallsTop.position -= 4
+//        wallsTop.setColor(LFloat4(0.1, 0.3, 0.3, 1.0))
+        
+        wallsBottom.applyBottom(childBounds)
+        wallsBottom.position.y -= 4
+        wallsBottom.setColor(LFloat4(0.0, 0.1, 0.1, 1.0))
+        
+        wallsBack.applyBack(childBounds)
+        wallsBack.position.z -= 4
+        wallsBack.setColor(LFloat4(0.1, 0.2, 0.2, 1.0))
+        
+        return self
+    }
+    
     public func setNameNode(_ node: WordNode) {
         if let nameNode {
-            targetNode.remove(child: nameNode)
+            print("-- Resetting name on \(String(describing: sourcePath))")
+            rootNode.remove(child: nameNode)
+            nameNode.parentGrid = nil
         }
-        targetNode.add(child: node)
+        rootNode.add(child: node)
         self.nameNode = node
-    }
-    
-    public func hideName() {
-        nameNode?.hideNode()
-    }
-    
-    public func showName() {
-        nameNode?.showNode()
+        node.parentGrid = self
     }
     
     @discardableResult
@@ -113,13 +192,25 @@ public class CodeGrid: Identifiable, Equatable {
     }
     
     public func updateBackground() {
-        let size = targetNode.contentBounds
+        let size = rootNode.bounds
         gridBackground.size = LFloat2(x: size.width, y: size.height)
         
         gridBackground
             .setLeading(size.leading)
             .setTop(size.top)
-            .setFront(back - 1)
+            .setFront(back - 0.39269)
+    }
+    
+    @discardableResult
+    public func removeFromParent() -> CodeGrid {
+        rootNode.removeFromParent()
+        
+        let toRemove = parentGroup
+        weakParentGroup = nil
+        strongParentGroup = nil
+        toRemove?.removeChild(self)
+        
+        return self
     }
     
     public func addChildGrid(_ other: CodeGrid) {
@@ -144,6 +235,19 @@ public class CodeGrid: Identifiable, Equatable {
 }
 
 // MARK: - Hashing
+extension CodeGrid {
+    func copyDisplayState(from other: CodeGrid) {
+        self.uuid = other.uuid
+        self.position = other.position
+        self.rotation = other.rotation
+        self.sourcePath = other.sourcePath
+        self.fileName = other.fileName
+        
+        self.applyName()
+        self.updateBackground()
+    }
+}
+
 extension CodeGrid: Hashable {
     public func hash(into hasher: inout Hasher) {
         laztrace(#fileID,#function,hasher)
@@ -152,104 +256,8 @@ extension CodeGrid: Hashable {
 }
 
 // MARK: - Builder-style configuration
-// NOTE: - Word of warning
-// Grids can describe an entire glyph collection, or represent
-// a set of nodes in a collection. Because of this dual job and
-// from how the clearinghouse went, Grids owned a reference
-// to a collection now, and assume they are the representing object.
-// TODO: Add another `GroupMode` to switch between rootNode and collection node updates
-extension CodeGrid: Measures {
-    public var worldBounds: Bounds {
-        targetNode.worldBounds
-    }
-    
-    public var asNode: MetalLinkNode {
-        targetNode
-    }
-    
-    public var bounds: Bounds {
-        targetNode.bounds
-    }
-    
-    public var boundsCacheKey: MetalLinkNode {
-        targetNode
-    }
-    
-    public var sizeBounds: Bounds {
-        targetNode.sizeBounds
-    }
-
-    public var hasIntrinsicSize: Bool {
-        targetNode.hasIntrinsicSize
-    }
-    
-    public var contentBounds: Bounds {
-        targetNode.contentBounds
-    }
-    
-    public var nodeId: String {
-        targetNode.nodeId
-    }
-    
-    public var position: LFloat3 {
-        get {
-            targetNode.position
-        }
-        set {
-            targetNode.position = newValue
-        }
-    }
-    
-    public var worldPosition: LFloat3 {
-        get {
-            targetNode.worldPosition
-        }
-        set {
-            targetNode.worldPosition = newValue
-        }
-    }
-    
-    public var rotation: LFloat3 {
-        get {
-            targetNode.rotation
-        }
-        set {
-            targetNode.rotation = newValue
-        }
-    }
-    
-    public var lengthX: Float {
-        targetNode.lengthX
-    }
-    
-    public var lengthY: Float {
-        targetNode.lengthY
-    }
-    
-    public var lengthZ: Float {
-        targetNode.lengthZ
-    }
-    
-    public var parent: MetalLinkNode? {
-        get {
-            targetNode.parent
-        }
-        set {
-            targetNode.parent = newValue
-        }
-    }
-    
-    public func convertPosition(_ position: LFloat3, to: MetalLinkNode?) -> LFloat3 {
-        targetNode.convertPosition(position, to: to)
-    }
-    
-    public var centerPosition: LFloat3 {
-        targetNode.centerPosition
-    }
-}
 
 public extension CodeGrid {
-    
     @discardableResult
     func zeroedPosition() -> CodeGrid {
         position = .zero
@@ -293,5 +301,25 @@ public extension CodeGrid {
     func withSourcePath(_ filePath: URL) -> Self {
         self.sourcePath = filePath
         return self
+    }
+}
+
+extension CodeGrid: MeasuresDelegating {
+    public var delegateTarget: any Measures { rootNode }
+}
+
+extension CodeGrid: CustomStringConvertible {
+    public var description: String {
+"""
+CodeGrid(
+    \(id),
+    \(sourcePath?.path() ?? fileName),
+    in global cache:  \(sourcePath.map { GlobalInstances.gridStore.gridCache.contains($0) } ?? false ),
+    is hover tracked: \(GlobalInstances.gridStore.nodeHoverController.contains(self)),
+    \(parentGroup.map { "parentGroup: \($0.nodeId)" } ??  "no parent group"),
+    \(parent.map { "parent: \($0.nodeId)" } ??  "no parent node"),
+    \(!childGrids.isEmpty ? "children: \(childGrids.count)": "no child grids"),
+)
+""".trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

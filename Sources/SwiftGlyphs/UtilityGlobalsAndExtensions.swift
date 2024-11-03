@@ -29,9 +29,11 @@ public class QuickLooper {
     public var interval: DispatchTimeInterval
     public var nextDispatch: DispatchTime { .now() + interval }
     
-    public init(interval: DispatchTimeInterval = .seconds(1),
-         loop: @escaping () -> Void,
-         queue: DispatchQueue = .main) {
+    public init(
+        interval: DispatchTimeInterval = .seconds(1),
+        queue: DispatchQueue = .main,
+        loop: @escaping () -> Void
+    ) {
         self.interval = interval
         self.loop = loop
         self.queue = queue
@@ -39,15 +41,15 @@ public class QuickLooper {
     
     public func runUntil(
         onStop: (() -> Void)? = nil,
-        _ stopCondition: @escaping () -> Bool
+        stopIf: @escaping () -> Bool
     ) {
-        guard !stopCondition() else {
+        guard !stopIf() else {
             onStop?()
             return
         }
         loop()
         queue.asyncAfter(deadline: nextDispatch) {
-            self.runUntil(onStop: onStop, stopCondition)
+            self.runUntil(onStop: onStop, stopIf: stopIf)
         }
     }
 }

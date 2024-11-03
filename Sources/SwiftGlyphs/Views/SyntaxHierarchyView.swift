@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftSyntax
 import Combine
 
 public struct SyntaxHierarchyView: View {
@@ -99,13 +98,8 @@ public struct SyntaxHierarchyView: View {
     
     func doFindOnClick(_ info: SemanticInfo) {
         // Try to find local class identifier
-        guard info.node.kind == .token
-        else { return }
         
-        guard let reference = info.node.parent?.as(DeclReferenceExprSyntax.self),
-              let memberAccess = reference.parent?.as(MemberAccessExprSyntax.self)
-        else { return }
-        print(memberAccess)
+        print("Find on click says noooooooooooooooooooooooooo")
     }
 }
 

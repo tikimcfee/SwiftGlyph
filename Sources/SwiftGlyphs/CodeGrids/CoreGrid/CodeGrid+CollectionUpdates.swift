@@ -6,13 +6,15 @@
 //
 
 import Foundation
-import SwiftSyntax
+import MetalLink
 
 // MARK: - Collection Updates
 
 extension CodeGrid {
     @inline(__always)
-    func updateAllNodeConstants(_ update: UpdateConstants) rethrows {
+    func updateAllNodeConstants(
+        _ update: UpdateConstants
+    ) rethrows {
         var stopFlag = false
         try forAllNodesInCollection { _, nodeSet in
             if stopFlag { return }
@@ -39,10 +41,11 @@ extension CodeGrid {
     }
     
     @inline(__always)
-    private func forAllNodesInCollection(_ operation: ((SemanticInfo, CodeGridNodes)) throws -> Void) rethrows {
-        for rootSyntaxNode in consumedRootSyntaxNodes {
-            let rootSyntaxId = rootSyntaxNode.id
-            try semanticInfoMap.doOnAssociatedNodes(rootSyntaxId, tokenCache, operation)
-        }
+    private func forAllNodesInCollection(
+        _ operation: ((SemanticInfo, [GlyphNode])) throws -> Void
+    ) rethrows {
+        print("---------------------------------")
+        print("Warning: forAllNodes is disabled!")
+        print("---------------------------------")
     }
 }

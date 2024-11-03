@@ -8,12 +8,14 @@
 import Foundation
 import Combine
 import MetalLink
+import SwiftUI
+import Collections
 
+@Observable
 public class GridInteractionState {
     var bag = Set<AnyCancellable>()
     
-    private var lockedNodeEvent: NodePickingState.Event = .initial
-    private var lockedGridEvent: GridPickingState.Event = .initial
+    public var bookmarkedGrids: OrderedSet<CodeGrid> = .init()
     
     public let hoverController: MetalLinkHoverController
     public let input: DefaultInputReceiver
@@ -29,34 +31,12 @@ public class GridInteractionState {
     public func setupStreams() {
         let glyphStream = hoverController.sharedGlyphEvent
 //        let gridStream = hoverController.sharedGridEvent
-//        let mouseStream = input.sharedMouseDown
-        
-//        gridStream
-//            .removeDuplicates(by: {
-//                $0.latestState?.targetGrid.id == $1.latestState?.targetGrid.id
-//            })
-//            .sink {
-//                $0.latestState?.targetGrid.showName()
-//                $0.maybeLasteState?.targetGrid.hideName()
-//            }
-//            .store(in: &bag)
-//        
-//        mouseStream
-//            .combineLatest(
-//                glyphStream,
-//                gridStream
-//            )
-//            .sink { _, glyphEvent, gridEvent in
-//                self.lockedNodeEvent = glyphEvent
-//                self.lockedGridEvent = gridEvent
-//            }
-//        .store(in: &bag)
         
         glyphStream
             .sink { glyph in
                 self.handleNodeEvent(glyph)
             }
-        .store(in: &bag)
+            .store(in: &bag)
     }
 }
 
@@ -78,15 +58,13 @@ private extension GridInteractionState {
     }
     
     func focusGlyphState(_ nodeState: NodePickingState) {
-        updateGlyphState(nodeState) {
-            $0.instanceConstants?.addedColor += LFloat4(0.0, 0.3, 0.0, 0.0)
-        }
+        LFloat4(0.0, 0.9, 0.0, 0.0)
+            .setAddedColor(on: &nodeState.node.instanceConstants)
     }
     
     func defocusGlyphState(_ nodeState: NodePickingState) {
-        updateGlyphState(nodeState) {
-            $0.instanceConstants?.addedColor -= LFloat4(0.0, 0.3, 0.0, 0.0)
-        }
+        LFloat4(0.0, 0.0, 0.0, 0.0)
+            .setAddedColor(on: &nodeState.node.instanceConstants)
     }
     
     private func updateGlyphState(_ pickingState: NodePickingState, _ action: (GlyphNode) -> Void) {
@@ -100,5 +78,23 @@ private extension GridInteractionState {
             ) { node, _ in
                 action(node)
             }
+    }
+}
+
+public extension Array where Element: CodeGrid {
+    enum Selection {
+        case addedToSet, removedFromSet
+    }
+    
+    @discardableResult
+    mutating func toggle(_ toggled: Element) -> Selection {
+        let index = firstIndex(where: { $0.id == toggled.id })
+        if let index {
+            remove(at: index)
+            return .removedFromSet
+        } else {
+            append(toggled)
+            return .addedToSet
+        }
     }
 }

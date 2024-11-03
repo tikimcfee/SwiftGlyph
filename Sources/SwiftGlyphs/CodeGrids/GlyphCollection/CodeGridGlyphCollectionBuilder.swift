@@ -14,23 +14,23 @@ public class CodeGridGlyphCollectionBuilder {
     let link: MetalLink
     let atlas: MetalLinkAtlas
     let sharedSemanticMap: SemanticInfoMap
-    let sharedTokenCache: CodeGridTokenCache
-    let sharedGridCache: GridCache
+    private let sharedTokenCache: CodeGridTokenCache
     
     public init(
         link: MetalLink,
+        sharedAtlas atlas: MetalLinkAtlas,
         sharedSemanticMap semanticMap: SemanticInfoMap,
-        sharedTokenCache tokenCache: CodeGridTokenCache,
-        sharedGridCache gridCache: GridCache
+        sharedTokenCache tokenCache: CodeGridTokenCache
     ) throws {
         self.link = link
-        self.atlas = GlobalInstances.defaultAtlas
+        self.atlas = atlas
         self.sharedSemanticMap = semanticMap
         self.sharedTokenCache = tokenCache
-        self.sharedGridCache = gridCache
     }
     
-    public func getCollection(bufferSize: Int = BackingBufferDefaultSize) -> GlyphCollection {
+    public func getCollection(
+        bufferSize: Int = BackingBufferDefaultSize
+    ) -> GlyphCollection {
         return try! GlyphCollection(
             link: link,
             linkAtlas: atlas,
@@ -45,8 +45,16 @@ public class CodeGridGlyphCollectionBuilder {
             rootNode: getCollection(bufferSize: bufferSize),
             tokenCache: sharedTokenCache
         )
-        sharedGridCache.cachedGrids[grid.id] = grid
-        
+        return grid
+    }
+    
+    public func createGrid(
+        around collection: GlyphCollection
+    ) -> CodeGrid {
+        let grid = CodeGrid(
+            rootNode: collection,
+            tokenCache: sharedTokenCache
+        )
         return grid
     }
     

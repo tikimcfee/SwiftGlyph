@@ -16,7 +16,7 @@ import MetalLink
 // MARK: -- Global Scaling Defaults --
 
 public var DeviceScaleEnabled = false // Disabled because of switch to root geometry global scaling
-public var DeviceScaleRootEnabled = true // Enabled by default to take advantage of global relative measurements within a node
+public var DeviceScaleRootEnabled = false // Enabled by default to take advantage of global relative measurements within a node
 
 #if os(iOS)
 public let DeviceScaleRoot = Float(0.001)

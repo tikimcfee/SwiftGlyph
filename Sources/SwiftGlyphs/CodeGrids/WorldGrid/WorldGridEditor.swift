@@ -8,6 +8,7 @@
 import Foundation
 import simd
 import MetalLink
+import BitHandling
 
 var default__VerticalSpacing: VectorFloat = 32.0
 var default__HorizontalSpacing: VectorFloat = 32.0
@@ -21,6 +22,7 @@ public class WorldGridEditor {
     
     public let snapping = WorldGridSnapping()
     public var layoutStrategy: Strategy = .gridRelative
+    
     public var lastFocusedGrid: CodeGrid?
     
     public init() {
@@ -90,8 +92,8 @@ public class WorldGridEditor {
     public func transformedByAdding(_ style: AddStyle) -> WorldGridEditor {
         switch (style, layoutStrategy, lastFocusedGrid) {
         case (_, _, .none):
+            style.grid.translated(dX: -30, dY: 30, dZ: -100)
             print("Setting first focused grid: \(style)")
-            lastFocusedGrid = style.grid
             
         case let (.trailingFromLastGrid(codeGrid), .gridRelative, .some(lastGrid)):
             addTrailing(codeGrid, from: lastGrid)
@@ -103,11 +105,21 @@ public class WorldGridEditor {
             addInNextPlane(codeGrid, from: lastGrid)
         }
         
+        lastFocusedGrid = style.grid
+        return self
+    }
+    
+    @discardableResult
+    public func remove(_ toRemove: CodeGrid) -> WorldGridEditor {
+        if lastFocusedGrid?.id == toRemove.id {
+            lastFocusedGrid = nil
+        }
+        snapping.detachRetaining(toRemove)
         return self
     }
 }
 
-public extension WorldGridEditor {
+private extension WorldGridEditor {
     func addTrailing(
         _ codeGrid: CodeGrid,
         from other: CodeGrid
@@ -118,8 +130,6 @@ public extension WorldGridEditor {
             .setLeading(other.trailing + default__HorizontalSpacing)
             .setTop(other.top)
             .setFront(other.front)
-        
-        lastFocusedGrid = codeGrid
     }
     
     func addInNextRow(
@@ -127,7 +137,6 @@ public extension WorldGridEditor {
         from other: CodeGrid
     ) {
         snapping.connectWithInverses(sourceGrid: other, to: .down(codeGrid))
-        lastFocusedGrid = codeGrid
         
         var leftMostGrid: CodeGrid?
         let lowestBottomPosition: VectorFloat = getLowestBottomPosition(
@@ -170,7 +179,6 @@ public extension WorldGridEditor {
         from other: CodeGrid
     ) {
         snapping.connectWithInverses(sourceGrid: other, to: .forward(codeGrid))
-        lastFocusedGrid = codeGrid
         codeGrid
             .setLeading(0)
             .setTop(0)

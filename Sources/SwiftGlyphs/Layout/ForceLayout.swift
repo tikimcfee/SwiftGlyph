@@ -8,7 +8,6 @@
 import Foundation
 import MetalLink
 import MetalLinkHeaders
-import MetalLinkResources
 import Metal
 
 struct LForceLayout2 {

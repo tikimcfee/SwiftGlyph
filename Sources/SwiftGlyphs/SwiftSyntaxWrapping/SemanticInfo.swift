@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import SwiftSyntax
+import MetalLink
 
 public struct SemanticInfo: Hashable, CustomStringConvertible {
     public let node: Syntax
@@ -37,12 +37,12 @@ public struct SemanticInfo: Hashable, CustomStringConvertible {
         self.node = node
         self.syntaxId = node.id
         self.referenceName = referenceName ?? ""
-        self.syntaxTypeName = typeName ?? String(describing: node.syntaxNodeType)
+        self.syntaxTypeName = typeName ?? String(describing: node.nodeSyntaxType)
         self.color = color ?? CodeGridColors.defaultText
         self.isFullTextSearchable = fullTextSearchable
         self.callStackName = callStackName ?? ""
         if isFullTextSearchable {
-            self.fullTextSearch = node.strippedText
+            self.fullTextSearch = node.text
         }
         self.fileName = fileName ?? ""
     }
