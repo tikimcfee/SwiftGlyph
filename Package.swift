@@ -16,11 +16,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "sgalpha-bits"),
+        .package(url: "https://github.com/tikimcfee/BitHandling.git", branch: "main"),
+        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "main"),
+        .package(url: "https://github.com/tikimcfee/STTextView.git", branch: "main"),
+        
         .package(url: "https://github.com/ChimeHQ/SwiftTreeSitter.git", exact: "0.8.0"),
         .package(url: "https://github.com/alex-pinkus/tree-sitter-swift", branch: "with-generated-files"),
-        .package(url: "https://github.com/tikimcfee/MetalLink.git", branch: "sgalpha-metal-link"),
-        .package(url: "https://github.com/tikimcfee/STTextView.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-algorithms.git", branch: "main"),
     ],
     targets: [
