@@ -58,6 +58,25 @@ public class AppControlPanelState: ObservableObject {
 }
 
 public extension AppControlPanelState {
+    func resetSection(_ section: PanelSections) {
+        DispatchQueue.main.async {
+            self[section] = .hidden
+        }
+        DispatchQueue.main.async {
+            section.setDragState(
+                ComponentModel(
+                    componentInfo: ComponentState(
+                        origin: .init(x: 512, y: 512),
+                        size: .init(width: 300, height: 300)
+                    )
+                )
+            )
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self[section] = .displayedAsSibling
+        }
+    }
+    
     func toggleWindowControlsVisible() {
         switch visiblePanelStates.source[.windowControls, default: .hidden] {
         case .hidden:

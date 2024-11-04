@@ -77,22 +77,7 @@ public struct AppWindowTogglesView: View {
     func resetControl(_ section: PanelSections) -> some View {
         Button(
             action: {
-                DispatchQueue.main.async {
-                    state[section] = .hidden
-                }
-                DispatchQueue.main.async {
-                    section.setDragState(
-                        ComponentModel(
-                            componentInfo: ComponentState(
-                                origin: .init(x: 512, y: 512),
-                                size: .init(width: 300, height: 300)
-                            )
-                        )
-                    )
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    state[section] = .displayedAsSibling
-                }
+                state.resetSection(section)
             },
             label: {
                 Text("⊜")

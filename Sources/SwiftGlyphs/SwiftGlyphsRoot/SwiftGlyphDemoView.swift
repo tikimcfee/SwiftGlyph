@@ -12,8 +12,8 @@ import STTextViewSwiftUI
 private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
 public struct SwiftGlyphDemoView : View {
+    @State var showWindowing = true
     @State var showControls = true
-    
     @State var inputState = FloatableViewMode.displayedAsWindow
     
     public init() {
@@ -41,10 +41,18 @@ public struct SwiftGlyphDemoView : View {
             }
             
             VStack {
-                buttonImage("macwindow.on.rectangle").onTapGesture {
+                buttonImage("macwindow.on.rectangle").opacity(
+                    showWindowing ? 1.0 : 0.5
+                ).onTapGesture {
                     GlobalInstances.appPanelState.toggleWindowControlsVisible()
+                    showWindowing = GlobalInstances.appPanelState.isVisible(.windowControls)
+                }.onLongPressGesture {
+                    GlobalInstances.appPanelState.resetSection(.windowControls)
                 }
-                buttonImage("wrench.and.screwdriver").onTapGesture {
+                
+                buttonImage("wrench.and.screwdriver").opacity(
+                    showControls ? 1.0 : 0.5
+                ).onTapGesture {
                     showControls.toggle()
                 }
             }
