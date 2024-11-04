@@ -145,7 +145,6 @@ private extension RenderPlan {
         }
         
         rootGroup.addLines(root: rootGroup.asNode)
-        rootGroup.assignAsRootParent()
         rootGroup.addAllWalls()
     }
 }
@@ -201,6 +200,7 @@ private extension RenderPlan {
         
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
+        rootGroup.assignAsRootParent()
         
         // Then ask kindly of the gpu to go 'ham'
         do {
