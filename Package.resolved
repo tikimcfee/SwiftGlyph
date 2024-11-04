@@ -5,8 +5,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tikimcfee/BitHandling.git",
       "state" : {
-        "branch" : "sgalpha-bits",
-        "revision" : "86df010344716daa71813a6442bc8a7cf86f4974"
+        "branch" : "main",
+        "revision" : "8db4c0027eeb14539fda8e81768b39a6ca892c85"
+      }
+    },
+    {
+      "identity" : "coretextswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzyzanowskim/CoreTextSwift",
+      "state" : {
+        "revision" : "833177201d6421e6322296f39fce6ff6ae52618a",
+        "version" : "0.2.0"
       }
     },
     {
@@ -14,26 +23,35 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tikimcfee/MetalLink.git",
       "state" : {
-        "branch" : "sgalpha-metal-link",
-        "revision" : "d8fbc7dda79a6b3c0c191107e8875f608df0e130"
+        "branch" : "main",
+        "revision" : "845feb81c7b6e234779154759ac8d9102ecd40cd"
       }
     },
     {
-      "identity" : "neon",
+      "identity" : "sttextkitplus",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ChimeHQ/Neon.git",
+      "location" : "https://github.com/krzyzanowskim/STTextKitPlus",
+      "state" : {
+        "revision" : "34e80fdc73180844e0710286418d3d0c74a6a9fe",
+        "version" : "0.1.7"
+      }
+    },
+    {
+      "identity" : "sttextview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tikimcfee/STTextView.git",
       "state" : {
         "branch" : "main",
-        "revision" : "b59553ca87af963fd7c2173b2abaafb498a93806"
+        "revision" : "2775005b9523e8fc06d49fa2fc7ae422c9921ed7"
       }
     },
     {
-      "identity" : "rearrange",
+      "identity" : "swift-algorithms",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/ChimeHQ/Rearrange",
+      "location" : "https://github.com/apple/swift-algorithms.git",
       "state" : {
-        "revision" : "0fb658e721c68495f6340c211cc6d4719e6b52d8",
-        "version" : "1.6.0"
+        "branch" : "main",
+        "revision" : "34eec0dd27ba4b539fe01e61fac07c9227c65a63"
       }
     },
     {
@@ -46,18 +64,27 @@
       }
     },
     {
+      "identity" : "swift-numerics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-numerics.git",
+      "state" : {
+        "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
+        "version" : "1.0.2"
+      }
+    },
+    {
       "identity" : "swifttreesitter",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ChimeHQ/SwiftTreeSitter",
       "state" : {
-        "revision" : "a9b1335d5151b62b11f07599bd07d07dc5965de3",
-        "version" : "0.7.2"
+        "revision" : "2599e95310b3159641469d8a21baf2d3d200e61f",
+        "version" : "0.8.0"
       }
     },
     {
       "identity" : "tree-sitter-swift",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/alex-pinkus/tree-sitter-swift.git",
+      "location" : "https://github.com/tikimcfee/tree-sitter-swift.git",
       "state" : {
         "branch" : "with-generated-files",
         "revision" : "eda05af7ac41adb4eb19c346883c0fa32fe3bdd8"
@@ -68,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/marmelroy/Zip.git",
       "state" : {
-        "revision" : "67fa55813b9e7b3b9acee9c0ae501def28746d76",
-        "version" : "2.1.2"
+        "branch" : "master",
+        "revision" : "bca30f6d6c7d37cbc4aa8f6b0002e281dcc36195"
       }
     }
   ],
