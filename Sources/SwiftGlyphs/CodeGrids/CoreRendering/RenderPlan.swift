@@ -19,7 +19,7 @@ class RenderPlan: MetalLinkReader {
     var builder: CodeGridGlyphCollectionBuilder { GlobalInstances.gridStore.builder }
     var gridCache: GridCache { GlobalInstances.gridStore.gridCache }
     var hoverController: MetalLinkHoverController { GlobalInstances.gridStore.nodeHoverController }
-    var colorizeOnLoad: Bool { true }
+    var colorizeOnLoad: Bool { GlobalLiveConfig.Default.colorizeOnOpen }
     
     var bag = Set<AnyCancellable>()
     var targetParent: MetalLinkNode {
