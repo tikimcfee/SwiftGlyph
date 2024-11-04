@@ -86,16 +86,20 @@ public struct FloatableView<Inner: View>: View {
 public extension FloatableView {
     @ViewBuilder
     func makePlatformBody() -> some View {
-        if resizableAsSibling {
+        switch displayMode {
+        case .displayedAsSibling, .displayedAsWindow:
             ResizableComponentView(
+                displayMode: $displayMode,
+                windowKey: windowKey,
                 model: windowKey.getDragState,
                 onSave: windowKey.setDragState,
                 content: {
                     coreContent(isWindow: false)
                 }
             )
-        } else {
-            innerViewBuilder()
+            
+        case .hidden:
+            EmptyView()
         }
     }
     
@@ -149,49 +153,6 @@ public extension FloatableView {
                     ? nil
                     : Color(red: 0.2, green: 0.2, blue: 0.2, opacity: 0.2)
             )
-    }
-}
-
-struct SwitchModeButtons: View {
-    @Binding var displayMode: FloatableViewMode
-    let windowKey: GlobalWindowKey
-    
-    var body: some View {
-        HStack {
-            if windowKey != .windowControls {
-                buttonView
-                    .foregroundStyle(.red.opacity(0.8))
-                    .onTapGesture {
-                        displayMode = .hidden
-                    }
-            }
-
-            switch displayMode {
-            case .displayedAsSibling:
-                buttonView
-                    .foregroundStyle(.yellow.opacity(0.8))
-                    .onTapGesture {
-                        displayMode = .displayedAsWindow
-                    }
-                
-                
-            case .displayedAsWindow:
-                buttonView
-                    .foregroundStyle(.yellow.opacity(0.8))
-                    .onTapGesture {
-                        displayMode = .displayedAsSibling
-                    }
-                
-            case .hidden:
-                EmptyView()
-            }
-        }
-    }
-    
-    var buttonView: some View {
-        Circle()
-            .frame(width: 12, height: 12)
-
     }
 }
 

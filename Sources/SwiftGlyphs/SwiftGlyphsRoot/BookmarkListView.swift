@@ -25,26 +25,10 @@ struct BookmarkListView: View {
     
     @ViewBuilder
     var bookmarkListResizable: some View {
-        ResizableComponentView(
-            model: {
-                AppStatePreferences.shared.getCustom(
-                    name: BookmarkListViewStateName,
-                    makeDefault: ComponentModel.init
-                )
-            },
-            onSave: {
-                AppStatePreferences.shared.setCustom(
-                    name: BookmarkListViewStateName,
-                    value: $0
-                )
-            },
-            content: {
-                bookmarkListContent
-                    .padding(2)
-                    .background(Color.primaryBackground.opacity(0.8))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-        )
+        bookmarkListContent
+            .padding(2)
+            .background(Color.primaryBackground.opacity(0.8))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     @ViewBuilder

@@ -21,7 +21,13 @@ public enum ResizePoint: Codable, Equatable {
 public struct ResizingControlsView: View {
     let borderColor: Color = .white
     let fillColor: Color = .blue
+    
+    #if os(macOS)
     let diameter: CGFloat = 15.0
+    #else
+    let diameter: CGFloat = 30
+    #endif
+    
     @Binding var isResizing: Bool
     let dragged: (ResizePoint, CGFloat, CGFloat) -> Void
     let dragEnded: () -> Void
@@ -33,10 +39,9 @@ public struct ResizingControlsView: View {
         resizeBody
             .padding(8)
         #else
-        if isResizing {
-            resizeBody
-                .padding(-8)
-        }
+        resizeBody
+            .opacity(isResizing ? 1.0 : 0.0)
+            .padding(diameter / 2.0)
         #endif
         
     }
@@ -45,9 +50,7 @@ public struct ResizingControlsView: View {
     private var resizeBody: some View {
         VStack(spacing: 0.0) {
             HStack(spacing: 0.0) {
-                grabView(resizePoint: .topLeft)
-                    .disabled(true)
-                
+                grabView(resizePoint: .topLeft)                
                 Spacer()
                 grabView(resizePoint: .topMiddle)
                 Spacer()
@@ -112,21 +115,13 @@ public struct ResizingControlsView: View {
         case .leftMiddle:
             offsetX = -halfDiameter
         }
-        #if os(iOS)
-        /// 'Text' is the only thing that renders.. `contentShape` doesn't work and I have no idea why.
-        /// So whatever you get a square.
-        return Text("⬜️")
-            .offset(x: offsetX, y: offsetY)
-            .gesture(dragGesture(point: resizePoint))
-        #else
+        
         return Circle()
             .strokeBorder(borderColor, lineWidth: 3)
             .background(Circle().foregroundColor(fillColor))
             .frame(width: diameter, height: diameter)
             .offset(x: offsetX, y: offsetY)
             .gesture(dragGesture(point: resizePoint))
-        #endif
-        
     }
     
     private func dragGesture(point: ResizePoint) -> some Gesture {

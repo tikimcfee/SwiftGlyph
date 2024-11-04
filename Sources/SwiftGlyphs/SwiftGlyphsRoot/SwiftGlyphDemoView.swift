@@ -11,45 +11,8 @@ import STTextViewSwiftUI
 
 private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
-public extension SwiftGlyphDemoView {
-    enum Tab {
-        case metalView
-        case actions
-    }
-    
-    enum Screen {
-        case fileBrowser
-        case showActions
-        case showGitFetch
-        case root
-    }
-}
-
-private extension SwiftGlyphDemoView {
-    var receiver: DefaultInputReceiver { DefaultInputReceiver.shared }
-    
-    var fileButtonName: String {
-        let name = "\(browserState.files.first?.path.lastPathComponent ?? "No Directory")"
-        if screen == .fileBrowser {
-            return "[\(name)] - Hide"
-        } else {
-            return name
-        }
-    }
-    
-    func setScreen(_ new: Screen) {
-        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
-            self.screen = screen == new
-                ? .root
-                : new
-        }
-    }
-}
-
 public struct SwiftGlyphDemoView : View {
-    @State var screen: Screen = .root
-    @State var showBottomControls = false
-    @StateObject var browserState = FileBrowserViewState()
+    @State var showControls = true
     
     @State var inputState = FloatableViewMode.displayedAsWindow
     
@@ -59,22 +22,33 @@ public struct SwiftGlyphDemoView : View {
     
     public var body: some View {
         rootView
-//            .environmentObject(MultipeerConnectionManager.shared)
     }
     
     private var rootView: some View {
-        ZStack(alignment: .topTrailing) {
-            previewSafeView
+        ZStack(alignment: .bottomTrailing) {
+            previewSafeRenderView
             
             SwiftGlyphHoverView(
                 link: GlobalInstances.defaultLink
             )
             
-            #if os(macOS)
-            macOSContent
-            #else
-            iOSContent
-            #endif
+            if showControls {
+                #if os(macOS)
+                macOSContent
+                #else
+                iOSContent
+                #endif
+            }
+            
+            VStack {
+                buttonImage("macwindow.on.rectangle").onTapGesture {
+                    GlobalInstances.appPanelState.toggleWindowControlsVisible()
+                }
+                buttonImage("wrench.and.screwdriver").onTapGesture {
+                    showControls.toggle()
+                }
+            }
+            .padding()
         }
         #if os(iOS)
         .ignoresSafeArea()
@@ -87,80 +61,20 @@ public struct SwiftGlyphDemoView : View {
         ZStack(alignment: .topTrailing) {
             AppControlPanelView()
         }
-        
-//        HStack {
-//            topSafeAreaContent
-//                .padding()
-//            Spacer()
-//        }
-//        VStack(alignment: .trailing) {
-//            Spacer()
-//            screenView
-//            bottomSafeAreaContent
-//                .padding(.vertical)
-//                .padding(.horizontal)
-//        }
     }
     #endif
     
     #if os(iOS)
     @ViewBuilder
     private var iOSContent: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            Spacer()
-                .frame(minHeight: 120)
-                .layoutPriority(0)
-            
-            screenView
-                .transition(.move(edge: .trailing))
-                .zIndex(5)
-                .frame(maxHeight: 600)
-            
-            VStack(spacing: 0) {
-                HStack(alignment: .top) {
-                    Spacer()
-                    let image = showBottomControls
-                        ? "chevron.right"
-                        : "chevron.left"
-                    
-                    buttonImage(image).onTapGesture {
-                        withAnimation(.snappy(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
-                            showBottomControls.toggle()
-                        }
-                    }
-                    .padding([.leading, .bottom, .trailing], 24)
-                    
-                    if showBottomControls {
-                        bottomSafeAreaContent
-                            .padding([.trailing, .bottom], 24)
-                            .frame(maxWidth: .infinity)
-                            .transition(
-                                .move(edge: .trailing)
-                                    .combined(with: .slide)
-                            )
-                            .layoutPriority(1)
-                            .zIndex(1)
-                    }
-                }
-                if showBottomControls {
-                    AppStatusView(status: GlobalInstances.appStatus)
-                        .frame(maxWidth: .infinity, maxHeight: 120)
-                        .padding(.bottom, 20)
-                }
-            }
-            .padding(.top)
-            .background(
-                showBottomControls
-                    ? Color.gray.opacity(0.3)
-                    : Color.clear
-            )
+        ZStack(alignment: .topTrailing) {
+            AppControlPanelView()
         }
-        .frame(maxWidth: .infinity)
     }
     #endif
     
     @ViewBuilder
-    private var previewSafeView: some View {
+    private var previewSafeRenderView: some View {
         if IsPreview {
             Spacer()
         } else {
@@ -178,85 +92,15 @@ public struct SwiftGlyphDemoView : View {
         }
     }
     
-    @ViewBuilder
-    var screenView: some View {
-        switch screen {
-        case .fileBrowser:
-            fileBrowserContentView
-                .zIndex(1)
-            
-        case .showActions:
-            MenuActions()
-                .padding(.horizontal)
-                .zIndex(2)
-            
-        case .showGitFetch:
-            GitHubClientView()
-                .zIndex(3)
-            
-        case .root:
-            EmptyView()
-                .zIndex(4)
-        }
-    }
-    
-    var bottomSafeAreaContent: some View {
-        HStack(alignment: .top) {
-            buttonImage("gearshape.fill").onTapGesture {
-                setScreen(.showActions)
-            }
-            Spacer()
-            VStack(alignment: .trailing) {
-                showFileBrowserButton
-                downloadFromGithubButton
-            }
-        }
-        .zIndex(6)
-    }
-    
-    @ViewBuilder
-    var fileBrowserContentView: some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            FileBrowserView(browserState: browserState)
-                .frame(maxHeight: 640)
-                .padding(.top, 8)
-        }
-    }
-    
     func buttonImage(_ name: String) -> some View {
         Image(systemName: name)
             .renderingMode(.template)
+            .frame(width: 40, height: 40)
             .foregroundStyle(.red.opacity(0.8))
             .padding(6)
             .background(.blue.opacity(0.2))
             .contentShape(Rectangle())
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-    
-    var showFileBrowserButton: some View {
-        SGButton(fileButtonName, "") {
-            setScreen(.fileBrowser)
-        }
-    }
-    
-    var downloadFromGithubButton: some View {
-        SGButton(
-            screen == .showGitFetch
-                ? "Hide"
-                : "GitHub",
-            "square.and.arrow.down.fill"
-        ) {
-            setScreen(.showGitFetch)
-        }
-    }
-    
-    var importFilesButton: some View {
-        Button("Select Directory") {
-            GlobalInstances
-                .debugCamera // lol wow man
-                .interceptor
-                .onNewFileOperation?(.openDirectory)
-        }.keyboardShortcut("o", modifiers: .command)
+            .clipShape(Circle())
     }
 }
 

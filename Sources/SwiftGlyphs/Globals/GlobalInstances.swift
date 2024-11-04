@@ -32,14 +32,16 @@ public class GlobalInstances {
 public extension GlobalInstances {
     static let appStatus = AppStatus()
     static let swiftGlyphRoot = try! SwiftGlyphRoot(link: defaultLink)
+    static let appPanelState = AppControlPanelState()
 }
-
 
 // MARK: - Files
 // ______________________________________________________________
 public extension GlobalInstances {
     static let fileBrowser = FileBrowser()
     static let fileStream = fileBrowser.$scopes.share().eraseToAnyPublisher()
+    
+    static let fileBrowserState = FileBrowserViewState()
     
     static let userTextEditHolder = UserTextEditingStateHolder(link: defaultLink)
     static let userTextEditRenderer = UserTextEditingRenderer(

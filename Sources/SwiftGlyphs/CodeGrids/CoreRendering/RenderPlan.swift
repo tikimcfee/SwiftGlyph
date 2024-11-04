@@ -382,14 +382,10 @@ private extension RenderPlan {
             // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
             // the general render, since colorizing huge files takes forever
             WorkerPool.shared.nextConcurrentWorker().async {
-                do {
-                    try GlobalInstances.colorizer.runColorizer(
-                        colorizerQuery: .highlights,
-                        on: grid
-                    )
-                } catch {
-                    print("lol internet")
-                }
+                try? GlobalInstances.colorizer.runColorizer(
+                    colorizerQuery: .highlights,
+                    on: grid
+                )
             }
         }
     }

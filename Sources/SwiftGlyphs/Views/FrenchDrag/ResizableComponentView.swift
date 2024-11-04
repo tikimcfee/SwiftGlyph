@@ -21,23 +21,11 @@ public struct ResizableComponentView<Content: View>: View {
     @State var model: ComponentModel
     @State var isResizing: Bool = false
     
-    let displayMode: Binding<FloatableViewMode>?
-    let windowKey: GlobalWindowKey?
+    let displayMode: Binding<FloatableViewMode>
+    let windowKey: GlobalWindowKey
     
     let onSave: (ComponentModel) -> Void
     @ViewBuilder let content: () -> Content
-        
-    public init(
-        model: @escaping () -> ComponentModel,
-        onSave: @escaping (ComponentModel) -> Void,
-        content: @escaping () -> Content
-    ) {
-        self._model = State(wrappedValue: model())
-        self.onSave = onSave
-        self.content = content
-        self.displayMode = nil
-        self.windowKey = nil
-    }    
     
     public init(
         displayMode: Binding<FloatableViewMode>,
@@ -58,12 +46,31 @@ public struct ResizableComponentView<Content: View>: View {
             VStack(spacing: 0) {
                 dragBar
                     .frame(maxWidth: .infinity, maxHeight: 24)
-                    .overlay(alignment: .leading) {
-                        dragBarOverlay
+                    .overlay() {
+                        ZStack(alignment: .center) {
+                            HStack {
+                                dragBarOverlay
+                                Spacer()
+                            }
+                            
+                            Text(windowKey.rawValue)
+                        }
+                        .gesture(dragGesture)
+                        .onTapGesture(count: 2, perform: {
+                            isResizing.toggle()
+                        })
                     }
+                    .gesture(dragGesture)
+                    .onTapGesture(count: 2, perform: {
+                        isResizing.toggle()
+                    })
 
                 content()
             }
+            #if os(iOS)
+            .padding(30)
+            #endif
+            
             ResizingControlsView(
                 isResizing: $isResizing
             ) { point, deltaX, deltaY in
@@ -87,17 +94,22 @@ public struct ResizableComponentView<Content: View>: View {
     
     @ViewBuilder
     var dragBarOverlay: some View {
-        if let displayMode, let windowKey,
-           displayMode.wrappedValue == .displayedAsSibling
+        #if os(macOS)
+        if displayMode.wrappedValue == .displayedAsSibling
         {
-            #if os(macOS)
             SwitchModeButtons(
                 displayMode: displayMode,
                 windowKey: windowKey
             )
             .padding(4)
-            #endif
         }
+        #else
+        SwitchModeButtonsMobile(
+            displayMode: displayMode,
+            windowKey: windowKey
+        )
+        .padding(4)
+        #endif
     }
     
     var dragBar: some View {
@@ -109,10 +121,6 @@ public struct ResizableComponentView<Content: View>: View {
                 }
             }
             .contentShape(Rectangle())
-            .gesture(dragGesture)
-            .onTapGesture(count: 2, perform: {
-                isResizing.toggle()
-            })
     }
     
     var dragGesture: some Gesture {

@@ -12,7 +12,7 @@ import MetalLinkHeaders
 import MetalLinkResources
 
 struct AppControlPanelView: View {
-    @StateObject var state: AppControlPanelState = AppControlPanelState()
+    @ObservedObject var state: AppControlPanelState = GlobalInstances.appPanelState
     
     var body: some View {
         allPanelsGroup
@@ -43,114 +43,53 @@ extension AppControlPanelView {
     func panelView(for panel: PanelSections) -> some View {
         switch panel {
         case .windowControls:
-            windowControlsView
+            AppWindowTogglesView(state: state)
             
         case .appStatusInfo:
-            appStatusView
+            AppStatusView(
+                status: GlobalInstances.appStatus
+            )
             
         case .gridStateInfo:
-            gridStateView
+            SwiftGlyphHoverView(
+                link: GlobalInstances.defaultLink
+            )
             
         case .globalSearch:
-            globalSearchView
+            GlobalSearchView()
             
         case .editor:
-            editorView
+            TextViewWrapper()
             
         case .directories:
-            fileBrowserView
+            FileBrowserView(
+                browserState: GlobalInstances.fileBrowserState
+            )
             
         case .semanticCategories:
-            semanticCategoriesView
+            SourceInfoCategoryView()
+                .frame(width: 780, height: 640)
             
         case .hoverInfo:
-            hoverInfoView
+            SyntaxHierarchyView()
             
         case .tracingInfo:
-            traceInfoView
+            Text("No tracin' on mobile because abstractions.")
             
         case .githubTools:
-            gitHubTools
+            GitHubClientView()
             
         case .focusState:
-            focusState
+            WorldFocusView(
+                focus: GlobalInstances.gridStore.worldFocusController
+            )
             
         case .menuActions:
-            menuActions
+            MenuActions()
+            
+        case .bookmarks:
+            BookmarkListView()
         }
-    }
-    
-    
-    @ViewBuilder
-    var menuActions: some View {
-        MenuActions()
-    }
-    
-    @ViewBuilder
-    var focusState: some View {
-        WorldFocusView(
-            focus: GlobalInstances.gridStore.worldFocusController
-        )
-    }
-    
-    @ViewBuilder
-    var appStatusView: some View {
-        AppStatusView(
-            status: GlobalInstances.appStatus
-        )
-    }
-    
-    @ViewBuilder
-    var gitHubTools: some View {
-        GitHubClientView()
-    }
-    
-    @ViewBuilder
-    var gridStateView: some View {
-        SwiftGlyphHoverView(
-            link: GlobalInstances.defaultLink
-        )
-    }
-    
-    var globalSearchView: some View {
-        GlobalSearchView()
-    }
-    
-    @ViewBuilder
-    var semanticCategoriesView: some View {
-        SourceInfoCategoryView()
-            .frame(width: 780, height: 640)
-            .environmentObject(state)
-    }
-    
-    @ViewBuilder
-    var hoverInfoView: some View {
-        SyntaxHierarchyView()
-    }
-
-    @ViewBuilder
-    var traceInfoView: some View {
-        #if !os(iOS)
-        Text("No tracin' on desktop because we movin' on.")
-        #else
-        Text("No tracin' on mobile because abstractions.")
-        #endif
-    }
-    
-    @ViewBuilder
-    var editorView: some View {
-        TextViewWrapper()
-    }
-    
-    @ViewBuilder
-    var fileBrowserView: some View {
-        FileBrowserView(
-            browserState: state.fileBrowserState
-        )
-    }
-    
-    var windowControlsView: some View {
-        AppControlPanelToggles(state: state)
     }
 }
 
