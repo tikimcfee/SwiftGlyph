@@ -18,11 +18,11 @@ public enum FloatableViewMode: Codable, Identifiable, Equatable, CaseIterable {
     var segmentedControlName: String {
         switch self {
         case .hidden:
-            "⤫"
+            "eye.slash"
         case .displayedAsWindow:
-            "✚"
+            "macwindow.on.rectangle"
         case .displayedAsSibling:
-            "⿴"
+            "uiwindow.split.2x1"
         }
     }
 }

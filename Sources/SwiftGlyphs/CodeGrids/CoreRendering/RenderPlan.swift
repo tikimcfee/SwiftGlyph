@@ -168,7 +168,7 @@ private extension RenderPlan {
             if parent.isDirectory {
                 allDirectoryURLs.append(parent)
             }
-        } else {
+        } else if rootPath.isDirectory {
             // Render the root file as normal directory, then look for it
             allDirectoryURLs.append(rootPath)
             

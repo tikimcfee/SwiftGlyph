@@ -22,7 +22,7 @@ struct AppControlPanelView: View {
 extension AppControlPanelView {
     
     var allPanelsGroup: some View {
-        ForEach(PanelSections.allCases) { section in
+        ForEach(PanelSections.usableWindows) { section in
             floatingViewWrapper(for: section)
         }
     }
@@ -51,12 +51,17 @@ extension AppControlPanelView {
             )
             
         case .gridStateInfo:
-            SwiftGlyphHoverView(
-                link: GlobalInstances.defaultLink
-            )
+            EmptyView()
+//            SwiftGlyphHoverView(
+//                link: GlobalInstances.defaultLink
+//            )
             
         case .globalSearch:
-            GlobalSearchView()
+            Text("""
+            Coming soon here:
+            - Global fuzzy text search with visual highlighting.
+            """)
+//            GlobalSearchView()
             
         case .editor:
             TextViewWrapper()
@@ -67,28 +72,44 @@ extension AppControlPanelView {
             )
             
         case .semanticCategories:
-            SourceInfoCategoryView()
-                .frame(width: 780, height: 640)
+            Text("""
+            Coming soon here:
+            - View, highlight, and jump to AST nodes and types.
+            """)
+//            SourceInfoCategoryView()
+//                .frame(width: 780, height: 640)
             
         case .hoverInfo:
-            SyntaxHierarchyView()
+            Text("""
+            Coming soon here:
+            - Tap and hover on files to view statistics and app state.
+            """)
+//            SyntaxHierarchyView()
             
         case .tracingInfo:
-            Text("No tracin' on mobile because abstractions.")
+            Text("Trace highlighting coming soon!")
             
         case .githubTools:
             GitHubClientView()
             
         case .focusState:
-            WorldFocusView(
-                focus: GlobalInstances.gridStore.worldFocusController
-            )
+            Text("""
+            Coming soon here:
+            - Keyboard shortcut and on-screen button based navigation between files and folders.
+            """)
+//            WorldFocusView(
+//                focus: GlobalInstances.gridStore.worldFocusController
+//            )
             
         case .menuActions:
             MenuActions()
             
         case .bookmarks:
-            BookmarkListView()
+            Text("""
+            Coming soon here:
+            - Quick jumps and shortcuts between open files and folders.
+            """)
+//            BookmarkListView()
         }
     }
 }

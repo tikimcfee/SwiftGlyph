@@ -38,9 +38,9 @@ extension FileBrowser.Scope {
         case .file(_):
             ""
         case .directory(_):
-            "􀆊"
+            "chevron.right"
         case .expandedDirectory(_):
-            "􀆈"
+            "chevron.down"
         }
     }
     

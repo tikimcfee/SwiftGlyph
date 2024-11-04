@@ -17,7 +17,7 @@ struct FileBrowserRowView: View {
     
     @Binding var hoveredScope: FileBrowser.Scope?
     var isHovered: Bool {
-        scope == hoveredScope
+        scope.path == hoveredScope?.path
     }
     
     let onEvent: (FileBrowserEvent) -> Void
@@ -50,6 +50,7 @@ struct FileBrowserRowView: View {
                 onEvent(.init(scope, .toggle))
             }
         }
+        .padding(2)
     }
 
     @ViewBuilder
@@ -67,9 +68,9 @@ struct FileBrowserRowView: View {
         HStack(spacing: 2) {
             // Left Icon
             if scope.isDirectoryType {
-                Text(scope.directoryStateIconName)
+                Image(systemName: scope.directoryStateIconName)
                     .font(.footnote)
-                    .frame(width: 12)
+                    .frame(width: 8)
             }
             Image(systemName: scope.mainIconName)
                 .aspectRatio(contentMode: .fit)
@@ -101,7 +102,7 @@ struct FileBrowserRowView: View {
     func showDirectoryButton(_ scope: FileBrowser.Scope) -> some View {
         Button(
             action: {
-                onEvent(.init(scope, .toggle))
+                onEvent(FileBrowserEvent(scope, .toggle))
             },
             label: {
                 Text("Show All")

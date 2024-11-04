@@ -18,7 +18,7 @@ public struct AppWindowTogglesView: View {
     public var body: some View {
         ScrollView {
             VStack {
-                ForEach(PanelSections.sorted, id: \.self) { section in
+                ForEach(PanelSections.usableWindows, id: \.self) { section in
                     sectionRow(section)
                     Divider()
                 }
@@ -41,7 +41,7 @@ public struct AppWindowTogglesView: View {
                     selection: $state[section],
                     content: {
                         ForEach(modes(for: section)) { mode in
-                            Text("\(mode.segmentedControlName)")
+                            Image(systemName:"\(mode.segmentedControlName)")
                                 .tag(mode)
                         }
                     }
@@ -80,7 +80,7 @@ public struct AppWindowTogglesView: View {
                 state.resetSection(section)
             },
             label: {
-                Text("⊜")
+                Image(systemName: "arrow.clockwise")
             }
         )
     }

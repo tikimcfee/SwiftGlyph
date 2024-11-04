@@ -9,36 +9,6 @@ import Combine
 import SwiftUI
 import BitHandling
 
-public enum PanelSections: String, CaseIterable, Equatable, Comparable, Codable {
-    case editor = "Editor"
-    case directories = "Files"
-    case semanticCategories = "Semantics"
-    case hoverInfo = "Hover Info"
-    case tracingInfo = "Tracing Info"
-    case globalSearch = "Global Search"
-    case windowControls = "Window Controls"
-    case appStatusInfo = "App Status"
-    case gridStateInfo = "Grid State"
-    case githubTools = "GitHub"
-    case focusState = "Focus"
-    case bookmarks = "Bookmarks"
-    case menuActions = "App Tools"
-    
-    public static func < (lhs: PanelSections, rhs: PanelSections) -> Bool {
-        lhs.rawValue < rhs.rawValue
-    }
-    
-    static var sorted: [PanelSections] {
-        allCases.sorted(by: { $0.rawValue < $1.rawValue} )
-    }
-    
-    var defaultMode: FloatableViewMode {
-        switch self {
-        case .windowControls: .displayedAsSibling
-        default: .hidden
-        }
-    }
-}
 
 public class AppControlPanelState: ObservableObject {
     // Visible subsections
