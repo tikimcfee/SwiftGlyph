@@ -7,7 +7,7 @@ let package = Package(
     name: "SwiftGlyph",
     platforms: [
         .iOS(.v17),
-        .macOS(.v15),
+        .macOS(.v14),
     ],
     products: [
         .library(
