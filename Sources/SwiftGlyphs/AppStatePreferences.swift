@@ -19,10 +19,8 @@ extension AppStatePreferences {
             into: CodableAutoCache<PanelSections, FloatableViewMode>()
         ) { cache, section in
             switch section {
-            case .windowControls,
-                    .directories,
-                    .appStatusInfo:
-                cache.source[section] = .displayedAsWindow
+            case .windowControls:
+                cache.source[section] = .displayedAsSibling
             default:
                 cache.source[section] = .hidden
             }
