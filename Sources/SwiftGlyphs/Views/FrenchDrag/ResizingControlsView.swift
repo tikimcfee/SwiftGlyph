@@ -50,7 +50,11 @@ public struct ResizingControlsView: View {
     private var resizeBody: some View {
         VStack(spacing: 0.0) {
             HStack(spacing: 0.0) {
-                grabView(resizePoint: .topLeft)                
+                grabView(resizePoint: .topLeft)
+                #if os(macOS)
+                .hidden()
+                #endif
+                
                 Spacer()
                 grabView(resizePoint: .topMiddle)
                 Spacer()
