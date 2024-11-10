@@ -21,7 +21,7 @@ public class CodeGridGlyphCollectionBuilder {
         sharedAtlas atlas: MetalLinkAtlas,
         sharedSemanticMap semanticMap: SemanticInfoMap,
         sharedTokenCache tokenCache: CodeGridTokenCache
-    ) throws {
+    ) {
         self.link = link
         self.atlas = atlas
         self.sharedSemanticMap = semanticMap

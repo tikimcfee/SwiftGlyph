@@ -55,6 +55,7 @@ class RenderPlan: MetalLinkReader {
     let rootPath: URL
     let editor: WorldGridEditor
     let focus: WorldGridFocusController
+    lazy var watch = WatchWrap(name: rootPath.lastPathComponent)
     
     init(
         mode: Mode,
@@ -83,14 +84,14 @@ class RenderPlan: MetalLinkReader {
         
         statusObject.update {
             $0.totalValue += 1 // pretend there's at least one unfinished task
-            $0.message = "Your computer is about to explode <3"
+            $0.title = "Your computer is about to explode <3"
             $0.isActive = true
         }
         
         renderTaskForMode(onComplete)
         
         statusObject.update {
-            $0.message = "Render complete!"
+            $0.title = "Render complete!"
             $0.currentValue = $0.totalValue
             $0.isActive = false
         }
@@ -103,45 +104,49 @@ private extension RenderPlan {
     ) {
         switch mode {
         case .cacheAndLayoutStream:
-            WatchWrap.startTimer("\(self.rootPath.fileName)")
+            watch.start(.cache)
             computeAllTheGrids_stream({ _ in
-                WatchWrap.stopTimer("\(self.rootPath.fileName)")
+                self.watch.stop(.cache)
                 self.bag = .init()
                 onComplete(self)
             })
             
         case .cacheAndLayout:
-            WatchWrap.startTimer("\(rootPath.fileName)")
+            watch.start(.cache)
             cacheGrids_V2()
+            watch.stop(.cache)
+            
+            watch.start(.layout)
             doGridLayout()
+            watch.stop(.layout)
+            
             onComplete(self)
-            WatchWrap.stopTimer("\(rootPath.fileName)")
 
         case .cacheOnly:
-            WatchWrap.startTimer("\(rootPath.fileName)")
+            watch.start(.cache)
             cacheGrids_V2()
+            watch.stop(.cache)
             onComplete(self)
-            WatchWrap.stopTimer("\(rootPath.fileName)")
             
         case .layoutOnly:
-            WatchWrap.startTimer("\(rootPath.fileName)")
+            watch.start(.layout)
             doGridLayout()
+            watch.stop(.layout)
             onComplete(self)
-            WatchWrap.stopTimer("\(rootPath.fileName)")
         }
     }
     
     func doGridLayout() {        
         statusObject.update {
             $0.totalValue += 1
-            $0.message = "Starting layout..."
+            $0.title = "Starting layout..."
         }
         rootGroup.applyAllConstraints()
         
         statusObject.update {
             $0.currentValue += 1
             $0.totalValue += 1
-            $0.message = "Jump in the line..."
+            $0.title = "Jump in the line..."
         }
         
         rootGroup.addLines(root: rootGroup.asNode)
@@ -189,13 +194,13 @@ private extension RenderPlan {
         guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
             statusObject.update {
                 $0.currentValue += 1
-                $0.message = "Didn't find any supported files to render."
+                $0.title = "Didn't find any supported files to render."
             }
             return
         }
         
         statusObject.update {
-            $0.message = "Found \(allFileURLs.count) files to render."
+            $0.title = "Found \(allFileURLs.count) files to render."
         }
         
         // Setup all the directory relationships first
@@ -213,16 +218,16 @@ private extension RenderPlan {
                         switch event {
                         case .bufferMapped(let string):
                             $0.totalValue += 1
-                            $0.message = "File mapped to data: \(string)"
+                            $0.title = "File mapped to data: \(string)"
                             
                         case .layoutEncoded(let string):
-                            $0.message = "Atlas layout encoded: \(string)"
+                            $0.title = "Atlas layout encoded: \(string)"
                             
                         case .copyEncoded(let string):
-                            $0.message = "Preparing glyph copy: \(string)"
+                            $0.title = "Preparing glyph copy: \(string)"
                             
                         case .collectionReady(let string):
-                            $0.message = "Collection made ready: \(string)"
+                            $0.title = "Collection made ready: \(string)"
                         }
                     }
                 }
@@ -231,7 +236,7 @@ private extension RenderPlan {
             for collectionResult in allMappedAtlasResults {
                 cacheCollectionAsGrid(from: collectionResult)
                 statusObject.update {
-                    $0.message = "Completed grid creation: \(collectionResult.sourceURL.lastPathComponent)"
+                    $0.title = "Completed grid creation: \(collectionResult.sourceURL.lastPathComponent)"
                     $0.currentValue += 1
                 }
             }
@@ -279,13 +284,13 @@ private extension RenderPlan {
         guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
             statusObject.update {
                 $0.currentValue += 1
-                $0.message = "Didn't find any supported files to render."
+                $0.title = "Didn't find any supported files to render."
             }
             return
         }
         
         statusObject.update {
-            $0.message = "Found \(allFileURLs.count) files to render."
+            $0.title = "Found \(allFileURLs.count) files to render."
         }
         
         // Setup all the directory relationships first
@@ -310,6 +315,7 @@ private extension RenderPlan {
                     }
                 }
             )
+        
         cacheStream.sink(receiveValue: { result in
             print("Completed: \(result.sourceURL.lastPathComponent)")
         }).store(in: &bag)
@@ -437,17 +443,28 @@ private extension RenderPlan {
 }
 
 class WatchWrap {
-    static let stopwatch = Stopwatch(running: false)
+    let stopwatch = Stopwatch(running: false)
+    let name: String
     
-    static func startTimer(_ name: String) {
-        print("[* StopWatch *] Starting \(name)")
+    enum Stage: String {
+        case cache
+        case layout
+    }
+    
+    init(name: String) {
+        self.name = name
+    }
+    
+    func start(_ stage: Stage) {
+        print("[* StopWatch *]\n\(name)\n Starting \(stage)")
         stopwatch.start()
         
     }
-    static func stopTimer(_ name: String) {
+    
+    func stop(_ stage: Stage) {
         defer { stopwatch.reset() }
         stopwatch.stop()
-        let time = Self.stopwatch.elapsedTimeString()
-        print("[* Stopwatch *] Time for \(name): \(time)")
+        let time = stopwatch.elapsedTimeString()
+        print("[* StopWatch *]\n\(name)\n Stopping \(stage): \(time)")
     }
 }

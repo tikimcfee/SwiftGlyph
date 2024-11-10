@@ -7,25 +7,41 @@ import SwiftUI
 import BitHandling
 
 public class AppStatus: ObservableObject {
-    @Published private(set) var progress = AppProgress()
-    @Published private(set) var history = [AppProgress]()
+    public let limit = 500
+    
+    private(set) var progress = AppProgress()
+    private(set) var history = [AppProgress]()
+    
+    private let updateQueue = DispatchQueue(label: "AppStatusQueue", qos: .utility)
     
     func update(_ receiver: @escaping (inout AppProgress) -> Void) {
-        DispatchQueue.main.async {
-            var current = self.progress
-            current.id = .init()
+        updateQueue.async {
+            var current = AppProgress()
+            current.currentValue = self.progress.currentValue
+            current.totalValue = self.progress.totalValue
+            current.isActive = self.progress.isActive
+            current.index = self.progress.index + 1
             receiver(&current)
+
+            let newHistory = Array(self.history.suffix(self.limit) + [current])
             
+            self.post()
+            self.progress = current
+            self.history = newHistory
+        }
+    }
+    
+    func post() {
+        DispatchQueue.main.async {
             withAnimation(.easeOut(duration: GlobalLiveConfig.Default.uiAnimationDuration)) {
-                self.progress = current
+                self.objectWillChange.send()
             }
-            
-            self.history = self.history.suffix(500) + [current]
         }
     }
     
     func resetProgress() {
-        DispatchQueue.main.async {
+        updateQueue.async {
+            self.post()
             self.progress = AppProgress()
         }
     }
@@ -34,8 +50,11 @@ public class AppStatus: ObservableObject {
 public extension AppStatus {
     struct AppProgress: Identifiable {
         public var id = UUID()
+        public var index = 0
+        
         var message: String = ""
-        var detail: String = ""
+        var title: String = ""
+        
         var totalValue: Double = 0
         var currentValue: Double = 0
         var isActive: Bool = false

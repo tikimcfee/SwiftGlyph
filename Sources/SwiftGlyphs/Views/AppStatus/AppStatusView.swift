@@ -18,44 +18,61 @@ public struct AppStatusView: View {
     }
     
     public var body: some View {
-        ScrollView {
+        VStack {
             mainView
-            LazyVStack {
-                ForEach(status.history) { progress in
-                    VStack {
-                        HStack {
-                            Text(progress.message)
-                                .font(.subheadline)
-                                .frame(alignment: .leading)
-                                .lineLimit(2, reservesSpace: true)
-                        }
-                    }
-                }
+            List(status.history.reversed()) { progress in
+                cell(progress)
+                    .listRowInsets(.none)
+                    .listRowBackground(Color.gray.opacity(progress.index % 2 == 0 ? 0.2 : 0.1))
             }
+            .listStyle(.plain)
         }
         .padding(8)
     }
     
     @ViewBuilder
+    func cell(_ progress: AppStatus.AppProgress) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(progress.title)
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .italic()
+                Spacer()
+                Text("\(progress.index)")
+                    .font(.subheadline)
+                    .italic()
+            }
+
+            if !progress.message.isEmpty {
+                Text(progress.message)
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading)
+            }
+
+        }
+        .padding(4)
+    }
+    
+    @ViewBuilder
     var mainView: some View {
         VStack(alignment: .leading) {
-            HStack(alignment: .top) {
-                VStack (alignment: .leading) {
-                    Text(statusText)
-                        .font(.headline)
-                        .frame(alignment: .leading)
-                    
-                    Text(status.progress.message)
-                        .font(.subheadline)
-                        .frame(alignment: .leading)
-                        .lineLimit(2, reservesSpace: true)
-                }
+            VStack (alignment: .leading) {
+                Text(statusText)
+                    .font(.headline)
+                    .frame(alignment: .leading)
+                
+                Text(status.progress.title)
+                    .font(.subheadline)
+                    .frame(alignment: .leading)
             }
             
             clampedProgressViewLabel
             
-            Text(status.progress.detail)
-            
+            Text(status.progress.message)
+                .lineLimit(1, reservesSpace: true)
+
             countView
         }
         
@@ -131,6 +148,8 @@ struct AppStatusView_Previews: PreviewProvider {
         "Whenever can you can you",
         "Fun fun bun bun",
         "If you apply a long series of glyphs into a line and then separate the glyphs with not glyphs you end up with words and then you if you use the same glyphs and spaces over and over again sometimes the words becomes real.",
+        "a b c d e f",
+        "g h i j k l",
     ]
     
     static var status: AppStatus {
@@ -142,33 +161,31 @@ struct AppStatusView_Previews: PreviewProvider {
             $0.totalValue = 15
         }
 
-        status.update { _ in
-            QuickLooper(
-                interval: .milliseconds(100),
-                loop: {
-                    status.update {
-                        $0.currentValue += 1
-                        $0.message = testSubDetails.randomElement()!
-                        $0.detail = testDetails.randomElement()!
-                    }
+        QuickLooper(
+            interval: .milliseconds(500),
+            loop: {
+                status.update {
+                    $0.currentValue += 1
+                    $0.message = testSubDetails.randomElement()!
+                    $0.title = testDetails.randomElement()!
                 }
-            ).runUntil(
-                onStop: {
-                    status.update {
-                        $0.message = "Done!"
-                        $0.currentValue = $0.totalValue
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(2)) {
-                        status.update {
-                            $0.isActive = false
-                        }
-                    }
-                },
-                stopIf: {
-                    status.progress.currentValue >= status.progress.totalValue
+//                
+//                if status.progress.index > 100 {
+//                    status.resetProgress()
+//                }
+            }
+        ).runUntil(
+            onStop: {
+                status.update {
+                    $0.message = "Done!"
+                    $0.currentValue = $0.totalValue
+                    $0.isActive = false
                 }
-            )
-        }
+            },
+            stopIf: {
+                status.progress.index > 5000
+            }
+        )
         
         return status
     }

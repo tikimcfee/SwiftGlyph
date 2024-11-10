@@ -109,7 +109,7 @@ public class GridStore {
     
     public private(set) lazy var globalTokenCache: CodeGridTokenCache = CodeGridTokenCache()
     public private(set) lazy var globalSemanticMap: SemanticInfoMap = SemanticInfoMap()
-    public private(set) lazy var builder = try! CodeGridGlyphCollectionBuilder(
+    public private(set) lazy var builder = CodeGridGlyphCollectionBuilder(
         link: link,
         sharedAtlas: GlobalInstances.defaultAtlas,
         sharedSemanticMap: globalSemanticMap,
