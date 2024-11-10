@@ -18,16 +18,21 @@ public struct AppStatusView: View {
     }
     
     public var body: some View {
-        VStack {
-            mainView
-            List(status.history.reversed()) { progress in
-                cell(progress)
-                    .listRowInsets(.none)
-                    .listRowBackground(Color.gray.opacity(progress.index % 2 == 0 ? 0.2 : 0.1))
-            }
-            .listStyle(.plain)
+        List {
+            Section(
+                content: {
+                    ForEach(status.history.reversed()) { progress in
+                        cell(progress)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 8))
+                            .listRowBackground(Color.gray.opacity(progress.index % 2 == 0 ? 0.2 : 0.1))
+                    }
+                },
+                header: {
+                    mainView
+                }
+            )
         }
-        .padding(8)
+        .listStyle(.plain)
     }
     
     @ViewBuilder
