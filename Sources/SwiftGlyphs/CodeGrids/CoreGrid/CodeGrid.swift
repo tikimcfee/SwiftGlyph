@@ -28,7 +28,8 @@ public class CodeGrid: Identifiable, Equatable {
     
     public private(set) var rootNode: GlyphCollection
     
-    public private(set) var nameNode: WordNode?
+//    public private(set) var nameNode: WordNode?
+    public private(set) var setName: Bool = false
     public let tokenCache: CodeGridTokenCache
     public let gridBackground: BackgroundQuad
     public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
@@ -110,16 +111,18 @@ public class CodeGrid: Identifiable, Equatable {
     @discardableResult
     public func applyName() -> CodeGrid {
 //        guard false else { return self }
-        guard nameNode == nil else { return self }
+        guard !setName else { return self }
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
         
         let (_, nodes) = consume(text: fileName)
-        let nameNode = WordNode(
-            sourceWord: fileName,
-            glyphs: nodes,
-            parentGrid: self
-        )
+//        setNameNode(MetalLinkNode())
+        
+//        let nameNode = WordNode(
+//            sourceWord: fileName,
+//            glyphs: nodes,
+//            parentGrid: self
+//        )
         
         let nameColor = isDirectory
             ? LFloat4(0.33, 0.75, 0.45, 1.0)
@@ -133,14 +136,24 @@ public class CodeGrid: Identifiable, Equatable {
             ? LFloat3(0.0, 16.0, 0.0)
             : LFloat3(0.0, 4.0, 0.0)
         
-        nameNode.position = namePosition
-        nameNode.scale = LFloat3(repeating: nameScale)
-        nameNode.glyphs.forEach {
-            nameColor.setAddedColor(on: &$0.instanceConstants)
-        }
+        WordNode.layoutWord(
+            glyphs: nodes,
+            scale: LFloat3(repeating: nameScale),
+            offset: namePosition,
+            each: {
+                nameColor.setAddedColor(on: &$0.instanceConstants)
+//                $0.instanceConstants?.setFlag(.useParent, false)
+            }
+        )
+        
+//        nameNode.position = namePosition
+//        nameNode.scale = LFloat3(repeating: nameScale)
+//        nameNode.glyphs.forEach {
+//            nameColor.setAddedColor(on: &$0.instanceConstants)
+//        }
         
         
-        setNameNode(nameNode)
+//        setNameNode(nameNode)
         return self
     }
     
@@ -174,16 +187,16 @@ public class CodeGrid: Identifiable, Equatable {
         return self
     }
     
-    public func setNameNode(_ node: WordNode) {
-        if let nameNode {
-            print("-- Resetting name on \(String(describing: sourcePath))")
-            rootNode.remove(child: nameNode)
-            nameNode.parentGrid = nil
-        }
-        rootNode.add(child: node)
-        self.nameNode = node
-        node.parentGrid = self
-    }
+//    public func setNameNode(_ node: WordNode) {
+//        if let nameNode {
+//            print("-- Resetting name on \(String(describing: sourcePath))")
+//            rootNode.remove(child: nameNode)
+//            nameNode.parentGrid = nil
+//        }
+//        rootNode.add(child: node)
+//        self.nameNode = node
+//        node.parentGrid = self
+//    }
     
     @discardableResult
     public func removeBackground() -> CodeGrid {

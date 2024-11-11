@@ -23,7 +23,7 @@ extension Array {
 }
 
 public class QuickLooper {
-    public let loop: () -> Void
+    public let loop: (DispatchTime) -> Void
     public let queue: DispatchQueue
     
     public var interval: DispatchTimeInterval
@@ -32,10 +32,20 @@ public class QuickLooper {
     public init(
         interval: DispatchTimeInterval = .seconds(1),
         queue: DispatchQueue = .main,
-        loop: @escaping () -> Void
+        loop: @escaping (DispatchTime) -> Void
     ) {
         self.interval = interval
         self.loop = loop
+        self.queue = queue
+    }
+    
+    public init(
+        interval: DispatchTimeInterval = .seconds(1),
+        queue: DispatchQueue = .main,
+        loop: @escaping () -> Void
+    ) {
+        self.interval = interval
+        self.loop = { _ in loop() }
         self.queue = queue
     }
     
@@ -47,8 +57,9 @@ public class QuickLooper {
             onStop?()
             return
         }
-        loop()
-        queue.asyncAfter(deadline: nextDispatch) {
+        let next = nextDispatch
+        loop(next)
+        queue.asyncAfter(deadline: next) {
             self.runUntil(onStop: onStop, stopIf: stopIf)
         }
     }

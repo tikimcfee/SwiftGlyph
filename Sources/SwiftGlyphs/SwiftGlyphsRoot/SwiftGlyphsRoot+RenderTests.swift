@@ -101,7 +101,7 @@ extension SwiftGlyphRoot {
             GlobalInstances.defaultRenderer.paused = true
             
             RenderPlan(
-                mode: .cacheAndLayout,
+                mode: .cacheAndLayoutStream,
                 rootPath: url,
                 editor: editor,
                 focus: focus
@@ -120,7 +120,11 @@ extension SwiftGlyphRoot {
             GlobalInstances.defaultLink.glyphPickingTexture.pickingPaused = false
             GlobalInstances.rootCustomMTKView.isPaused = false
             GlobalInstances.defaultRenderer.paused = false
-                        
+            
+//            QuickLooper(interval: .milliseconds(100)) { interval in
+//                plan.targetParent.position.translateBy(LFloat3(0, 0, -100 * sin(Float(interval.uptimeNanoseconds))))
+//                plan.targetParent.rotation.y += 0.1
+//            }.runUntil { false }
 //            self.lockZoomToBounds(of: plan.targetParent)
         }
     }

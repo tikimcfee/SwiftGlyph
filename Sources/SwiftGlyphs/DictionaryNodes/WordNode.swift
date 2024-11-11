@@ -41,15 +41,38 @@ public class WordNode: MetalLinkNode {
         var yOffset: Float = 0
         for glyph in glyphs {
             // The word node will act as a virtual parent and the instanced node shouldn't use the parent multipier.
-            glyph.instanceConstants?.setFlag(.useParent, false)
+//            glyph.instanceConstants?.setFlag(.useParent, false)
             glyph.instanceConstants?.setFlag(.ignoreHover, true)
-            glyph.parent = self
+//            glyph.parent = self
             glyph.position = LFloat3(x: xOffset, y: yOffset, z: 0)
             if verticalLayout {
                 yOffset -= glyph.boundsHeight
             } else {
                 xOffset += glyph.boundsWidth
             }
+        }
+    }
+    
+    public static func layoutWord(
+        glyphs: [GlyphNode],
+        verticalLayout: Bool = false,
+        scale: LFloat3,
+        offset initialOffset: LFloat3,
+        each: (GlyphNode) -> Void
+    ) {
+        var xOffset: Float = initialOffset.x
+        var yOffset: Float = initialOffset.y
+        let zOffset: Float = initialOffset.z
+        for glyph in glyphs {
+            glyph.instanceConstants?.scale = LFloat4(scale, 0);
+            glyph.instanceConstants?.positionOffset = LFloat4(x: xOffset, y: yOffset, z: zOffset, w: 0)
+//            glyph.position = LFloat3(x: xOffset, y: yOffset, z: zOffset)
+            if verticalLayout {
+                yOffset -= glyph.boundsHeight * scale.y
+            } else {
+                xOffset += glyph.boundsWidth * scale.x
+            }
+            each(glyph)
         }
     }
     
