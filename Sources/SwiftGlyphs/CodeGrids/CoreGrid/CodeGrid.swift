@@ -42,27 +42,18 @@ public class CodeGrid: Identifiable, Equatable {
         get { strongParentGroup ?? weakParentGroup }
     }
     
-    private lazy var groupWalls = {
-        var walls = [
-            BackgroundQuad(rootNode.link), // top
-            BackgroundQuad(rootNode.link), // leading
-            BackgroundQuad(rootNode.link), // trailing
-            BackgroundQuad(rootNode.link), // bottom
-            BackgroundQuad(rootNode.link)  // front
-        ]
-        walls.forEach {
-            rootNode.add(child: $0)
-            $0.constants.pickingId = gridBackground.constants.pickingId
-        }
-        walls.append(gridBackground) // <--   default is back wall
-        return walls
-    }()
-    public var wallsTop: BackgroundQuad { groupWalls[0] }
-    public var wallsLeading: BackgroundQuad { groupWalls[1] }
-    public var wallsTrailing: BackgroundQuad { groupWalls[2] }
-    public var wallsBottom: BackgroundQuad { groupWalls[3] }
-    public var wallsFront: BackgroundQuad { groupWalls[4] }
-    public var wallsBack: BackgroundQuad { groupWalls[5] }
+    public lazy var wallsTop: BackgroundQuad = makeWall()
+    public lazy var wallsLeading: BackgroundQuad = makeWall()
+    public lazy var wallsTrailing: BackgroundQuad = makeWall()
+    public lazy var wallsBottom: BackgroundQuad = makeWall()
+    public lazy var wallsFront: BackgroundQuad = makeWall()
+    public lazy var wallsBack: BackgroundQuad = makeWall()
+    func makeWall() -> BackgroundQuad {
+        let wall = BackgroundQuad(rootNode.link)
+        rootNode.add(child: wall)
+        wall.constants.pickingId = gridBackground.constants.pickingId
+        return wall
+    }
     // ----------------------------------------------
     
     public init(
@@ -187,20 +178,9 @@ public class CodeGrid: Identifiable, Equatable {
         return self
     }
     
-//    public func setNameNode(_ node: WordNode) {
-//        if let nameNode {
-//            print("-- Resetting name on \(String(describing: sourcePath))")
-//            rootNode.remove(child: nameNode)
-//            nameNode.parentGrid = nil
-//        }
-//        rootNode.add(child: node)
-//        self.nameNode = node
-//        node.parentGrid = self
-//    }
-    
     @discardableResult
     public func removeBackground() -> CodeGrid {
-        rootNode.remove(child: gridBackground)
+        gridBackground.removeFromParent()
         return self
     }
     
