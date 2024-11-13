@@ -5,6 +5,7 @@
 //  Created by Ivan Lugo on 11/10/24.
 //
 
+#if os(macOS)
 import SwiftUI
 import MetalLink
 
@@ -53,3 +54,4 @@ struct OmnibarView: View {
         return allItems.filter { $0.lowercased().contains(query.lowercased()) }
     }
 }
+#endif

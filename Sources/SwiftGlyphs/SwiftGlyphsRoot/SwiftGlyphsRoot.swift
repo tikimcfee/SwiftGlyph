@@ -58,9 +58,9 @@ public class SwiftGlyphRoot: MetalLinkReader {
 //        try setupRenderStreamTest()
 //        try setupWordWarePLA()
         
-//        QuickLooper(interval: .milliseconds(1000)) {
-//            print("~~ Debug loop ~~")
-//        }.runUntil { false }
+        QuickLooper(interval: .milliseconds(1000)) {
+            print("~~ Debug loop ~~")
+        }.runUntil { false }
     }
     
     func delegatedEncode(in sdp: SafeDrawPass) {

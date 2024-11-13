@@ -88,7 +88,7 @@ public class OmnibarManager: ObservableObject {
 import UIKit
 
 public enum OmnibarState {
-    case visible(InvokeOmnibarType)
+    case visible
     case inactive
 }
 
