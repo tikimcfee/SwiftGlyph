@@ -15,6 +15,7 @@ public struct SwiftGlyphDemoView : View {
     @State var showWindowing = true
     @State var showControls = true
     @State var inputState = FloatableViewMode.displayedAsWindow
+    @ObservedObject var bar = GlobalInstances.omnibarManager
     
     public init() {
         
@@ -25,42 +26,55 @@ public struct SwiftGlyphDemoView : View {
     }
     
     private var rootView: some View {
-        ZStack(alignment: .bottomTrailing) {
+        ZStack(alignment: .center) {
             previewSafeRenderView
-            
-            SwiftGlyphHoverView(
-                link: GlobalInstances.defaultLink
-            )
-            
-            if showControls {
-                #if os(macOS)
-                macOSContent
-                #else
-                iOSContent
-                #endif
-            }
-            
-            VStack {
-                buttonImage("macwindow.on.rectangle").opacity(
-                    showWindowing ? 1.0 : 0.5
-                ).onTapGesture {
-                    GlobalInstances.appPanelState.toggleWindowControlsVisible()
-                    showWindowing = GlobalInstances.appPanelState.isVisible(.windowControls)
-                }.onLongPressGesture {
-                    GlobalInstances.appPanelState.resetSection(.windowControls)
-                }
-                
-                buttonImage("wrench.and.screwdriver").opacity(
-                    showControls ? 1.0 : 0.5
-                ).onTapGesture {
-                    showControls.toggle()
-                }
-            }
-            .padding()
+            SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
+            conditionalControls
         }
         #if os(iOS)
         .ignoresSafeArea()
         #endif
+    }
+    
+    @ViewBuilder
+    var conditionalControls: some View {
+        if showControls {
+            #if os(macOS)
+            macOSContent
+            #else
+            iOSContent
+            #endif
+        }
+        floatingControlToggles
+    }
+        
+    @ViewBuilder
+    var floatingControlToggles: some View {
+        VStack {
+            Spacer()
+            
+            HStack {
+                Spacer()
+                
+                VStack {
+                    buttonImage("macwindow.on.rectangle").opacity(
+                        showWindowing ? 1.0 : 0.5
+                    ).onTapGesture {
+                        GlobalInstances.appPanelState.toggleWindowControlsVisible()
+                        showWindowing = GlobalInstances.appPanelState.isVisible(.windowControls)
+                    }.onLongPressGesture {
+                        GlobalInstances.appPanelState.resetSection(.windowControls)
+                    }
+                    
+                    buttonImage("wrench.and.screwdriver").opacity(
+                        showControls ? 1.0 : 0.5
+                    ).onTapGesture {
+                        showControls.toggle()
+                    }
+                }
+            }
+        }
+        .padding()
     }
     
     #if os(macOS)
@@ -69,6 +83,18 @@ public struct SwiftGlyphDemoView : View {
         ZStack(alignment: .topTrailing) {
             AppControlPanelView()
         }
+        
+        FloatableView(
+            displayMode: .init(
+                get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
+                set: { _ in }
+            ),
+            windowKey: .unregistered("omnibar-v1.0.0"),
+            resizableAsSibling: false,
+            innerViewBuilder: {
+                OmnibarView()
+            }
+        )
     }
     #endif
     
@@ -134,38 +160,6 @@ func SGButton(
     )
     .buttonStyle(.plain)
 }
-
-#if os(macOS)
-private extension SwiftGlyphDemoView {
-    private static var window: NSWindow?
-    
-    func macOSViewDidAppear() {
-        let rootWindow = makeRootWindow()
-        GlobalWindowDelegate.instance.registerRootWindow(rootWindow)
-        rootWindow.contentView = makeRootContentView()
-        rootWindow.makeKeyAndOrderFront(nil)
-        Self.window = rootWindow
-    }
-    
-    func makeRootContentView() -> NSView {
-        let contentView = SwiftGlyphDemoView()
-        return NSHostingView(rootView: contentView)
-    }
-    
-    func makeRootWindow() -> NSWindow {
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1440, height: 1024),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
-            backing: .buffered, defer: false
-        )
-        window.isReleasedWhenClosed = false
-        window.center()
-        window.setFrameAutosaveName("Main Window")
-        return window
-    }
-}
-#endif
-
 
 #if DEBUG
 struct ContentView_Previews : PreviewProvider {

@@ -9,11 +9,6 @@ import BitHandling
 
 public typealias GlobalWindowKey = PanelSections
 
-extension GlobalWindowKey: Identifiable, Hashable {
-    public var id: String { rawValue }
-    var title: String { rawValue }
-}
-
 public extension GlobalWindowKey {
     func setDragState(_ newValue: ComponentModel) {
         AppStatePreferences.shared.setCustom(

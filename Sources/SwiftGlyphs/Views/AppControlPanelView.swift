@@ -109,6 +109,11 @@ extension AppControlPanelView {
             Coming soon here:
             - Quick jumps and shortcuts between open files and folders.
             """)
+            
+        case .unregistered:
+            Text("""
+            Oh look, you found a bug - well done and all that!
+            """)
 //            BookmarkListView()
         }
     }

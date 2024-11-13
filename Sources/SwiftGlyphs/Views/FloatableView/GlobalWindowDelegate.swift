@@ -32,6 +32,7 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     
     public func registerRootWindow(_ window: NSWindow) {
         self.rootWindow = window
+        window.delegate = self
     }
     
     public func windowIsDisplayed(for key: GlobalWindowKey) -> Bool {

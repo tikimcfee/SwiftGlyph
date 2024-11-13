@@ -33,6 +33,7 @@ public extension GlobalInstances {
     static let appStatus = AppStatus()
     static let swiftGlyphRoot = try! SwiftGlyphRoot(link: defaultLink)
     static let appPanelState = AppControlPanelState()
+    static let omnibarManager = OmnibarManager()
 }
 
 // MARK: - Files
