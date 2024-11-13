@@ -74,13 +74,15 @@ public class FloatableWindow: NSWindow {
     ) {
         self.key = key
         self.mode = mode
+        
+        // TODO: Omnibar is everywhere
+        // Maybe do some kind of default window config for the keys instead.
+        
         var updatedStyle = style
         if key != .windowControls {
             updatedStyle.formUnion(.closable)
         }
         
-        // TODO: Omnibar is everywhere
-        // Maybe do some kind of default window config for the keys instead.
         if case .omnibar = key {
             updatedStyle.remove([
 //                .titled,
@@ -93,15 +95,18 @@ public class FloatableWindow: NSWindow {
                 .utilityWindow,
             ])
         }
+        
         super.init(
             contentRect: key == .omnibar ? OmnibarManager.defaultRect : contentRect,
             styleMask: updatedStyle,
             backing: backingStoreType,
             defer: flag
         )
+        
         if case .omnibar = key {
             title = "Quickbar"
             level = .floating
+            becomeFirstResponder()
         } else {
             setFrameAutosaveName(key.title)
             title = key.title

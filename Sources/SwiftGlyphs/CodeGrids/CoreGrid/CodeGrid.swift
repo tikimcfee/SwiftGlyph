@@ -106,14 +106,9 @@ public class CodeGrid: Identifiable, Equatable {
         guard let sourcePath else { return self }
         let isDirectory = sourcePath.isDirectory
         
-        let (_, nodes) = consume(text: fileName)
-//        setNameNode(MetalLinkNode())
-        
-//        let nameNode = WordNode(
-//            sourceWord: fileName,
-//            glyphs: nodes,
-//            parentGrid: self
-//        )
+        let nameGrid = GlobalInstances.gridStore.builder.createGrid()
+        let (_, nodes) = nameGrid.consume(text: fileName)
+        nameGrid.removeBackground()
         
         let nameColor = isDirectory
             ? LFloat4(0.33, 0.75, 0.45, 1.0)
@@ -130,12 +125,13 @@ public class CodeGrid: Identifiable, Equatable {
         WordNode.layoutWord(
             glyphs: nodes,
             scale: LFloat3(repeating: nameScale),
-            offset: namePosition,
+            offset: .zero,
             each: {
                 nameColor.setAddedColor(on: &$0.instanceConstants)
-//                $0.instanceConstants?.setFlag(.useParent, false)
             }
         )
+        addChildGrid(nameGrid)
+        nameGrid.position = namePosition
         
 //        nameNode.position = namePosition
 //        nameNode.scale = LFloat3(repeating: nameScale)

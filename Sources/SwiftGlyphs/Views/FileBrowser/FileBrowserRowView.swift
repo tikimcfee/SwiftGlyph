@@ -10,6 +10,7 @@ import Combine
 import SwiftUI
 import Foundation
 import BitHandling
+import MetalLink
 
 struct FileBrowserRowView: View {
     let scope: FileBrowser.Scope
@@ -91,12 +92,55 @@ struct FileBrowserRowView: View {
                     .padding(2)
             }
             #else
-            if isHovered && scope.isDirectoryType {
-                showDirectoryButton(scope)
+            HStack(spacing: 4) {
+                if isHovered {
+                    if scope.isDirectoryType {
+                        showDirectoryButton(scope)
+                    }
+                    
+                    jumpButton(scope)
+                }
             }
             #endif
         }
         .background(Color.gray.opacity(0.001))
+    }
+    
+    func jumpButton(_ scope: FileBrowser.Scope) -> some View {
+        Button(
+            action: {
+                if let grid = scope.cachedGrid {
+                    lockZoomToBounds(of: grid.rootNode)
+                }
+            },
+            label: {
+                Text("Jump")
+                    .font(.caption2)
+            }
+        )
+        .padding(.horizontal, 4)
+        .padding(.vertical, 1)
+        .background(
+            RoundedRectangle(cornerRadius: 4.0)
+                .foregroundColor(.blue.opacity(0.6))
+        )
+        .buttonStyle(.plain)
+    }
+    
+    func lockZoomToBounds(of node: MetalLinkNode) {
+        var bounds = node.worldBounds
+//        bounds.min.x -= 4
+//        bounds.max.x += 4
+//        bounds.min.y -= 8
+//        bounds.max.y += 16
+        bounds.min.z -= 32
+        bounds.max.z += 32
+        
+//        let position = bounds.center
+        GlobalInstances.debugCamera.interceptor.resetPositions()
+        GlobalInstances.debugCamera.position = LFloat3(bounds.leading, bounds.top, bounds.front)
+        GlobalInstances.debugCamera.rotation = .zero
+        GlobalInstances.debugCamera.scrollBounds = bounds
     }
 
     func showDirectoryButton(_ scope: FileBrowser.Scope) -> some View {

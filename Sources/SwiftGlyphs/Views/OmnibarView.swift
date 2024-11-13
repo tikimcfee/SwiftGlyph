@@ -13,45 +13,59 @@ extension GlobalWindowKey {
     static let omnibar = GlobalWindowKey.unregistered("omnibar-v1.0.0")
 }
 
+enum Focus {
+    case input
+    case list
+}
+
 struct OmnibarView: View {
     @ObservedObject var omniBarManager: OmnibarManager = GlobalInstances.omnibarManager
     
-    @FocusState private var focused: Bool
+    @FocusState private var focus: Focus?
     
     @State private var searchText = ""
-    @State private var results: [String] = []
+    @State private var results: [OmniAction] = []
+    @State private var selection: OmniAction?
     
     var body: some View {
         VStack {
             TextField("Search...", text: $searchText)
-                .focused($focused)
+                .focused($focus, equals: .input)
+                .onKeyPress(.downArrow) {
+                    focus = .list
+                    selection = results.first
+                    return .handled
+                }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
             
-            List(results, id: \.self) { result in
-                Text(result)
+            List(results, id: \.self, selection: $selection) { result in
+                Text(result.actionDisplay)
             }
-            .frame(maxHeight: 200)
+            .frame(maxHeight: 400)
+            .focused($focus, equals: .list)
+            .onKeyPress(.return) {
+                guard let selection else { return .ignored }
+                selection.perform()
+                omniBarManager.dismissOmnibar()
+                return .handled
+            }
         }
-        .shadow(radius: 5)
         .frame(maxWidth: 600, maxHeight: 400)
         .onAppear {
-            focused = true
+            focus = .input
             omniBarManager.focusOmnibar()
         }
         .onDisappear {
-            focused = false
+            focus = nil
         }
         .onChange(of: searchText) { old, new in
-            results = getResults(for: new)
+            results = actions(for: new)
         }
     }
     
-    func getResults(for query: String) -> [String] {
-        // Implement your search logic here
-        // This is a placeholder for demonstration
-        let allItems = ["Open File", "Save File", "Close Window", "Exit App"]
-        return allItems.filter { $0.lowercased().contains(query.lowercased()) }
+    func actions(for query: String) -> [OmniAction] {
+        omniBarManager.lookup(query)
     }
 }
 #endif
