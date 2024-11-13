@@ -89,7 +89,7 @@ public struct SwiftGlyphDemoView : View {
                 get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
                 set: { _ in }
             ),
-            windowKey: .unregistered("omnibar-v1.0.0"),
+            windowKey: .omnibar,
             resizableAsSibling: false,
             innerViewBuilder: {
                 OmnibarView()

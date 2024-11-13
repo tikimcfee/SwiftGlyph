@@ -33,24 +33,44 @@ extension View {
 public class FloatableWindow: NSWindow {
     let key: GlobalWindowKey
     let mode: Binding<FloatableViewMode>
+    public static let defaultRect: NSRect = {
+        let mainRect = NSScreen.main?.frame ?? .zero
+        let width = 300.0
+        let height = 400.0
+        return NSRect(
+            x: Double(mainRect.width / 2 - width / 2),
+            y: Double(mainRect.height / 2 - height / 2),
+            width: width,
+            height: height
+        )
+    }()
+    
+    convenience init(
+        key: GlobalWindowKey,
+        mode: Binding<FloatableViewMode>
+    ) {
+        self.init(
+            key: key,
+            mode: mode,
+            contentRect: Self.defaultRect,
+            styleMask: [
+                .titled,
+                .fullSizeContentView,
+                .resizable,
+                .miniaturizable
+            ],
+            backing: .buffered,
+            defer: false
+        )
+    }
     
     init(
         key: GlobalWindowKey,
         mode: Binding<FloatableViewMode>,
-        contentRect: NSRect = NSRect(
-            x: 0,
-            y: 0,
-            width: 480,
-            height: 600
-        ),
-        styleMask style: NSWindow.StyleMask = [
-            .titled,
-            .fullSizeContentView,
-            .resizable,
-            .miniaturizable
-        ],
-        backing backingStoreType: NSWindow.BackingStoreType = .buffered,
-        defer flag: Bool = false
+        contentRect: NSRect,
+        styleMask style: NSWindow.StyleMask,
+        backing backingStoreType: NSWindow.BackingStoreType,
+        defer flag: Bool
     ) {
         self.key = key
         self.mode = mode
@@ -58,15 +78,34 @@ public class FloatableWindow: NSWindow {
         if key != .windowControls {
             updatedStyle.formUnion(.closable)
         }
+        
+        // TODO: Omnibar is everywhere
+        // Maybe do some kind of default window config for the keys instead.
+        if case .omnibar = key {
+            updatedStyle.remove([
+//                .titled,
+//                .resizable,
+                .closable,
+                .miniaturizable,
+            ])
+            updatedStyle.formUnion([
+                .borderless,
+                .utilityWindow,
+            ])
+        }
         super.init(
-            contentRect: contentRect,
+            contentRect: key == .omnibar ? OmnibarManager.defaultRect : contentRect,
             styleMask: updatedStyle,
             backing: backingStoreType,
             defer: flag
         )
-        
-        setFrameAutosaveName(key.title)
-        title = key.title
+        if case .omnibar = key {
+            title = "Quickbar"
+            level = .floating
+        } else {
+            setFrameAutosaveName(key.title)
+            title = key.title
+        }
         
         // THIS IS CRITICAL!
         // The window lifecycle is fragile here, and the window

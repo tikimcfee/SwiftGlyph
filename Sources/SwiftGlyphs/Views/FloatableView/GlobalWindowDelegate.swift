@@ -30,6 +30,15 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
         super.init()
     }
     
+    public func withWindow(
+        _ key: GlobalWindowKey,
+        _ receiver: (FloatableWindow) -> Void
+    ) {
+        if let window = knownWindowMap[key] {
+            receiver(window)
+        }
+    }
+    
     public func registerRootWindow(_ window: NSWindow) {
         self.rootWindow = window
         window.delegate = self
@@ -67,6 +76,11 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
         }
         print("Window closing:", knownWindowMap[window]?.rawValue ?? "<No known key!>", "->", window.title)
         knownWindowMap[window] = nil
+    }
+    
+    public func windowDidUpdate(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        
     }
     
     public func setupScreens() {

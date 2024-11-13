@@ -18,6 +18,18 @@ public enum OmnibarState {
 }
 
 public class OmnibarManager: ObservableObject {
+    public static let defaultRect: NSRect = {
+        let mainRect = NSScreen.main?.frame ?? .zero
+        let width = 400.0
+        let height = 200.0
+        return NSRect(
+            x: Double(mainRect.width / 2 - width / 2),
+            y: Double(mainRect.height / 2),
+            width: width,
+            height: height
+        )
+    }()
+    
     @Published public var state = OmnibarState.inactive
     
     private lazy var eventMonitor = {
@@ -45,6 +57,12 @@ public class OmnibarManager: ObservableObject {
     
     deinit {
         detach()
+    }
+    
+    public func focusOmnibar() {
+        GlobalWindowDelegate.instance.withWindow(.omnibar) {
+            $0.makeKeyAndOrderFront(nil)
+        }
     }
     
     public func attach() {

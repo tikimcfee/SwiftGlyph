@@ -104,9 +104,7 @@ private extension RenderPlan {
     ) {
         switch mode {
         case .cacheAndLayoutStream:
-            watch.start(.cache)
             computeAllTheGrids_stream({ _ in
-                self.watch.stop(.cache)
                 self.bag = .init()
                 onComplete(self)
             })
@@ -250,6 +248,8 @@ private extension RenderPlan {
     func computeAllTheGrids_stream(
         _ onComplete: @escaping (RenderPlan) -> Void
     ) {
+        watch.start(.cache)
+        
         // Gather all the files and directories at once.
         // Threads. Heh.
         var allFileURLs = [URL]()
@@ -309,8 +309,14 @@ private extension RenderPlan {
                     remaining.directWriteAccess {
                         $0.removeAll(where: { $0 == collectionResult.sourceURL })
                     }
+                    
                     if remaining.isEmpty {
+                        self.watch.stop(.cache)
+                        
+                        self.watch.start(.layout)
                         self.doGridLayout()
+                        self.watch.stop(.layout)
+                        
                         onComplete(self)
                     }
                 }
