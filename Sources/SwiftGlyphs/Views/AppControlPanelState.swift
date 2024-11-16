@@ -36,7 +36,7 @@ public extension AppControlPanelState {
             section.setDragState(
                 ComponentModel(
                     componentInfo: ComponentState(
-                        origin: .init(x: 512, y: 512),
+                        origin: .init(x: 120, y: 120),
                         size: .init(width: 300, height: 300)
                     )
                 )

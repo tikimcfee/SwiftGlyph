@@ -64,7 +64,7 @@ class RenderPlan: MetalLinkReader {
         focus: WorldGridFocusController
     ) {
         self.mode = mode
-        self.rootPath = rootPath
+        self.rootPath = rootPath.resolvingSymlinksInPath()
         self.editor = editor
         self.focus = focus
     }
@@ -72,29 +72,30 @@ class RenderPlan: MetalLinkReader {
     func startRender(
         _ onComplete: @escaping (RenderPlan) -> Void = { _ in }
     ) {
-        WorkerPool.shared.nextConcurrentWorker().async {
-            self.onStart(onComplete)
-        }
-    }
-    
-    private func onStart(
-        _ onComplete: @escaping (RenderPlan) -> Void
-    ) {
         statusObject.resetProgress()
-        
         statusObject.update {
             $0.totalValue += 1 // pretend there's at least one unfinished task
             $0.title = "Your computer is about to explode <3"
             $0.isActive = true
         }
         
-        renderTaskForMode(onComplete)
-        
+        WorkerPool.shared.nextConcurrentWorker().async {
+            self.onStart(onComplete)
+        }
+    }
+    
+    func postFinish() {
         statusObject.update {
             $0.title = "Render complete!"
             $0.currentValue = $0.totalValue
             $0.isActive = false
         }
+    }
+    
+    private func onStart(
+        _ onComplete: @escaping (RenderPlan) -> Void
+    ) {
+        renderTaskForMode(onComplete)
     }
 }
 
@@ -106,6 +107,7 @@ private extension RenderPlan {
         case .cacheAndLayoutStream:
             computeAllTheGrids_stream({ _ in
                 self.bag = .init()
+                self.postFinish()
                 onComplete(self)
             })
             
@@ -118,18 +120,23 @@ private extension RenderPlan {
             doGridLayout()
             watch.stop(.layout)
             
+            postFinish()
             onComplete(self)
 
         case .cacheOnly:
             watch.start(.cache)
             cacheGrids_V2()
             watch.stop(.cache)
+            
+            postFinish()
             onComplete(self)
             
         case .layoutOnly:
             watch.start(.layout)
             doGridLayout()
             watch.stop(.layout)
+            
+            postFinish()
             onComplete(self)
         }
     }
@@ -296,42 +303,34 @@ private extension RenderPlan {
         // Setup all the directory relationships first
         cacheCodeGroups(for: allDirectoryURLs)
         
-        // Then ask kindly of the gpu to go 'ham'
-        let results = compute.executeManyWithAtlas_Stream(
-            atlas: builder.atlas
-        )
-        let remaining = ConcurrentArray<URL>(allFileURLs)
+        var toBuild = allFileURLs.count
+        func layoutOnComplete() {
+            toBuild -= 1
+            guard toBuild == 0 else {
+                return
+            }
+            
+            self.watch.stop(.cache)
+            
+            self.watch.start(.layout)
+            self.doGridLayout()
+            self.watch.stop(.layout)
+            
+            onComplete(self)
+        }
         
-        let cacheStream = results.out
-            .handleEvents(
-                receiveOutput: { collectionResult in
-                    self.cacheCollectionAsGrid(from: collectionResult)
-                    remaining.directWriteAccess {
-                        $0.removeAll(where: { $0 == collectionResult.sourceURL })
-                    }
-                    
-                    if remaining.isEmpty {
-                        self.watch.stop(.cache)
-                        
-                        self.watch.start(.layout)
-                        self.doGridLayout()
-                        self.watch.stop(.layout)
-                        
-                        onComplete(self)
-                    }
-                }
+        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
+            let result = compute.executeManyWithAtlas_Conc(
+                in: allFileURLs[index],
+                atlas: builder.atlas
             )
-        
-        cacheStream.sink(receiveValue: { result in
-            print("Completed: \(result.sourceURL.lastPathComponent)")
-        }).store(in: &bag)
-        
-//        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
-//            results.in.send(allFileURLs[index])
-//        }
-        
-        for url in allFileURLs {
-            results.in.send(url)
+            
+            WorkerPool.shared.nextWorker().async {
+                if let result {
+                    self.cacheCollectionAsGrid(from: result)
+                }
+                layoutOnComplete()
+            }
         }
     }
     
