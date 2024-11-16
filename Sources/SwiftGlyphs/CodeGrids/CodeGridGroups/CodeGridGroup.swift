@@ -92,7 +92,8 @@ class CodeGridGroup {
     func applyAllConstraints(myDepth: Int) {
         // First, apply constraints recursively to child groups
         for childGroup in childGroups {
-            childGroup.applyAllConstraints(myDepth: myDepth + 1)
+            let nextdepth = childGroup.childGrids.isEmpty ? myDepth : myDepth + 1
+            childGroup.applyAllConstraints(myDepth: nextdepth)
         }
 
         // Configuration for layout
@@ -178,7 +179,10 @@ class CodeGridGroup {
             }
 
             // Set the front position (Z-axis), adjust as needed
-            group.setFront(myDepth.float * GlobalLiveConfig.Default.codeGridGroupDepthPading)
+            if !group.childGrids.isEmpty {
+                group.setFront(myDepth.float * GlobalLiveConfig.Default.codeGridGroupDepthPading)
+            }
+            
 
             // Update the current row width and maximum height
             currentGroupX += groupWidth + (lastGroupInRow != nil ? padding : 0)

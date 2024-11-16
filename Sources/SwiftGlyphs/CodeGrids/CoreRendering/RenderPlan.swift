@@ -326,13 +326,13 @@ private extension RenderPlan {
             print("Completed: \(result.sourceURL.lastPathComponent)")
         }).store(in: &bag)
         
-        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
-            results.in.send(allFileURLs[index])
-        }
-        
-//        for url in allFileURLs {
-//            results.in.send(url)
+//        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
+//            results.in.send(allFileURLs[index])
 //        }
+        
+        for url in allFileURLs {
+            results.in.send(url)
+        }
     }
     
     

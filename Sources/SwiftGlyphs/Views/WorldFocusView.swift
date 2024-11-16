@@ -20,6 +20,15 @@ public struct WorldFocusView: View {
     
     @ViewBuilder
     var focusList: some View {
+        HStack {
+            ScrollView {
+                BookmarkListView()
+            }
+//            focusView()
+        }
+    }
+    
+    func focusView() -> some View {
         ScrollView {
             VStack(alignment: .leading) {
                 ForEach(focus.focusableGrids, id: \.targetGrid.id) { relationship in
@@ -32,7 +41,6 @@ public struct WorldFocusView: View {
                 }
             }
         }
-//        .frame(minWidth: 640, minHeight: 320)
         .padding()
         .border(.gray, width: 1.0)
     }

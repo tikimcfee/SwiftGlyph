@@ -93,13 +93,9 @@ extension AppControlPanelView {
             GitHubClientView()
             
         case .focusState:
-            Text("""
-            Coming soon here:
-            - Keyboard shortcut and on-screen button based navigation between files and folders.
-            """)
-//            WorldFocusView(
-//                focus: GlobalInstances.gridStore.worldFocusController
-//            )
+            WorldFocusView(
+                focus: GlobalInstances.gridStore.worldFocusController
+            )
             
         case .menuActions:
             MenuActions()
@@ -114,7 +110,6 @@ extension AppControlPanelView {
             Text("""
             Oh look, you found a bug - well done and all that!
             """)
-//            BookmarkListView()
         }
     }
 }

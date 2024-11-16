@@ -30,8 +30,6 @@ extension FileBrowser.Scope {
     }
 }
 
-
-
 extension FileBrowser.Scope {
     var directoryStateIconName: String {
         switch self {

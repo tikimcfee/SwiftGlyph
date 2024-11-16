@@ -154,14 +154,18 @@ func SGButton(
         action: action,
         label: {
             HStack {
-                Text(text)
+                if !text.isEmpty {
+                    Text(text)
+                        .font(.caption2)
+                }
+                
                 if !image.isEmpty {
                     Image(systemName: image)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.primaryBackground)
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .background(Color.primarySGButtonBackground)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     )

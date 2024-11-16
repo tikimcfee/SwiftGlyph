@@ -28,7 +28,7 @@ public extension CodeGrid {
 //        let position = bounds.center
         camera.interceptor.resetPositions()
         camera.position = LFloat3(
-            bounds.leading + bounds.width * 0.10,
+            bounds.leading + 20,
             bounds.top,
             bounds.front
         )
