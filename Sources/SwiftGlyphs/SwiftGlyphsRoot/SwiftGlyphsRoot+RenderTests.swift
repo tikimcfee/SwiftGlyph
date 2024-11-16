@@ -125,24 +125,7 @@ extension SwiftGlyphRoot {
 //                plan.targetParent.position.translateBy(LFloat3(0, 0, -100 * sin(Float(interval.uptimeNanoseconds))))
 //                plan.targetParent.rotation.y += 0.1
 //            }.runUntil { false }
-//            self.lockZoomToBounds(of: plan.targetParent)
         }
-    }
-    
-    func lockZoomToBounds(of node: MetalLinkNode) {
-        var bounds = node.bounds
-        bounds.min.x -= 4
-        bounds.max.x += 4
-        bounds.min.y += 8
-        bounds.max.y += 32
-        bounds.min.z += 8
-        bounds.max.z += 196
-        
-        let position = bounds.center.translated(dZ: bounds.length / 2 + 128)
-        GlobalInstances.debugCamera.interceptor.resetPositions()
-        GlobalInstances.debugCamera.position = position
-        GlobalInstances.debugCamera.rotation = .zero
-        GlobalInstances.debugCamera.scrollBounds = bounds
     }
 }
 

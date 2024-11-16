@@ -101,21 +101,8 @@ struct GlobalSearchView: View {
             }
     }
     
-    func selectGrid(_ grid: CodeGrid) {        
-        let position = grid.worldPosition.translated(
-            dX: grid.lengthX / 4.0,
-            dZ: 64
-        )
-        
-        var scrollBounds = grid.rootNode.worldBounds
-        scrollBounds.min.x += 8
-        scrollBounds.min.z += 8
-        scrollBounds.max.z += 64
-        
-        GlobalInstances.debugCamera.interceptor.resetPositions()
-        GlobalInstances.debugCamera.position = position
-        GlobalInstances.debugCamera.rotation = .zero
-        GlobalInstances.debugCamera.scrollBounds = scrollBounds
+    func selectGrid(_ grid: CodeGrid) {
+        grid.displayFocused(GlobalInstances.debugCamera)
         GlobalInstances.gridStore.editor.snapping.searchTargetGrid = grid
     }
     

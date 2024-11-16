@@ -28,7 +28,6 @@ public class CodeGrid: Identifiable, Equatable {
     
     public private(set) var rootNode: GlyphCollection
     
-//    public private(set) var nameNode: WordNode?
     public private(set) var setName: Bool = false
     public let tokenCache: CodeGridTokenCache
     public let gridBackground: BackgroundQuad
@@ -95,7 +94,7 @@ public class CodeGrid: Identifiable, Equatable {
         cache.removeGrid(self)
         controller.detachPickingStream(from: self)
         editor.remove(self)
-//        rootNode.clearChildren()
+        
         removeBackground()
     }
     
@@ -133,14 +132,6 @@ public class CodeGrid: Identifiable, Equatable {
         addChildGrid(nameGrid)
         nameGrid.position = namePosition
         
-//        nameNode.position = namePosition
-//        nameNode.scale = LFloat3(repeating: nameScale)
-//        nameNode.glyphs.forEach {
-//            nameColor.setAddedColor(on: &$0.instanceConstants)
-//        }
-        
-        
-//        setNameNode(nameNode)
         return self
     }
     

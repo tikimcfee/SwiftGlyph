@@ -110,7 +110,7 @@ struct FileBrowserRowView: View {
         Button(
             action: {
                 if let grid = scope.cachedGrid {
-                    lockZoomToBounds(of: grid.rootNode)
+                    grid.displayFocused(GlobalInstances.debugCamera)
                 }
             },
             label: {
@@ -125,22 +125,6 @@ struct FileBrowserRowView: View {
                 .foregroundColor(.blue.opacity(0.6))
         )
         .buttonStyle(.plain)
-    }
-    
-    func lockZoomToBounds(of node: MetalLinkNode) {
-        var bounds = node.worldBounds
-//        bounds.min.x -= 4
-//        bounds.max.x += 4
-//        bounds.min.y -= 8
-//        bounds.max.y += 16
-        bounds.min.z -= 32
-        bounds.max.z += 32
-        
-//        let position = bounds.center
-        GlobalInstances.debugCamera.interceptor.resetPositions()
-        GlobalInstances.debugCamera.position = LFloat3(bounds.leading, bounds.top, bounds.front)
-        GlobalInstances.debugCamera.rotation = .zero
-        GlobalInstances.debugCamera.scrollBounds = bounds
     }
 
     func showDirectoryButton(_ scope: FileBrowser.Scope) -> some View {

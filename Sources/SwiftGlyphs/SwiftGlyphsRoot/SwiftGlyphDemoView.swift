@@ -28,12 +28,31 @@ public struct SwiftGlyphDemoView : View {
     private var rootView: some View {
         ZStack(alignment: .center) {
             previewSafeRenderView
+            
             SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
+            
             conditionalControls
+            
+            omnibar
         }
         #if os(iOS)
         .ignoresSafeArea()
         #endif
+    }
+    
+    @ViewBuilder
+    var omnibar: some View {
+        FloatableView(
+            displayMode: .init(
+                get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
+                set: { _ in }
+            ),
+            windowKey: .omnibar,
+            resizableAsSibling: false,
+            innerViewBuilder: {
+                OmnibarView()
+            }
+        )
     }
     
     @ViewBuilder
@@ -83,18 +102,6 @@ public struct SwiftGlyphDemoView : View {
         ZStack(alignment: .topTrailing) {
             AppControlPanelView()
         }
-        
-        FloatableView(
-            displayMode: .init(
-                get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
-                set: { _ in }
-            ),
-            windowKey: .omnibar,
-            resizableAsSibling: false,
-            innerViewBuilder: {
-                OmnibarView()
-            }
-        )
     }
     #endif
     
