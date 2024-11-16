@@ -139,7 +139,7 @@ private extension RenderPlan {
             $0.totalValue += 1
             $0.title = "Starting layout..."
         }
-        rootGroup.applyAllConstraints()
+        rootGroup.applyAllConstraints(myDepth: 0)
         
         statusObject.update {
             $0.currentValue += 1
@@ -326,9 +326,13 @@ private extension RenderPlan {
             print("Completed: \(result.sourceURL.lastPathComponent)")
         }).store(in: &bag)
         
-        for url in allFileURLs {
-            results.in.send(url)
+        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
+            results.in.send(allFileURLs[index])
         }
+        
+//        for url in allFileURLs {
+//            results.in.send(url)
+//        }
     }
     
     

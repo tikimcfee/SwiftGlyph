@@ -66,15 +66,36 @@ extension OmnibarManager {
             return showActions(input: input)
             
         case .visible(.open):
-            return showOpenList(input: input)
+            return showOpenList(queryText: input)
             
         case .inactive:
             return []
         }
     }
     
-    func showOpenList(input: String) -> [OmniAction] {
-        
+    func showOpenList(queryText: String) -> [OmniAction] {
+        return scopesMatching(queryText).map { scope in
+            .init(
+                trigger: .gridJump,
+                sourceQuery: queryText,
+                actionDisplay: "Open '\(scope.path.lastPathComponent)'",
+                perform: {
+                    RenderPlan(
+                        mode: .cacheAndLayoutStream,
+                        rootPath: scope.path,
+                        editor: GlobalInstances.gridStore.editor,
+                        focus: GlobalInstances.gridStore.worldFocusController
+                    ).startRender { plan in
+                        GlobalInstances.gridStore.editor.transformedByAdding(
+                            .inNextRow(plan.rootGroup.globalRootGrid)
+                        )
+                        GlobalInstances.swiftGlyphRoot.root.add(
+                            child: plan.targetParent
+                        )
+                    }
+                }
+            )
+        }
     }
     
     func showActions(input: String) -> [OmniAction] {

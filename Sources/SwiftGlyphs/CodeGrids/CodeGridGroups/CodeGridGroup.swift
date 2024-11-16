@@ -23,6 +23,9 @@ class CodeGridGroup {
     var editor = WorldGridEditor()
     var snapping: WorldGridSnapping { editor.snapping }
     
+    let padding: Float = GlobalLiveConfig.Default.codeGridGroupPadding
+    let maxRowWidth: Float = GlobalLiveConfig.Default.codeGridGroupMaxRowWidth
+    
     init(globalRootGrid: CodeGrid) {
         self.globalRootGrid = globalRootGrid
         
@@ -86,35 +89,102 @@ class CodeGridGroup {
         }
     }
     
-    func applyAllConstraints() {
+    func applyAllConstraints(myDepth: Int) {
+        // First, apply constraints recursively to child groups
         for childGroup in childGroups {
-            childGroup.applyAllConstraints()
+            childGroup.applyAllConstraints(myDepth: myDepth + 1)
         }
 
+        // Configuration for layout
+        var currentRowWidth: Float = 0.0
+        var currentRowY: Float = 0.0
+        var maxRowHeightInRow: Float = 0.0
+
+        // Sort grids by volume or any other criteria
         let sortedGrids = childGrids.sorted(by: {
-            $0.rootNode.planeAreaXY < $1.rootNode.planeAreaXY
+            $0.rootNode.volume < $1.rootNode.volume
         })
-        var lastGrid: CodeGrid?
-        for (_, grid) in sortedGrids.enumerated() {
-            if let lastGrid {
+
+        var lastGridInRow: CodeGrid?
+        for grid in sortedGrids {
+            // Get the grid's bounds (size) using the Measures protocol
+            let gridWidth = grid.boundsWidth
+            let gridHeight = grid.boundsHeight
+
+            // Check if adding the grid exceeds the maximum row width
+            if currentRowWidth + gridWidth + (lastGridInRow != nil ? padding : 0) > maxRowWidth {
+                // Start a new row
+                currentRowY -= (maxRowHeightInRow + padding)
+                currentRowWidth = 0.0
+                maxRowHeightInRow = 0.0
+                lastGridInRow = nil
+            }
+
+            // Position the grid
+            if let lastGrid = lastGridInRow {
+                // Position to the right of the last grid in the row
+                grid.setLeading(lastGrid.trailing + padding)
                 grid.setTop(lastGrid.top)
-                grid.setFront(lastGrid.back - 128)
-                grid.setLeading(lastGrid.leading)
+            } else {
+                // Start of a new row
+                grid.setLeading(0.0)
+                grid.setTop(currentRowY)
             }
-            lastGrid = grid
+
+            // Set the front position (Z-axis), adjust as needed
+            grid.setFront(0)
+
+            // Update the current row width and maximum height
+            currentRowWidth += gridWidth + (lastGridInRow != nil ? padding : 0)
+            maxRowHeightInRow = max(maxRowHeightInRow, gridHeight)
+
+            lastGridInRow = grid
         }
-        
+
+        // After laying out grids, position child groups below the grids
         let sortedGroups = childGroups.sorted(by: {
-            $0.asNode.planeAreaXY > $1.asNode.planeAreaXY
+            $0.asNode.planeAreaXY < $1.asNode.planeAreaXY
         })
-        var lastGroup: CodeGridGroup?
-        for childGroup in sortedGroups {
-            childGroup.setTop(nextRowStartY - 32)
-            if let lastGroup {
-                childGroup.setLeading(lastGroup.trailing + 32)
-                childGroup.setFront(lastGroup.front)
+
+        // Starting Y position for groups (below the grids)
+        var currentGroupY = currentRowY - (maxRowHeightInRow + padding)
+        var currentGroupX: Float = 0.0
+        var maxGroupHeightInRow: Float = 0.0
+        var lastGroupInRow: CodeGridGroup?
+
+        for group in sortedGroups {
+            // Get the group's bounds (size)
+            let groupWidth = group.boundsWidth
+            let groupHeight = group.boundsHeight
+
+            // Check if adding the group exceeds the maximum row width
+            if currentGroupX + groupWidth + (lastGroupInRow != nil ? padding : 0) > maxRowWidth {
+                // Start a new row for groups
+                currentGroupY -= (maxGroupHeightInRow + padding)
+                currentGroupX = 0.0
+                maxGroupHeightInRow = 0.0
+                lastGroupInRow = nil
             }
-            lastGroup = childGroup
+
+            // Position the group
+            if let lastGroup = lastGroupInRow {
+                // Position to the right of the last group in the row
+                group.setLeading(lastGroup.trailing + padding)
+                group.setTop(lastGroup.top)
+            } else {
+                // Start of a new row
+                group.setLeading(0.0)
+                group.setTop(currentGroupY)
+            }
+
+            // Set the front position (Z-axis), adjust as needed
+            group.setFront(myDepth.float * GlobalLiveConfig.Default.codeGridGroupDepthPading)
+
+            // Update the current row width and maximum height
+            currentGroupX += groupWidth + (lastGroupInRow != nil ? padding : 0)
+            maxGroupHeightInRow = max(maxGroupHeightInRow, groupHeight)
+
+            lastGroupInRow = group
         }
     }
     
