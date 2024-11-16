@@ -42,6 +42,7 @@ public struct SwiftGlyphDemoView : View {
     
     @ViewBuilder
     var omnibar: some View {
+        #if os(macOS)
         FloatableView(
             displayMode: .init(
                 get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
@@ -53,6 +54,9 @@ public struct SwiftGlyphDemoView : View {
                 OmnibarView()
             }
         )
+        #else
+        EmptyView()
+        #endif
     }
     
     @ViewBuilder

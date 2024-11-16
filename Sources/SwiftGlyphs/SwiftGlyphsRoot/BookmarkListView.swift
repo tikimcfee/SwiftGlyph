@@ -93,7 +93,7 @@ struct BookmarkListView: View {
                 formatter: NumberFormatter.integerFormatter
             )
             #if os(iOS)
-            .keyboardStyle(.numberPad)
+            .keyboardType(.numberPad)
             #endif
 //
   
