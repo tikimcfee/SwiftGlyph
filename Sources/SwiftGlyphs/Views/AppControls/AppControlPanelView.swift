@@ -49,7 +49,7 @@ extension AppControlPanelView {
     func panelView(for panel: PanelSections) -> some View {
         switch panel {
         case .windowControls:
-            AppWindowTogglesView(state: state, sections: sections)
+            AppControlsTogglesView(state: state, sections: sections)
             
         case .appStatusInfo:
             AppStatusView(

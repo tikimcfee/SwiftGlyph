@@ -86,9 +86,10 @@ extension BasicIDEView {
                     VStack(alignment: .center) {
                         Text("Favorite Windows")
                         
-                        AppWindowTogglesView(
+                        AppControlsTogglesView(
                             state: GlobalInstances.appPanelState,
                             sections: [
+                                .menuActions,
                                 .githubTools,
                                 .editor,
                                 .hoverInfo,

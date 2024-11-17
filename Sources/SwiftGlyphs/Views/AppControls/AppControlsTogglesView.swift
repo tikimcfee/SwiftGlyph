@@ -1,5 +1,5 @@
 //
-//  AppWindowTogglesView.swift
+//  AppControlsTogglesView.swift
 //  LookAtThat_AppKit
 //
 //  Created by Ivan Lugo on 5/15/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 import BitHandling
 
-public struct AppWindowTogglesView: View {
+public struct AppControlsTogglesView: View {
     @ObservedObject public var state: AppControlPanelState
     @State var hoveredSection: PanelSections?
     
@@ -109,9 +109,9 @@ public struct AppWindowTogglesView: View {
     }
 }
 
-struct AppWindowTogglesView_Preview: PreviewProvider {
+struct AppControlsTogglesView_Preview: PreviewProvider {
     static let state = AppControlPanelState()
     static var previews: some View {
-        return AppWindowTogglesView(state: state, sections: PanelSections.usableWindows)
+        return AppControlsTogglesView(state: state, sections: PanelSections.usableWindows)
     }
 }

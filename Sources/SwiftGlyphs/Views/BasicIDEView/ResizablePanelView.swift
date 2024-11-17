@@ -20,7 +20,7 @@ struct ResizablePanelView<Content: View>: View {
     // Constants
     private let minHeight: CGFloat = 10
     private let minWidth: CGFloat = 200
-    private let dividerThickness: CGFloat = 4
+    private let dividerThickness: CGFloat = 8
     
     init(
         layoutMode: LayoutMode,
@@ -200,7 +200,7 @@ extension Array {
         [
             FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
                 .eraseToAnyView(),
-            AppWindowTogglesView(state: GlobalInstances.appPanelState, sections: PanelSections.usableWindows)
+            AppControlsTogglesView(state: GlobalInstances.appPanelState, sections: PanelSections.usableWindows)
                 .eraseToAnyView(),
             AppStatusView(status: GlobalInstances.appStatus)
                 .eraseToAnyView()
