@@ -253,6 +253,7 @@ private extension RenderPlan {
             $0.title = "Kicking off concurrent render..."
         }
         
+        let cacheLock = LockWrapper()
         DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
             let renderPath = allFileURLs[index]
             statusObject.update {
@@ -265,7 +266,9 @@ private extension RenderPlan {
             )
             
             if let result {
+                cacheLock.writeLock()
                 let grid = cacheCollectionAsGrid(from: result)
+                cacheLock.unlock()
                 
                 if let grid {
                     colorizeIfEnabled(grid)
