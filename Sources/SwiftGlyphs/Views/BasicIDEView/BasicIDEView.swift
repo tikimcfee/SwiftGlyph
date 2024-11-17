@@ -40,13 +40,8 @@ struct BasicIDEView: View {
             }
             
             FloatingControlsCombo(
-                sections: [
-                    .windowControls,
-                    .appStatusInfo,
-                    .githubTools,
-                    .menuActions,
-                    .editor,
-                ]
+                showWindowing: false,
+                sections: PanelSections.usableWindows
             )
         }
         .toolbar {
@@ -73,13 +68,37 @@ extension BasicIDEView {
     @ViewBuilder
     private var leftPanel: some View {
         if leftPanelVisible {
-            ResizablePanelView(layoutMode: .vertical) { [
-                FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
-                    .eraseToAnyView(),
-                WorldFocusView(focus: GlobalInstances.gridStore.worldFocusController)
+            GeometryReader { proxy in
+                ResizablePanelView(
+                    layoutMode: .vertical,
+                    sizes: [
+                        proxy.size.height - 500,
+                        250,
+                        250
+                    ]
+                ) { [
+                    FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
+                        .eraseToAnyView(),
+                    
+                    WorldFocusView(focus: GlobalInstances.gridStore.worldFocusController)
+                        .eraseToAnyView(),
+                    
+                    VStack(alignment: .center) {
+                        Text("Favorite Windows")
+                        
+                        AppWindowTogglesView(
+                            state: GlobalInstances.appPanelState,
+                            sections: [
+                                .githubTools,
+                                .editor,
+                                .hoverInfo,
+                            ]
+                        )
+                    }
                     .eraseToAnyView()
-            ] }
-            .background(Color.primaryBackground)
+                ] }
+                .background(Color.primaryBackground)
+            }
             .transition(.move(edge: .leading))
         }
     }

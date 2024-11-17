@@ -12,12 +12,16 @@ import BitHandling
 import STTextViewSwiftUI
 
 public struct FloatingControlsCombo: View {
-    @State var showWindowing = true
+    @State var showWindowing: Bool
     @State var showControls = true
     
     let sections: [PanelSections]
     
-    init(sections: [PanelSections]) {
+    init(
+        showWindowing initialWindowingState: Bool = true,
+        sections: [PanelSections]
+    ) {
+        self.showWindowing = initialWindowingState
         self.sections = sections
     }
     

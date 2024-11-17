@@ -129,7 +129,7 @@ public class UserTextEditingStateHolder: ObservableObject {
                     let newFileContents = try Data(contentsOf: inputStagingFile, options: .uncached)
                     
                     if currentFileContents != newFileContents {
-                        try AppFiles.replace(fileUrl: selectedFile, with: inputStagingFile)
+                        try AppFiles.oneTimeBackupOf(fileUrl: selectedFile, with: inputStagingFile)
                         
                         DispatchQueue.main.async {
                             self.watchData = newFileContents
