@@ -148,14 +148,17 @@ private extension RenderPlan {
         }
         rootGroup.applyAllConstraints(myDepth: 0)
         
-        statusObject.update {
-            $0.currentValue += 1
-            $0.totalValue += 1
-            $0.title = "Jump in the line..."
-        }
+        
         
         rootGroup.addLines(root: rootGroup.asNode)
         rootGroup.addAllWalls()
+        
+        let layoutTime = watch.stopwatch.elapsedTimeString()
+        statusObject.update {
+            $0.currentValue += 1
+            $0.totalValue += 1
+            $0.title = "Layout complete: \(layoutTime)"
+        }
     }
 }
 
@@ -285,10 +288,11 @@ private extension RenderPlan {
                 }
             }
         }
+        let cacheTime = watch.stopwatch.elapsedTimeString()
         watch.stop(.cache)
         
         statusObject.update {
-            $0.title = "Rendering complete, kicking off layout..."
+            $0.title = "Rendering complete: \(cacheTime)"
         }
         
         watch.start(.layout)
