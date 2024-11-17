@@ -15,13 +15,13 @@ struct SwitchModeButtons: View {
     
     var body: some View {
         HStack {
-            if windowKey != .windowControls {
+//            if windowKey != .windowControls {
                 buttonView
                     .foregroundStyle(.red.opacity(0.8))
                     .onTapGesture {
                         displayMode = .hidden
                     }
-            }
+//            }
 
             switch displayMode {
             case .displayedAsSibling:

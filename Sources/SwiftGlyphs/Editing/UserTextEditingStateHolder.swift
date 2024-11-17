@@ -112,34 +112,38 @@ public class UserTextEditingStateHolder: ObservableObject {
             .compactMap { $0 }
             .removeDuplicates()
             .sink { pair in
-                let (selectedFile, input) = (pair.selectedFile, pair.userInput)
-                do {
-                    let inputStagingFile = AppFiles.file(
-                        named: "inputStagingFile",
-                        in: AppFiles.glyphSceneDirectory
-                    )
-                    let inputData = NSAttributedString(input).string
-                    try inputData.write(
-                        to: inputStagingFile,
-                        atomically: true,
-                        encoding: .utf8
-                    )
-                    
-                    let currentFileContents = try Data(contentsOf: selectedFile, options: .alwaysMapped)
-                    let newFileContents = try Data(contentsOf: inputStagingFile, options: .uncached)
-                    
-                    if currentFileContents != newFileContents {
-                        try AppFiles.oneTimeBackupOf(fileUrl: selectedFile, with: inputStagingFile)
-                        
-                        DispatchQueue.main.async {
-                            self.watchData = newFileContents
-                        }
-                    }
-                } catch {
-                    print(error)
-                }
+                self.onEditPairChanged(pair)
             }
             .store(in: &bag)
+    }
+    
+    func onEditPairChanged(_ pair: EditPair) {
+        let (selectedFile, input) = (pair.selectedFile, pair.userInput)
+        do {
+            let inputStagingFile = AppFiles.file(
+                named: "inputStagingFile",
+                in: AppFiles.glyphSceneDirectory
+            )
+            let inputData = NSAttributedString(input).string
+            try inputData.write(
+                to: inputStagingFile,
+                atomically: true,
+                encoding: .utf8
+            )
+            
+            let currentFileContents = try Data(contentsOf: selectedFile, options: .alwaysMapped)
+            let newFileContents = try Data(contentsOf: inputStagingFile, options: .uncached)
+            
+            if currentFileContents != newFileContents {
+                try AppFiles.oneTimeBackupOf(fileUrl: selectedFile, with: inputStagingFile)
+                
+                DispatchQueue.main.async {
+                    self.watchData = newFileContents
+                }
+            }
+        } catch {
+            print(error)
+        }
     }
 }
 

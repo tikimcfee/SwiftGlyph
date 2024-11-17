@@ -79,9 +79,9 @@ public class FloatableWindow: NSWindow {
         // Maybe do some kind of default window config for the keys instead.
         
         var updatedStyle = style
-        if key != .windowControls {
+//        if key != .windowControls {
             updatedStyle.formUnion(.closable)
-        }
+//        }
         
         if case .omnibar = key {
             updatedStyle.remove([

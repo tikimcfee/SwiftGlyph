@@ -57,6 +57,9 @@ public struct FloatingControlsStack: View {
                     }.onLongPressGesture {
                         GlobalInstances.appPanelState.resetSection(.windowControls)
                     }
+                    .onReceive(GlobalInstances.appPanelState.objectWillChange) {
+                        showWindowing = GlobalInstances.appPanelState.isVisible(.windowControls)
+                    }
                     
                     FABImage("wrench.and.screwdriver").opacity(
                         showControls ? 1.0 : 0.5
