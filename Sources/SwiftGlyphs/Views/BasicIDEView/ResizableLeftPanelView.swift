@@ -3,214 +3,182 @@ import MetalLink
 import BitHandling
 import STTextViewSwiftUI
 
-struct ResizableLeftPanelView: View {
+struct ResizableLeftPanelView<Content: View>: View {
     enum LayoutMode {
         case vertical, horizontal
     }
 
-    @State private var upperHeight: CGFloat = 500
-    @State private var lowerHeight: CGFloat = 200
-    @State private var leftWidth: CGFloat = 300
-    @State private var rightWidth: CGFloat = 300
+    @State private var sizes: [CGFloat]
     @State private var setInitial = false
 
     @ObservedObject var panelState = GlobalInstances.appPanelState
     @ObservedObject var fileBrowserState = GlobalInstances.fileBrowserState
     
     var layoutMode: LayoutMode
+    let content: () -> [Content]
 
     // Constants
     private let minHeight: CGFloat = 50
     private let minWidth: CGFloat = 100
     private let dividerThickness: CGFloat = 8
 
+    init(layoutMode: LayoutMode, content: @escaping () -> [Content]) {
+        self.layoutMode = layoutMode
+        self._sizes = State(initialValue: [])
+        self.content = content
+    }
+
     var body: some View {
         GeometryReader { geometry in
-            switch layoutMode {
-            case .horizontal:
+            if layoutMode == .horizontal {
                 HStack(spacing: 0) {
-                    left
-                    dividerLeft(geometry: geometry)
-                    middleHorizontal(geometry: geometry)
-                    dividerRight(geometry: geometry)
-                    right
+                    ForEach(Array(content().enumerated()), id: \.offset) { index, view in
+                        if index > 0 {
+                            dividerHorizontal(geometry: geometry, index: index)
+                        }
+                        view.frame(width: sizes[safe: index] ?? defaultWidth(geometry))
+                    }
                 }
                 .onAppear {
                     guard !setInitial else { return }
                     setInitial = true
-                    leftWidth = geometry.size.width / 4
-                    rightWidth = geometry.size.width / 4
+                    initializeSizes(count: content().count, totalLength: geometry.size.width)
                 }
-            case .vertical:
+            } else {
                 VStack(spacing: 0) {
-                    top
-                    dividerTop(geometry: geometry)
-                    middleVertical(geometry: geometry)
-                    dividerBottom(geometry: geometry)
-                    bottom
+                    ForEach(Array(content().enumerated()), id: \.offset) { index, view in
+                        if index > 0 {
+                            dividerVertical(geometry: geometry, index: index)
+                        }
+                        view.frame(height: sizes[safe: index] ?? defaultHeight(geometry))
+                    }
                 }
                 .onAppear {
                     guard !setInitial else { return }
                     setInitial = true
-                    upperHeight = geometry.size.height / 2
-                    lowerHeight = geometry.size.height / 5
+                    initializeSizes(count: content().count, totalLength: geometry.size.height)
                 }
             }
         }
     }
 
-    // Vertical Layout Views
-    var top: some View {
-        FileBrowserView(browserState: fileBrowserState, setMin: false)
-            .frame(height: upperHeight)
+    // Helpers for initialization
+    private func initializeSizes(count: Int, totalLength: CGFloat) {
+        sizes = Array(repeating: totalLength / CGFloat(count), count: count)
     }
 
-    func middleVertical(geometry: GeometryProxy) -> some View {
-        AppWindowTogglesView(state: panelState)
-            .frame(height: geometry.size.height - upperHeight - lowerHeight)
+    private func defaultWidth(_ geometry: GeometryProxy) -> CGFloat {
+        geometry.size.width / CGFloat(content().count)
     }
 
-    var bottom: some View {
-        AppStatusView(status: GlobalInstances.appStatus)
-            .frame(height: lowerHeight)
+    private func defaultHeight(_ geometry: GeometryProxy) -> CGFloat {
+        geometry.size.height / CGFloat(content().count)
     }
 
-    // Horizontal Layout Views
-    var left: some View {
-        FileBrowserView(browserState: fileBrowserState, setMin: false)
-            .frame(width: leftWidth)
+    // Dividers
+    func dividerVertical(geometry: GeometryProxy, index: Int) -> some View {
+        DividerView(isForVerticalStack: true)
+            .frame(height: dividerThickness)
+            .gesture(verticalDragGesture(geometry: geometry, index: index))
+            .onHoverCursor(NSCursor.resizeUpDown)
     }
 
-    func middleHorizontal(geometry: GeometryProxy) -> some View {
-        AppWindowTogglesView(state: panelState)
-            .frame(width: geometry.size.width - leftWidth - rightWidth)
-    }
-
-    var right: some View {
-        AppStatusView(status: GlobalInstances.appStatus)
-            .frame(width: rightWidth)
-    }
-
-    // Dividers for Vertical Layout
-    func dividerTop(geometry: GeometryProxy) -> some View {
-        ZStack {
-            Divider()
-                .background(Color.gray)
-            Image(systemName: "line.3.horizontal")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-        }
-        .frame(height: dividerThickness)
-        .contentShape(Rectangle())
-        .gesture(topDragGesture(geometry: geometry))
-        .onHover { hovering in
-            if hovering {
-                NSCursor.resizeUpDown.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-
-    func dividerBottom(geometry: GeometryProxy) -> some View {
-        ZStack {
-            Divider()
-                .background(Color.gray)
-            Image(systemName: "line.3.horizontal")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-        }
-        .frame(height: dividerThickness)
-        .contentShape(Rectangle())
-        .gesture(bottomDragGesture(geometry: geometry))
-        .onHover { hovering in
-            if hovering {
-                NSCursor.resizeUpDown.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-
-    // Dividers for Horizontal Layout
-    func dividerLeft(geometry: GeometryProxy) -> some View {
-        Divider()
-            .background(Color.gray)
+    func dividerHorizontal(geometry: GeometryProxy, index: Int) -> some View {
+        DividerView(isForVerticalStack: false)
             .frame(width: dividerThickness)
-            .contentShape(Rectangle())
-            .gesture(leftDragGesture(geometry: geometry))
-            .onHover { hovering in
-                if hovering {
-                    NSCursor.resizeLeftRight.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
+            .gesture(horizontalDragGesture(geometry: geometry, index: index))
+            .onHoverCursor(NSCursor.resizeLeftRight)
     }
 
-    func dividerRight(geometry: GeometryProxy) -> some View {
-        Divider()
-            .background(Color.gray)
-            .frame(width: dividerThickness)
-            .contentShape(Rectangle())
-            .gesture(rightDragGesture(geometry: geometry))
-            .onHover { hovering in
-                if hovering {
-                    NSCursor.resizeLeftRight.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
-    }
-
-    // Drag Gestures for Vertical Layout
-    private func topDragGesture(geometry: GeometryProxy) -> some Gesture {
+    // Drag Gestures for resizing
+    private func verticalDragGesture(geometry: GeometryProxy, index: Int) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let totalHeight = geometry.size.height
-                let newHeight = upperHeight + value.translation.height
-                if newHeight > minHeight && (newHeight + lowerHeight) < totalHeight - minHeight {
-                    upperHeight = newHeight
-                }
+                adjustSizeForVerticalDrag(value.translation.height, index: index)
             }
     }
 
-    private func bottomDragGesture(geometry: GeometryProxy) -> some Gesture {
+    private func horizontalDragGesture(geometry: GeometryProxy, index: Int) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let totalHeight = geometry.size.height
-                let newHeight = lowerHeight - value.translation.height
-                if newHeight > minHeight && (upperHeight + newHeight) < totalHeight - minHeight {
-                    lowerHeight = newHeight
-                }
+                adjustSizeForHorizontalDrag(value.translation.width, index: index)
             }
     }
 
-    // Drag Gestures for Horizontal Layout
-    private func leftDragGesture(geometry: GeometryProxy) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                let totalWidth = geometry.size.width
-                let newWidth = leftWidth + value.translation.width
-                if newWidth > minWidth && (newWidth + rightWidth) < totalWidth - minWidth {
-                    leftWidth = newWidth
-                }
-            }
+    // Resizing logic
+    private func adjustSizeForVerticalDrag(_ translation: CGFloat, index: Int) {
+        guard index > 0, index < sizes.count else { return }
+        let newSize = sizes[index - 1] + translation
+        let nextSize = sizes[index] - translation
+        if newSize > minHeight, nextSize > minHeight {
+            sizes[index - 1] = newSize
+            sizes[index] = nextSize
+        }
     }
 
-    private func rightDragGesture(geometry: GeometryProxy) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                let totalWidth = geometry.size.width
-                let newWidth = rightWidth - value.translation.width
-                if newWidth > minWidth && (leftWidth + newWidth) < totalWidth - minWidth {
-                    rightWidth = newWidth
-                }
-            }
+    private func adjustSizeForHorizontalDrag(_ translation: CGFloat, index: Int) {
+        guard index > 0, index < sizes.count else { return }
+        let newSize = sizes[index - 1] + translation
+        let nextSize = sizes[index] - translation
+        if newSize > minWidth, nextSize > minWidth {
+            sizes[index - 1] = newSize
+            sizes[index] = nextSize
+        }
     }
 }
 
 #Preview {
-    ResizableLeftPanelView(layoutMode: .vertical)
-        .frame(height: 800)
+    ResizableLeftPanelView(layoutMode: .vertical) {
+        [
+            FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
+                .eraseToAnyView(),
+            AppWindowTogglesView(state: GlobalInstances.appPanelState)
+                .eraseToAnyView(),
+            AppStatusView(status: GlobalInstances.appStatus)
+                .eraseToAnyView()
+        ]
+    }
+    .frame(height: 800)
+}
+
+extension View {
+    func eraseToAnyView() -> AnyView {
+        AnyView(self)
+    }
+
+    func onHoverCursor(_ cursor: NSCursor) -> some View {
+        self.onHover { hovering in
+            if hovering {
+                cursor.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+    }
+}
+
+struct DividerView: View {
+    let isForVerticalStack: Bool
+    
+    var body: some View {
+        if isForVerticalStack {
+            ZStack {
+                Divider()
+                    .background(Color.gray)
+                Image(systemName: "line.3.horizontal")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            }
+            
+        } else {
+            Divider()
+                .background(Color.gray)
+        }
+    }
+}
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
 }
