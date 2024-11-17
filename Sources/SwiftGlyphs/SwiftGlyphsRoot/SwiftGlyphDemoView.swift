@@ -64,11 +64,7 @@ public struct SwiftGlyphDemoView : View {
     @ViewBuilder
     var conditionalControls: some View {
         if showControls {
-            #if os(macOS)
-            macOSContent
-            #else
-            iOSContent
-            #endif
+            AppControlPanelView()
         }
     }
         
@@ -100,24 +96,6 @@ public struct SwiftGlyphDemoView : View {
         }
         .padding()
     }
-    
-    #if os(macOS)
-    @ViewBuilder
-    var macOSContent: some View {
-        ZStack(alignment: .topTrailing) {
-            AppControlPanelView()
-        }
-    }
-    #endif
-    
-    #if os(iOS)
-    @ViewBuilder
-    private var iOSContent: some View {
-        ZStack(alignment: .topTrailing) {
-            AppControlPanelView()
-        }
-    }
-    #endif
     
     @ViewBuilder
     private var previewSafeRenderView: some View {

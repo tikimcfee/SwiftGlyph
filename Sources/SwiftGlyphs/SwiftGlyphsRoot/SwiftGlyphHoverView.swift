@@ -10,10 +10,6 @@ import SwiftUI
 import MetalLink
 import BitHandling
 
-
-
-
-
 public struct SwiftGlyphHoverView: View, MetalLinkReader {
     public let link: MetalLink
     

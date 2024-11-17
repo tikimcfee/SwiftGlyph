@@ -17,22 +17,15 @@ import STTextViewSwiftUI
 #endif
 
 struct BasicIDEView: View {
-    
-    
     @State var leftPanelVisible: Bool = true
     
     @State var offsetYBrowser = 0.0
     @State var offsetYWindows = 0.0
-    
+        
     var body: some View {
-        HStack {
-            leftPanel
-                .layoutPriority(0)
-            
-            mainView
-                .layoutPriority(1)
+        ResizablePanelView(layoutMode: .horizontal) {
+            conditionalViews
         }
-        .frame(width: 1920, height: 1080)
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 SGButton("", "sidebar.left", .toolbar) {
@@ -44,6 +37,18 @@ struct BasicIDEView: View {
         }
     }
     
+    var conditionalViews: [AnyView] {
+        if leftPanelVisible {
+            [
+                leftPanel.eraseToAnyView(),
+                mainView.eraseToAnyView()
+            ]
+        } else {
+            [
+                mainView.eraseToAnyView()
+            ]
+        }
+    }
 }
 
 extension BasicIDEView {
@@ -61,7 +66,14 @@ extension BasicIDEView {
     @ViewBuilder
     private var leftPanel: some View {
         if leftPanelVisible {
-            ResizableLeftPanelView(layoutMode: .vertical)
+            ResizablePanelView(layoutMode: .vertical) { [
+                FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
+                    .eraseToAnyView(),
+                AppWindowTogglesView(state: GlobalInstances.appPanelState)
+                    .eraseToAnyView(),
+                AppStatusView(status: GlobalInstances.appStatus)
+                    .eraseToAnyView()
+            ] }
         }
     }
     

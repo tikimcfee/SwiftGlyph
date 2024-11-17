@@ -3,7 +3,7 @@ import MetalLink
 import BitHandling
 import STTextViewSwiftUI
 
-struct ResizableLeftPanelView<Content: View>: View {
+struct ResizablePanelView<Content: View>: View {
     enum LayoutMode {
         case vertical, horizontal
     }
@@ -15,7 +15,7 @@ struct ResizableLeftPanelView<Content: View>: View {
     @ObservedObject var fileBrowserState = GlobalInstances.fileBrowserState
     
     var layoutMode: LayoutMode
-    let content: () -> [Content]
+    let content: [(offset: Int, Content)]
 
     // Constants
     private let minHeight: CGFloat = 50
@@ -25,14 +25,14 @@ struct ResizableLeftPanelView<Content: View>: View {
     init(layoutMode: LayoutMode, content: @escaping () -> [Content]) {
         self.layoutMode = layoutMode
         self._sizes = State(initialValue: [])
-        self.content = content
+        self.content = Array(content().enumerated())
     }
 
     var body: some View {
         GeometryReader { geometry in
             if layoutMode == .horizontal {
                 HStack(spacing: 0) {
-                    ForEach(Array(content().enumerated()), id: \.offset) { index, view in
+                    ForEach(content, id: \.offset) { index, view in
                         if index > 0 {
                             dividerHorizontal(geometry: geometry, index: index)
                         }
@@ -42,11 +42,11 @@ struct ResizableLeftPanelView<Content: View>: View {
                 .onAppear {
                     guard !setInitial else { return }
                     setInitial = true
-                    initializeSizes(count: content().count, totalLength: geometry.size.width)
+                    initializeSizes(count: content.count, totalLength: geometry.size.width)
                 }
             } else {
                 VStack(spacing: 0) {
-                    ForEach(Array(content().enumerated()), id: \.offset) { index, view in
+                    ForEach(content, id: \.offset) { index, view in
                         if index > 0 {
                             dividerVertical(geometry: geometry, index: index)
                         }
@@ -56,7 +56,7 @@ struct ResizableLeftPanelView<Content: View>: View {
                 .onAppear {
                     guard !setInitial else { return }
                     setInitial = true
-                    initializeSizes(count: content().count, totalLength: geometry.size.height)
+                    initializeSizes(count: content.count, totalLength: geometry.size.height)
                 }
             }
         }
@@ -68,11 +68,11 @@ struct ResizableLeftPanelView<Content: View>: View {
     }
 
     private func defaultWidth(_ geometry: GeometryProxy) -> CGFloat {
-        geometry.size.width / CGFloat(content().count)
+        geometry.size.width / CGFloat(content.count)
     }
 
     private func defaultHeight(_ geometry: GeometryProxy) -> CGFloat {
-        geometry.size.height / CGFloat(content().count)
+        geometry.size.height / CGFloat(content.count)
     }
 
     // Dividers
@@ -127,20 +127,6 @@ struct ResizableLeftPanelView<Content: View>: View {
     }
 }
 
-#Preview {
-    ResizableLeftPanelView(layoutMode: .vertical) {
-        [
-            FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
-                .eraseToAnyView(),
-            AppWindowTogglesView(state: GlobalInstances.appPanelState)
-                .eraseToAnyView(),
-            AppStatusView(status: GlobalInstances.appStatus)
-                .eraseToAnyView()
-        ]
-    }
-    .frame(height: 800)
-}
-
 extension View {
     func eraseToAnyView() -> AnyView {
         AnyView(self)
@@ -163,17 +149,25 @@ struct DividerView: View {
     var body: some View {
         if isForVerticalStack {
             ZStack {
-                Divider()
-                    .background(Color.gray)
+                rectangle
                 Image(systemName: "line.3.horizontal")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
             }
             
         } else {
-            Divider()
-                .background(Color.gray)
+            rectangle
         }
+    }
+    
+    var rectangle: some View {
+        Rectangle()
+            .frame(
+                width: isForVerticalStack ? .infinity : 2,
+                height: isForVerticalStack ?  2 : .infinity
+            )
+            .background(Color.gray)
+            .contentShape(Rectangle().inset(by: -8))
     }
 }
 
@@ -181,4 +175,19 @@ extension Array {
     subscript(safe index: Int) -> Element? {
         return indices.contains(index) ? self[index] : nil
     }
+}
+
+
+#Preview {
+    ResizablePanelView(layoutMode: .vertical) {
+        [
+            FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
+                .eraseToAnyView(),
+            AppWindowTogglesView(state: GlobalInstances.appPanelState)
+                .eraseToAnyView(),
+            AppStatusView(status: GlobalInstances.appStatus)
+                .eraseToAnyView()
+        ]
+    }
+    .frame(height: 800)
 }
