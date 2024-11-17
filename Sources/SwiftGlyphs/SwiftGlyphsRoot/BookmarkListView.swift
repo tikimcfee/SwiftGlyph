@@ -33,7 +33,14 @@ struct BookmarkListView: View {
     @ViewBuilder
     var bookmarkListContent: some View {
         if GlobalInstances.gridStore.gridInteractionState.bookmarkedGrids.isEmpty {
-            Text("No Bookmarks").bold().padding()
+            Text("No Bookmarks")
+                .bold()
+                .padding(.horizontal)
+            
+            Text("Open a file and click it to bookmark.")
+                .font(.caption2)
+                .padding(.horizontal)
+                
         } else {
             let bookmarks = GlobalInstances
                 .gridStore

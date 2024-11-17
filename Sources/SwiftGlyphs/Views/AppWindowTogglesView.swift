@@ -10,6 +10,7 @@ import BitHandling
 
 public struct AppWindowTogglesView: View {
     @ObservedObject public var state: AppControlPanelState
+    @State var hoveredSection: PanelSections?
     
     public init(state: AppControlPanelState) {
         self.state = state
@@ -35,6 +36,14 @@ public struct AppWindowTogglesView: View {
             
             Spacer()
             
+            #if os(iOS)
+            resetControl(section)
+            #else
+            if hoveredSection == section {
+                resetControl(section)
+            }
+            #endif
+            
             if section != .windowControls {
                 Picker(
                     "",
@@ -50,8 +59,14 @@ public struct AppWindowTogglesView: View {
                 .labelsHidden()
                 .frame(width: 120)
             }
-            
-            resetControl(section)
+        }
+        .contentShape(Rectangle())
+        .onHover { hovered in
+            if hovered {
+                hoveredSection = section
+            } else if hoveredSection == section {
+                hoveredSection = nil
+            }
         }
     }
     

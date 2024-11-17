@@ -9,7 +9,7 @@ import BitHandling
 import STTextViewSwiftUI
 #endif
 
-private let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
+public let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
 public struct SwiftGlyphDemoView : View {
     @State var showWindowing = true
@@ -32,6 +32,8 @@ public struct SwiftGlyphDemoView : View {
             SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
             
             conditionalControls
+            
+            floatingControlToggles
             
             omnibar
         }
@@ -68,7 +70,6 @@ public struct SwiftGlyphDemoView : View {
             iOSContent
             #endif
         }
-        floatingControlToggles
     }
         
     @ViewBuilder
@@ -149,9 +150,24 @@ public struct SwiftGlyphDemoView : View {
     }
 }
 
-func SGButton(
+public enum SGButtonStyle {
+    case toolbar
+    case medium
+    case small
+    
+    var padding: EdgeInsets {
+        switch self {
+        case .toolbar: return .init(top: 6, leading: 8, bottom: 6, trailing: 8)
+        case .medium: return .init(top: 4, leading: 4, bottom: 4, trailing: 4)
+        case .small: return .init(top: 1, leading: 4, bottom: 1, trailing: 4)
+        }
+    }
+}
+
+public func SGButton(
     _ text: String,
     _ image: String,
+    _ style: SGButtonStyle = .small,
     _ action: @escaping () -> Void
 ) -> some View {
     Button(
@@ -167,8 +183,7 @@ func SGButton(
                     Image(systemName: image)
                 }
             }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 1)
+            .padding(style.padding)
             .background(Color.primarySGButtonBackground)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }

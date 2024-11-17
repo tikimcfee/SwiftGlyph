@@ -15,34 +15,59 @@ public struct FileBrowserView: View {
     public typealias RowType = [FileBrowser.Scope]
     @StateObject var browserState: FileBrowserViewState
     @State var hoveredScope: FileBrowser.Scope? = .none
+    let setMin: Bool
     func isHovered(_ scope: FileBrowser.Scope) -> Bool {
         hoveredScope == scope
     }
     
     public init(
-        browserState: FileBrowserViewState
+        browserState: FileBrowserViewState,
+        setMin: Bool = true
     ) {
         self._browserState = StateObject(wrappedValue: browserState)
+        self.setMin = setMin
     }
     
     public var body: some View {
         rootView
             .padding(4.0)
             .frame(
-                minWidth: 256.0,
-                minHeight: 256.0,
+                minWidth: setMin ? 256.0 : nil,
+                minHeight: setMin ? 256.0 : nil,
                 alignment: .leading
             )
     }
     
     var rootView: some View {
-        VStack(alignment: .leading) {
-            fileRows(browserState.files)
+        VStack(alignment: .center) {
+            if browserState.files.isEmpty {
+                Spacer()
+                openFolderButton
+            } else {
+                fileRows(browserState.files)
+            }
+            
             Spacer()
-            searchInput
+            HStack {
+                searchInput
+                
+                if !browserState.files.isEmpty {
+                    openFolderButton
+                }
+            }
         }
     }
     
+    var openFolderButton: some View {
+        VStack {
+            SGButton("Open Folder", "") {
+                GlobalInstances
+                    .swiftGlyphRoot
+                    .handleDirectory(.openDirectory)
+            }
+            .keyboardShortcut("o", modifiers: .command)
+        }
+    }
     
     var searchInput: some View {
         TextField(

@@ -16,6 +16,7 @@ public struct WorldFocusView: View {
     
     public var body: some View {
         focusList
+            .padding()
     }
     
     @ViewBuilder
@@ -24,7 +25,6 @@ public struct WorldFocusView: View {
             ScrollView {
                 BookmarkListView()
             }
-//            focusView()
         }
     }
     
