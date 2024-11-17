@@ -21,15 +21,38 @@ struct BasicIDEView: View {
     
     @State var offsetYBrowser = 0.0
     @State var offsetYWindows = 0.0
-        
+    
     var body: some View {
-        ResizablePanelView(layoutMode: .horizontal) {
-            conditionalViews
+        ZStack {
+            mainView
+                .eraseToAnyView()
+            
+            GeometryReader { proxy in
+                ResizablePanelView(
+                    layoutMode: .horizontal,
+                    sizes: [320, proxy.size.width - 320]
+                ) { [
+                    leftPanel
+                        .eraseToAnyView(),
+                    Spacer()
+                        .eraseToAnyView()
+                ] }
+            }
+            
+            FloatingControlsCombo(
+                sections: [
+                    .windowControls,
+                    .appStatusInfo,
+                    .githubTools,
+                    .menuActions,
+                    .editor,
+                ]
+            )
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {
                 SGButton("", "sidebar.left", .toolbar) {
-                    withAnimation {
+                    withAnimation(.linear(duration: 0.150)) {
                         leftPanelVisible.toggle()
                     }
                 }
@@ -37,29 +60,13 @@ struct BasicIDEView: View {
         }
     }
     
-    var conditionalViews: [AnyView] {
-        if leftPanelVisible {
-            [
-                leftPanel.eraseToAnyView(),
-                mainView.eraseToAnyView()
-            ]
-        } else {
-            [
-                mainView.eraseToAnyView()
-            ]
-        }
-    }
 }
 
 extension BasicIDEView {
     private var mainView: some View {
-        ZStack(alignment: .topLeading) {
-            VStack {
-                WorldFocusView(focus: GlobalInstances.gridStore.worldFocusController)
-            }
-            .frame(minWidth: 320)
-            Spacer()
+        ZStack {
             previewSafeRenderView
+            SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
         }
     }
     
@@ -69,11 +76,11 @@ extension BasicIDEView {
             ResizablePanelView(layoutMode: .vertical) { [
                 FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
                     .eraseToAnyView(),
-                AppWindowTogglesView(state: GlobalInstances.appPanelState)
-                    .eraseToAnyView(),
-                AppStatusView(status: GlobalInstances.appStatus)
+                WorldFocusView(focus: GlobalInstances.gridStore.worldFocusController)
                     .eraseToAnyView()
             ] }
+            .background(Color.primaryBackground)
+            .transition(.move(edge: .leading))
         }
     }
     

@@ -16,15 +16,12 @@ public struct WorldFocusView: View {
     
     public var body: some View {
         focusList
-            .padding()
     }
     
     @ViewBuilder
     var focusList: some View {
-        HStack {
-            ScrollView {
-                BookmarkListView()
-            }
+        ScrollView {
+            BookmarkListView()
         }
     }
     

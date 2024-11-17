@@ -18,13 +18,28 @@ struct ResizablePanelView<Content: View>: View {
     let content: [(offset: Int, Content)]
 
     // Constants
-    private let minHeight: CGFloat = 50
-    private let minWidth: CGFloat = 100
-    private let dividerThickness: CGFloat = 8
-
-    init(layoutMode: LayoutMode, content: @escaping () -> [Content]) {
+    private let minHeight: CGFloat = 10
+    private let minWidth: CGFloat = 200
+    private let dividerThickness: CGFloat = 4
+    
+    init(
+        layoutMode: LayoutMode,
+        sizes: [CGFloat],
+        content: @escaping () -> [Content]
+    ) {
         self.layoutMode = layoutMode
-        self._sizes = State(initialValue: [])
+        self._sizes = State(initialValue: sizes)
+        self.setInitial = true
+        self.content = Array(content().enumerated())
+    }
+
+    init(
+        layoutMode: LayoutMode,
+        sizes: [CGFloat]? = [],
+        content: @escaping () -> [Content]
+    ) {
+        self.layoutMode = layoutMode
+        self._sizes = State(initialValue: sizes ?? [])
         self.content = Array(content().enumerated())
     }
 
@@ -161,13 +176,15 @@ struct DividerView: View {
     }
     
     var rectangle: some View {
-        Rectangle()
-            .frame(
-                width: isForVerticalStack ? .infinity : 2,
-                height: isForVerticalStack ?  2 : .infinity
-            )
-            .background(Color.gray)
-            .contentShape(Rectangle().inset(by: -8))
+        GeometryReader { proxy in
+            Rectangle()
+                .frame(
+                    width: isForVerticalStack ? proxy.size.width : 2,
+                    height: isForVerticalStack ?  2 : proxy.size.height
+                )
+                .background(Color.gray)
+                .contentShape(Rectangle().inset(by: -8))
+        }
     }
 }
 
@@ -183,7 +200,7 @@ extension Array {
         [
             FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)
                 .eraseToAnyView(),
-            AppWindowTogglesView(state: GlobalInstances.appPanelState)
+            AppWindowTogglesView(state: GlobalInstances.appPanelState, sections: PanelSections.usableWindows)
                 .eraseToAnyView(),
             AppStatusView(status: GlobalInstances.appStatus)
                 .eraseToAnyView()

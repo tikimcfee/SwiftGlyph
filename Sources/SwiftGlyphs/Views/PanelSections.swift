@@ -124,6 +124,7 @@ extension PanelSections: CaseIterable, Equatable, Hashable, Comparable {
     ] }
     
     public static var usableWindows: [PanelSections] { [
+        .windowControls,
         .menuActions,
         .directories,
         .editor,

@@ -78,10 +78,14 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
         knownWindowMap[window] = nil
     }
     
-    public func windowDidUpdate(_ notification: Notification) {
-        guard let window = notification.object as? NSWindow else { return }
-        
-    }
+//    public func windowDidResize(_ notification: Notification) {
+//        guard let window = notification.object as? NSWindow else { return }
+//        if window == rootWindow {
+//            GlobalInstances.rootCustomMTKView.drawableSize = window.frame.size
+//            GlobalInstances.rootCustomMTKView.setNeedsDisplay(window.frame)
+//            GlobalInstances.rootCustomMTKView.display()
+//        }
+//    }
     
     public func setupScreens() {
         print("Available screens:")

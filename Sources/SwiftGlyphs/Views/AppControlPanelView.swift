@@ -14,6 +14,12 @@ import MetalLinkResources
 struct AppControlPanelView: View {
     @ObservedObject var state: AppControlPanelState = GlobalInstances.appPanelState
     
+    let sections: [PanelSections]
+    
+    init(sections: [PanelSections]) {
+        self.sections = sections
+    }
+    
     var body: some View {
         allPanelsGroup
     }
@@ -22,7 +28,7 @@ struct AppControlPanelView: View {
 extension AppControlPanelView {
     
     var allPanelsGroup: some View {
-        ForEach(PanelSections.usableWindows) { section in
+        ForEach(sections) { section in
             floatingViewWrapper(for: section)
         }
     }
@@ -43,7 +49,7 @@ extension AppControlPanelView {
     func panelView(for panel: PanelSections) -> some View {
         switch panel {
         case .windowControls:
-            AppWindowTogglesView(state: state)
+            AppWindowTogglesView(state: state, sections: sections)
             
         case .appStatusInfo:
             AppStatusView(

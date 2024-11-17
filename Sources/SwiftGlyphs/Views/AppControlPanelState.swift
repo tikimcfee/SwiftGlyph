@@ -81,8 +81,14 @@ public extension AppControlPanelState {
     }
     
     subscript(_ section: PanelSections) -> FloatableViewMode {
-        get { visiblePanelStates.source[section, default: section.defaultMode] }
-        set { visiblePanelStates.source[section] = newValue }
+        get {
+            visiblePanelStates.source[section, default: section.defaultMode]
+        }
+        set {
+            let current = visiblePanelStates.source[section]
+            guard current != newValue else { return }
+            visiblePanelStates.source[section] = newValue
+        }
     }
 }
 

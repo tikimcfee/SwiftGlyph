@@ -12,16 +12,24 @@ public struct AppWindowTogglesView: View {
     @ObservedObject public var state: AppControlPanelState
     @State var hoveredSection: PanelSections?
     
-    public init(state: AppControlPanelState) {
+    let sections: [PanelSections]
+    
+    public init(
+        state: AppControlPanelState,
+        sections: [PanelSections]
+    ) {
         self.state = state
+        self.sections = sections
     }
     
     public var body: some View {
         ScrollView {
             VStack {
-                ForEach(PanelSections.usableWindows, id: \.self) { section in
-                    sectionRow(section)
-                    Divider()
+                ForEach(sections, id: \.self) { section in
+                    if section != .windowControls {
+                        sectionRow(section)
+                        Divider()
+                    }
                 }
             }
             .padding(8)
@@ -104,6 +112,6 @@ public struct AppWindowTogglesView: View {
 struct AppWindowTogglesView_Preview: PreviewProvider {
     static let state = AppControlPanelState()
     static var previews: some View {
-        return AppWindowTogglesView(state: state)
+        return AppWindowTogglesView(state: state, sections: PanelSections.usableWindows)
     }
 }

@@ -19,7 +19,9 @@ struct BookmarkListView: View {
     var body: some View {
         bookmarkListResizable
 //            .attachedHoverState($hoveredGrid, $hoveredNode)
+            #if os(iOS)
             .frame(minWidth: 300)
+            #endif
     }
     
     @ViewBuilder
