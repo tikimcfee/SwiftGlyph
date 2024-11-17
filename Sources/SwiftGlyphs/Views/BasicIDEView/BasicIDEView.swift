@@ -28,7 +28,10 @@ struct BasicIDEView: View {
             GeometryReader { proxy in
                 ResizablePanelView(
                     layoutMode: .horizontal,
-                    sizes: [320, proxy.size.width - 320]
+                    sizes: [
+                        320,
+                        proxy.size.width - 320
+                    ]
                 ) { [
                     leftPanel
                         .eraseToAnyView(),
@@ -70,9 +73,9 @@ extension BasicIDEView {
                 ResizablePanelView(
                     layoutMode: .vertical,
                     sizes: [
-                        proxy.size.height - 500,
-                        250,
-                        250
+                        400,
+                        200,
+                        200
                     ]
                 ) { [
                     FileBrowserView(browserState: GlobalInstances.fileBrowserState, setMin: false)

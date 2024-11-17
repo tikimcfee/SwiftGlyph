@@ -33,7 +33,7 @@ public class AppStatus: ObservableObject {
     
     func post() {
         DispatchQueue.main.async {
-            withAnimation(.easeOut(duration: GlobalLiveConfig.store.preference.uiAnimationDuration)) {
+            withAnimation(.easeOut(duration: GlobalLiveConfig.store.preference.uiAnimationDuration.double)) {
                 self.objectWillChange.send()
             }
         }

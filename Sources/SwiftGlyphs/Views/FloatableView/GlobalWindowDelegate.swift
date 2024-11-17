@@ -71,7 +71,7 @@ public class GlobalWindowDelegate: NSObject, NSWindowDelegate {
     
     public func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? FloatableWindow else {
-            print("Missing window on close!", notification)
+            print("Missing window on close! -- ", String(describing: notification.object))
             return
         }
         print("Window closing:", knownWindowMap[window]?.rawValue ?? "<No known key!>", "->", window.title)

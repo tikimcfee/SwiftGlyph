@@ -10,9 +10,34 @@ import MetalLink
 import BitHandling
 import STTextViewSwiftUI
 
+enum MenuPage {
+    case actions
+    case settings
+}
+
 struct MenuActions: View {
+    @State var selection: MenuPage = .actions
+    
     var body: some View {
-        actionsContent
+        TabView(selection: $selection) {
+            actionsContent
+                .tabItem {
+                    Label(title: { Text("Actions") }, icon: { Image(systemName: "") })
+                }
+                .navigationTitle("Actions")
+                .tag(MenuPage.actions)
+            
+            settingsContent
+                .tabItem {
+                    Label(title: { Text("Settings") }, icon: { Image(systemName: "") })
+                }
+                .navigationTitle("Settings Editor")
+                .tag(MenuPage.settings)
+        }
+    }
+    
+    var settingsContent: some View {
+        GlobalLiveConfigEditor()
     }
 
     var actionsContent: some View {

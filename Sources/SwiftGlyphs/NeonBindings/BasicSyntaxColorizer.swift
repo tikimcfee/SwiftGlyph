@@ -74,16 +74,24 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         colorizerQuery: ColorizerQuery,
         on grid: CodeGrid
     ) throws {
-        guard let source = grid.sourcePath,
-              source.isSupportedFileType,
-              let rebuiltString = try? String(contentsOf: source)
-        else { return }
+        guard let sourcePath = grid.sourcePath else { return }
+        
+        let sourceExtension = sourcePath.pathExtension
+        let supportedFiles = GlobalLiveConfig.store.preference.supportedFileExtensions
+        
+        guard
+            supportedFiles.contains(sourceExtension),
+            let rebuiltString = try? String(contentsOf: sourcePath)
+        else {
+            return
+        }
         
         // Make the color buffer, blitit
         let colorBuffer = try execute(
             colorizerQuery: colorizerQuery,
             for: rebuiltString
         )
+        
         try blitColors(
             from: colorBuffer,
             into: grid.rootNode

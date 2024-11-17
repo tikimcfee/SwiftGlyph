@@ -393,7 +393,10 @@ private extension RenderPlan {
     }
     
     func colorizeIfEnabled(_ grid: CodeGrid) {
-        if colorizeOnLoad {
+        if
+            colorizeOnLoad,
+            grid.sourcePath?.isDirectory == false
+        {
             // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
             // the general render, since colorizing huge files takes forever
             WorkerPool.shared.nextConcurrentWorker().async {

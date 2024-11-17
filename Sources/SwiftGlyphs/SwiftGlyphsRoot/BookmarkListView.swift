@@ -108,17 +108,14 @@ struct BookmarkListView: View {
   
             if grid.sliderBinding_canShowRenderSlider {
                 Slider(
-                    value: grid.sliderBinding_baseRenderIndex,
+                    value: Binding(
+                        get: { grid.rootNode.instanceState.baseRenderIndex.float },
+                        set: { grid.rootNode.instanceState.baseRenderIndex = Int($0) }
+                    ),
                     in: grid.sliderBinding_Range,
                     step: grid.sliderBinding_step,
                     label: {
-                        Text("Render from: \(grid.rootNode.instanceState.baseRenderIndex)")
-                    },
-                    minimumValueLabel: {
-                        Text("0")
-                    },
-                    maximumValueLabel: {
-                        Text("\(grid.rootNode.instanceState.instanceBufferCount)")
+                        Text("Page: \(grid.rootNode.instanceState.baseRenderIndex / GlobalLiveConfig.store.preference.maxInstancesPerGrid)")
                     }
                 )
             }
@@ -164,7 +161,7 @@ extension CodeGrid {
     
     var sliderBinding_step: Float {
         clamp(
-            GlobalLiveConfig.store.preference.maxInstancesPerGrid.float / 1.167,
+            GlobalLiveConfig.store.preference.maxInstancesPerGrid.float,
             min: 1,
             max: self.rootNode.instanceState.instanceBufferCount.float
         )

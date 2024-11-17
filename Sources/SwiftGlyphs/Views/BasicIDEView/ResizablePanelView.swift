@@ -8,7 +8,7 @@ struct ResizablePanelView<Content: View>: View {
     enum LayoutMode {
         case vertical, horizontal
     }
-
+    
     @State private var sizes: [CGFloat]
     @State private var setInitial = false
 
@@ -46,35 +46,51 @@ struct ResizablePanelView<Content: View>: View {
 
     var body: some View {
         GeometryReader { geometry in
-            if layoutMode == .horizontal {
-                HStack(spacing: 0) {
-                    ForEach(content, id: \.offset) { index, view in
-                        if index > 0 {
-                            dividerHorizontal(geometry: geometry, index: index)
-                        }
-                        view.frame(width: sizes[safe: index] ?? defaultWidth(geometry))
-                    }
+            switchedContent(geometry)
+//                .onChange(of: geometry.size) { old, new in
+//                    
+//                }
+        }
+    }
+    
+    @ViewBuilder
+    private func switchedContent(_ geometry: GeometryProxy) -> some View {
+        if layoutMode == .horizontal {
+            horizontalContent(geometry)
+        } else {
+            verticalContent(geometry)
+        }
+    }
+    
+    private func horizontalContent(_ geometry: GeometryProxy) -> some View {
+        HStack(spacing: 0) {
+            ForEach(content, id: \.offset) { index, view in
+                if index > 0 {
+                    dividerHorizontal(geometry: geometry, index: index)
                 }
-                .onAppear {
-                    guard !setInitial else { return }
-                    setInitial = true
-                    initializeSizes(count: content.count, totalLength: geometry.size.width)
-                }
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(content, id: \.offset) { index, view in
-                        if index > 0 {
-                            dividerVertical(geometry: geometry, index: index)
-                        }
-                        view.frame(height: sizes[safe: index] ?? defaultHeight(geometry))
-                    }
-                }
-                .onAppear {
-                    guard !setInitial else { return }
-                    setInitial = true
-                    initializeSizes(count: content.count, totalLength: geometry.size.height)
-                }
+                view.frame(width: sizes[safe: index] ?? defaultWidth(geometry))
             }
+        }
+        .onAppear {
+            guard !setInitial else { return }
+            setInitial = true
+            initializeSizes(count: content.count, totalLength: geometry.size.width)
+        }
+    }
+
+    private func verticalContent(_ geometry: GeometryProxy) -> some View {
+        VStack(spacing: 0) {
+            ForEach(content, id: \.offset) { index, view in
+                if index > 0 {
+                    dividerVertical(geometry: geometry, index: index)
+                }
+                view.frame(minHeight: sizes[safe: index] ?? defaultHeight(geometry))
+            }
+        }
+        .onAppear {
+            guard !setInitial else { return }
+            setInitial = true
+            initializeSizes(count: content.count, totalLength: geometry.size.height)
         }
     }
 
