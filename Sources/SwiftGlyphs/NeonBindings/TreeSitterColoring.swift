@@ -12,80 +12,80 @@ extension SyntaxType {
         get {
             switch self {
             case .someRepeat:
-                return GlobalLiveConfig.Default.coloring.someRepeat
+                return GlobalLiveConfig.store.preference.coloring.someRepeat
             
             case .someLabel:
-                return GlobalLiveConfig.Default.coloring.someLabel
+                return GlobalLiveConfig.store.preference.coloring.someLabel
                 
             case .rawString:
-                return GlobalLiveConfig.Default.coloring.rawString
+                return GlobalLiveConfig.store.preference.coloring.rawString
             
             case .rawBoolean:
-                return GlobalLiveConfig.Default.coloring.rawBool
+                return GlobalLiveConfig.store.preference.coloring.rawBool
             
             case .comment:
-                return GlobalLiveConfig.Default.coloring.comment
+                return GlobalLiveConfig.store.preference.coloring.comment
             
             case .conditional:
-                return GlobalLiveConfig.Default.coloring.conditional
+                return GlobalLiveConfig.store.preference.coloring.conditional
             
             case .constructor:
-                return GlobalLiveConfig.Default.coloring.constructor
+                return GlobalLiveConfig.store.preference.coloring.constructor
             
             case .definition(let type):
                 switch type {
                 case .classDefinition:
-                    return GlobalLiveConfig.Default.coloring.classDefinition
+                    return GlobalLiveConfig.store.preference.coloring.classDefinition
                 case .method:
-                    return GlobalLiveConfig.Default.coloring.methodDefinition
+                    return GlobalLiveConfig.store.preference.coloring.methodDefinition
                 case .property:
-                    return GlobalLiveConfig.Default.coloring.propertyDefinition
+                    return GlobalLiveConfig.store.preference.coloring.propertyDefinition
                 case .function:
-                    return GlobalLiveConfig.Default.coloring.functionDeclaration
+                    return GlobalLiveConfig.store.preference.coloring.functionDeclaration
                 case .importDefinition:
-                    return GlobalLiveConfig.Default.coloring.importDefinition
+                    return GlobalLiveConfig.store.preference.coloring.importDefinition
                 }
             
             case .float:
-                return GlobalLiveConfig.Default.coloring.floatLiteral
+                return GlobalLiveConfig.store.preference.coloring.floatLiteral
             
             case .function(let type):
                 switch type {
                 case .call:
-                    return GlobalLiveConfig.Default.coloring.functionCallExpression
+                    return GlobalLiveConfig.store.preference.coloring.functionCallExpression
                 case .macro:
-                    return GlobalLiveConfig.Default.coloring.macroFunction
+                    return GlobalLiveConfig.store.preference.coloring.macroFunction
                 }
             
             case .include:
-                return GlobalLiveConfig.Default.coloring.includeDirective
+                return GlobalLiveConfig.store.preference.coloring.includeDirective
             
             case .keyword(let type):
                 switch type {
                 case .anyKeyword:
-                    return GlobalLiveConfig.Default.coloring.anyKeyword
+                    return GlobalLiveConfig.store.preference.coloring.anyKeyword
                 case .elseKeyword:
-                    return GlobalLiveConfig.Default.coloring.elseKeyword
+                    return GlobalLiveConfig.store.preference.coloring.elseKeyword
                 case .letKeyword:
-                    return GlobalLiveConfig.Default.coloring.letKeyword
+                    return GlobalLiveConfig.store.preference.coloring.letKeyword
                 case .throw_keyword:
-                    return GlobalLiveConfig.Default.coloring.throwKeyword
+                    return GlobalLiveConfig.store.preference.coloring.throwKeyword
                 case .throwsKeyword:
-                    return GlobalLiveConfig.Default.coloring.throwsKeyword
+                    return GlobalLiveConfig.store.preference.coloring.throwsKeyword
                 case .visibility_modifier:
-                    return GlobalLiveConfig.Default.coloring.visibilityModifier
+                    return GlobalLiveConfig.store.preference.coloring.visibilityModifier
                 case .classKeyword:
-                    return GlobalLiveConfig.Default.coloring.classDeclaration
+                    return GlobalLiveConfig.store.preference.coloring.classDeclaration
                 case .extensionKeyword:
-                    return GlobalLiveConfig.Default.coloring.extensionKeyword
+                    return GlobalLiveConfig.store.preference.coloring.extensionKeyword
                 case .function:
-                    return GlobalLiveConfig.Default.coloring.functionKeyword
+                    return GlobalLiveConfig.store.preference.coloring.functionKeyword
                 case .varKeyword:
-                    return GlobalLiveConfig.Default.coloring.variableKeyword
+                    return GlobalLiveConfig.store.preference.coloring.variableKeyword
                 case .operatorKeyword:
-                    return GlobalLiveConfig.Default.coloring.operatorKeyword
+                    return GlobalLiveConfig.store.preference.coloring.operatorKeyword
                 case .returnKeyword:
-                    return GlobalLiveConfig.Default.coloring.returnToken
+                    return GlobalLiveConfig.store.preference.coloring.returnToken
                 }
             
             case .local(let type):
@@ -93,201 +93,201 @@ extension SyntaxType {
                 case .scope(let scopeType):
                     switch scopeType {
                     case .class_declaration:
-                        return GlobalLiveConfig.Default.coloring.localScopeClassDeclaration
+                        return GlobalLiveConfig.store.preference.coloring.localScopeClassDeclaration
                     case .function_declaration:
-                        return GlobalLiveConfig.Default.coloring.localScopeFunctionDeclaration
+                        return GlobalLiveConfig.store.preference.coloring.localScopeFunctionDeclaration
                     case .guard_statement:
-                        return GlobalLiveConfig.Default.coloring.localScopeGuardStatement
+                        return GlobalLiveConfig.store.preference.coloring.localScopeGuardStatement
                     case .property_declaration:
-                        return GlobalLiveConfig.Default.coloring.localScopePropertyDeclaration
+                        return GlobalLiveConfig.store.preference.coloring.localScopePropertyDeclaration
                     case .statements:
-                        return GlobalLiveConfig.Default.coloring.localScopeStatements
+                        return GlobalLiveConfig.store.preference.coloring.localScopeStatements
                     }
                 }
             
             case .method:
-                return GlobalLiveConfig.Default.coloring.method
+                return GlobalLiveConfig.store.preference.coloring.method
             
             case .name(let type):
                 switch type {
                 case .initName:
-                    return GlobalLiveConfig.Default.coloring.initName
+                    return GlobalLiveConfig.store.preference.coloring.initName
                 case .simple_identifier:
-                    return GlobalLiveConfig.Default.coloring.simpleIdentifierName
+                    return GlobalLiveConfig.store.preference.coloring.simpleIdentifierName
                 case .type_identifier:
-                    return GlobalLiveConfig.Default.coloring.typeIdentifierName
+                    return GlobalLiveConfig.store.preference.coloring.typeIdentifierName
                 }
             
             case .number(let type):
                 switch type {
                 case .float:
-                    return GlobalLiveConfig.Default.coloring.floatLiteral
+                    return GlobalLiveConfig.store.preference.coloring.floatLiteral
                 case .anyLiteral:
-                    return GlobalLiveConfig.Default.coloring.numberLiteral
+                    return GlobalLiveConfig.store.preference.coloring.numberLiteral
                 case .integer_literal:
-                    return GlobalLiveConfig.Default.coloring.integerLiteral
+                    return GlobalLiveConfig.store.preference.coloring.integerLiteral
                 }
             
             case .operatorType(let type):
                 switch type {
                 case .anyOperator:
-                    return GlobalLiveConfig.Default.coloring.anyOperator
+                    return GlobalLiveConfig.store.preference.coloring.anyOperator
                 case .lessThan:
-                    return GlobalLiveConfig.Default.coloring.lessThanOperator
+                    return GlobalLiveConfig.store.preference.coloring.lessThanOperator
                 case .equal:
-                    return GlobalLiveConfig.Default.coloring.equalOperator
+                    return GlobalLiveConfig.store.preference.coloring.equalOperator
                 case .greaterThan:
-                    return GlobalLiveConfig.Default.coloring.greaterThanOperator
+                    return GlobalLiveConfig.store.preference.coloring.greaterThanOperator
                 case .addition:
-                    return GlobalLiveConfig.Default.coloring.additionOperator
+                    return GlobalLiveConfig.store.preference.coloring.additionOperator
                 case .subtraction:
-                    return GlobalLiveConfig.Default.coloring.subtractionOperator
+                    return GlobalLiveConfig.store.preference.coloring.subtractionOperator
                 }
             
             case .parameter:
-                return GlobalLiveConfig.Default.coloring.parameter
+                return GlobalLiveConfig.store.preference.coloring.parameter
             
             case .property:
-                return GlobalLiveConfig.Default.coloring.property
+                return GlobalLiveConfig.store.preference.coloring.property
             
             case .punctuation(let type):
                 switch type {
                 case .bracket(let bracketType):
                     switch bracketType {
                     case .anyBracket:
-                        return GlobalLiveConfig.Default.coloring.bracket
+                        return GlobalLiveConfig.store.preference.coloring.bracket
                     case .roundOpen:
-                        return GlobalLiveConfig.Default.coloring.roundOpenBracket
+                        return GlobalLiveConfig.store.preference.coloring.roundOpenBracket
                     case .roundClose:
-                        return GlobalLiveConfig.Default.coloring.roundCloseBracket
+                        return GlobalLiveConfig.store.preference.coloring.roundCloseBracket
                     case .curlyOpen:
-                        return GlobalLiveConfig.Default.coloring.curlyOpenBracket
+                        return GlobalLiveConfig.store.preference.coloring.curlyOpenBracket
                     case .curlyClose:
-                        return GlobalLiveConfig.Default.coloring.curlyCloseBracket
+                        return GlobalLiveConfig.store.preference.coloring.curlyCloseBracket
                     case .squareOpen:
-                        return GlobalLiveConfig.Default.coloring.squareOpenBracket
+                        return GlobalLiveConfig.store.preference.coloring.squareOpenBracket
                     case .squareClose:
-                        return GlobalLiveConfig.Default.coloring.squareCloseBracket
+                        return GlobalLiveConfig.store.preference.coloring.squareCloseBracket
                     }
                 case .delimiter(let delimiterType):
                     switch delimiterType {
                     case .anyDelimiter:
-                        return GlobalLiveConfig.Default.coloring.anyDelimiter
+                        return GlobalLiveConfig.store.preference.coloring.anyDelimiter
                     case .comma:
-                        return GlobalLiveConfig.Default.coloring.comma
+                        return GlobalLiveConfig.store.preference.coloring.comma
                     case .period:
-                        return GlobalLiveConfig.Default.coloring.period
+                        return GlobalLiveConfig.store.preference.coloring.period
                     case .colon:
-                        return GlobalLiveConfig.Default.coloring.colon
+                        return GlobalLiveConfig.store.preference.coloring.colon
                     }
                 }
             
             case .type(let type):
                 switch type {
                 case .anyTypeIdentifier:
-                    return GlobalLiveConfig.Default.coloring.typeIdentifier
+                    return GlobalLiveConfig.store.preference.coloring.typeIdentifier
                 case .simple_identifier:
-                    return GlobalLiveConfig.Default.coloring.simpleTypeIdentifier
+                    return GlobalLiveConfig.store.preference.coloring.simpleTypeIdentifier
                 case .type_identifier:
-                    return GlobalLiveConfig.Default.coloring.typeIdentifier
+                    return GlobalLiveConfig.store.preference.coloring.typeIdentifier
                 }
             
             case .variable(let type):
                 switch type {
                 case .anyVariable:
-                    return GlobalLiveConfig.Default.coloring.anyVariable
+                    return GlobalLiveConfig.store.preference.coloring.anyVariable
                 case .builtin(let builtinType):
                     switch builtinType {
                     case .anyBuiltin:
-                        return GlobalLiveConfig.Default.coloring.varableBuiltin
+                        return GlobalLiveConfig.store.preference.coloring.varableBuiltin
                     case .self_expression:
-                        return GlobalLiveConfig.Default.coloring.variableSelfExpression
+                        return GlobalLiveConfig.store.preference.coloring.variableSelfExpression
                     }
                 case .pattern:
-                    return GlobalLiveConfig.Default.coloring.variablePattern
+                    return GlobalLiveConfig.store.preference.coloring.variablePattern
                 }
             
             case .unknown:
-                return GlobalLiveConfig.Default.coloring.unknownToken
+                return GlobalLiveConfig.store.preference.coloring.unknownToken
             }
         }
         set {
             switch self {
             case .someRepeat:
-                GlobalLiveConfig.Default.coloring.someRepeat = newValue
+                GlobalLiveConfig.store.preference.coloring.someRepeat = newValue
             
             case .someLabel:
-                GlobalLiveConfig.Default.coloring.someLabel = newValue
+                GlobalLiveConfig.store.preference.coloring.someLabel = newValue
                 
             case .rawString:
-                GlobalLiveConfig.Default.coloring.rawString = newValue
+                GlobalLiveConfig.store.preference.coloring.rawString = newValue
             
             case .rawBoolean:
-                GlobalLiveConfig.Default.coloring.rawBool = newValue
+                GlobalLiveConfig.store.preference.coloring.rawBool = newValue
             
             case .comment:
-                GlobalLiveConfig.Default.coloring.comment = newValue
+                GlobalLiveConfig.store.preference.coloring.comment = newValue
             
             case .conditional:
-                GlobalLiveConfig.Default.coloring.conditional = newValue
+                GlobalLiveConfig.store.preference.coloring.conditional = newValue
             
             case .constructor:
-                GlobalLiveConfig.Default.coloring.constructor = newValue
+                GlobalLiveConfig.store.preference.coloring.constructor = newValue
             
             case .definition(let type):
                 switch type {
                 case .classDefinition:
-                    GlobalLiveConfig.Default.coloring.classDefinition = newValue
+                    GlobalLiveConfig.store.preference.coloring.classDefinition = newValue
                 case .method:
-                    GlobalLiveConfig.Default.coloring.methodDefinition = newValue
+                    GlobalLiveConfig.store.preference.coloring.methodDefinition = newValue
                 case .property:
-                    GlobalLiveConfig.Default.coloring.propertyDefinition = newValue
+                    GlobalLiveConfig.store.preference.coloring.propertyDefinition = newValue
                 case .function:
-                    GlobalLiveConfig.Default.coloring.functionDeclaration = newValue
+                    GlobalLiveConfig.store.preference.coloring.functionDeclaration = newValue
                 case .importDefinition:
-                    GlobalLiveConfig.Default.coloring.importDefinition = newValue
+                    GlobalLiveConfig.store.preference.coloring.importDefinition = newValue
                 }
             
             case .float:
-                GlobalLiveConfig.Default.coloring.floatLiteral = newValue
+                GlobalLiveConfig.store.preference.coloring.floatLiteral = newValue
             
             case .function(let type):
                 switch type {
                 case .call:
-                    GlobalLiveConfig.Default.coloring.functionCallExpression = newValue
+                    GlobalLiveConfig.store.preference.coloring.functionCallExpression = newValue
                 case .macro:
-                    GlobalLiveConfig.Default.coloring.macroFunction = newValue
+                    GlobalLiveConfig.store.preference.coloring.macroFunction = newValue
                 }
             
             case .include:
-                GlobalLiveConfig.Default.coloring.includeDirective = newValue
+                GlobalLiveConfig.store.preference.coloring.includeDirective = newValue
             
             case .keyword(let type):
                 switch type {
                 case .anyKeyword:
-                    GlobalLiveConfig.Default.coloring.anyKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.anyKeyword = newValue
                 case .elseKeyword:
-                    GlobalLiveConfig.Default.coloring.elseKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.elseKeyword = newValue
                 case .letKeyword:
-                    GlobalLiveConfig.Default.coloring.letKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.letKeyword = newValue
                 case .throw_keyword:
-                    GlobalLiveConfig.Default.coloring.throwKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.throwKeyword = newValue
                 case .throwsKeyword:
-                    GlobalLiveConfig.Default.coloring.throwsKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.throwsKeyword = newValue
                 case .visibility_modifier:
-                    GlobalLiveConfig.Default.coloring.visibilityModifier = newValue
+                    GlobalLiveConfig.store.preference.coloring.visibilityModifier = newValue
                 case .classKeyword:
-                    GlobalLiveConfig.Default.coloring.classDeclaration = newValue
+                    GlobalLiveConfig.store.preference.coloring.classDeclaration = newValue
                 case .extensionKeyword:
-                    GlobalLiveConfig.Default.coloring.extensionKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.extensionKeyword = newValue
                 case .function:
-                    GlobalLiveConfig.Default.coloring.functionKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.functionKeyword = newValue
                 case .varKeyword:
-                    GlobalLiveConfig.Default.coloring.variableKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.variableKeyword = newValue
                 case .operatorKeyword:
-                    GlobalLiveConfig.Default.coloring.operatorKeyword = newValue
+                    GlobalLiveConfig.store.preference.coloring.operatorKeyword = newValue
                 case .returnKeyword:
-                    GlobalLiveConfig.Default.coloring.returnToken = newValue
+                    GlobalLiveConfig.store.preference.coloring.returnToken = newValue
                 }
             
             case .local(let type):
@@ -295,122 +295,122 @@ extension SyntaxType {
                 case .scope(let scopeType):
                     switch scopeType {
                     case .class_declaration:
-                        GlobalLiveConfig.Default.coloring.localScopeClassDeclaration = newValue
+                        GlobalLiveConfig.store.preference.coloring.localScopeClassDeclaration = newValue
                     case .function_declaration:
-                        GlobalLiveConfig.Default.coloring.localScopeFunctionDeclaration = newValue
+                        GlobalLiveConfig.store.preference.coloring.localScopeFunctionDeclaration = newValue
                     case .guard_statement:
-                        GlobalLiveConfig.Default.coloring.localScopeGuardStatement = newValue
+                        GlobalLiveConfig.store.preference.coloring.localScopeGuardStatement = newValue
                     case .property_declaration:
-                        GlobalLiveConfig.Default.coloring.localScopePropertyDeclaration = newValue
+                        GlobalLiveConfig.store.preference.coloring.localScopePropertyDeclaration = newValue
                     case .statements:
-                        GlobalLiveConfig.Default.coloring.localScopeStatements = newValue
+                        GlobalLiveConfig.store.preference.coloring.localScopeStatements = newValue
                     }
                 }
             
             case .method:
-                GlobalLiveConfig.Default.coloring.method = newValue
+                GlobalLiveConfig.store.preference.coloring.method = newValue
             
             case .name(let type):
                 switch type {
                 case .initName:
-                    GlobalLiveConfig.Default.coloring.initName = newValue
+                    GlobalLiveConfig.store.preference.coloring.initName = newValue
                 case .simple_identifier:
-                    GlobalLiveConfig.Default.coloring.simpleIdentifierName = newValue
+                    GlobalLiveConfig.store.preference.coloring.simpleIdentifierName = newValue
                 case .type_identifier:
-                    GlobalLiveConfig.Default.coloring.typeIdentifierName = newValue
+                    GlobalLiveConfig.store.preference.coloring.typeIdentifierName = newValue
                 }
             
             case .number(let type):
                 switch type {
                 case .float:
-                    GlobalLiveConfig.Default.coloring.floatLiteral = newValue
+                    GlobalLiveConfig.store.preference.coloring.floatLiteral = newValue
                 case .anyLiteral:
-                    GlobalLiveConfig.Default.coloring.numberLiteral = newValue
+                    GlobalLiveConfig.store.preference.coloring.numberLiteral = newValue
                 case .integer_literal:
-                    GlobalLiveConfig.Default.coloring.integerLiteral = newValue
+                    GlobalLiveConfig.store.preference.coloring.integerLiteral = newValue
                 }
             
             case .operatorType(let type):
                 switch type {
                 case .anyOperator:
-                    GlobalLiveConfig.Default.coloring.anyOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.anyOperator = newValue
                 case .lessThan:
-                    GlobalLiveConfig.Default.coloring.lessThanOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.lessThanOperator = newValue
                 case .equal:
-                    GlobalLiveConfig.Default.coloring.equalOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.equalOperator = newValue
                 case .greaterThan:
-                    GlobalLiveConfig.Default.coloring.greaterThanOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.greaterThanOperator = newValue
                 case .addition:
-                    GlobalLiveConfig.Default.coloring.additionOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.additionOperator = newValue
                 case .subtraction:
-                    GlobalLiveConfig.Default.coloring.subtractionOperator = newValue
+                    GlobalLiveConfig.store.preference.coloring.subtractionOperator = newValue
                 }
             
             case .parameter:
-                GlobalLiveConfig.Default.coloring.parameter = newValue
+                GlobalLiveConfig.store.preference.coloring.parameter = newValue
             
             case .property:
-                GlobalLiveConfig.Default.coloring.property = newValue
+                GlobalLiveConfig.store.preference.coloring.property = newValue
             
             case .punctuation(let type):
                 switch type {
                 case .bracket(let bracketType):
                     switch bracketType {
                     case .anyBracket:
-                        GlobalLiveConfig.Default.coloring.bracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.bracket = newValue
                     case .roundOpen:
-                        GlobalLiveConfig.Default.coloring.roundOpenBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.roundOpenBracket = newValue
                     case .roundClose:
-                        GlobalLiveConfig.Default.coloring.roundCloseBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.roundCloseBracket = newValue
                     case .curlyOpen:
-                        GlobalLiveConfig.Default.coloring.curlyOpenBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.curlyOpenBracket = newValue
                     case .curlyClose:
-                        GlobalLiveConfig.Default.coloring.curlyCloseBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.curlyCloseBracket = newValue
                     case .squareOpen:
-                        GlobalLiveConfig.Default.coloring.squareOpenBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.squareOpenBracket = newValue
                     case .squareClose:
-                        GlobalLiveConfig.Default.coloring.squareCloseBracket = newValue
+                        GlobalLiveConfig.store.preference.coloring.squareCloseBracket = newValue
                     }
                 case .delimiter(let delimiterType):
                     switch delimiterType {
                     case .anyDelimiter:
-                        GlobalLiveConfig.Default.coloring.anyDelimiter = newValue
+                        GlobalLiveConfig.store.preference.coloring.anyDelimiter = newValue
                     case .comma:
-                        GlobalLiveConfig.Default.coloring.comma = newValue
+                        GlobalLiveConfig.store.preference.coloring.comma = newValue
                     case .period:
-                        GlobalLiveConfig.Default.coloring.period = newValue
+                        GlobalLiveConfig.store.preference.coloring.period = newValue
                     case .colon:
-                        GlobalLiveConfig.Default.coloring.colon = newValue
+                        GlobalLiveConfig.store.preference.coloring.colon = newValue
                     }
                 }
             
             case .type(let type):
                 switch type {
                 case .anyTypeIdentifier:
-                    GlobalLiveConfig.Default.coloring.typeIdentifier = newValue
+                    GlobalLiveConfig.store.preference.coloring.typeIdentifier = newValue
                 case .simple_identifier:
-                    GlobalLiveConfig.Default.coloring.simpleTypeIdentifier = newValue
+                    GlobalLiveConfig.store.preference.coloring.simpleTypeIdentifier = newValue
                 case .type_identifier:
-                    GlobalLiveConfig.Default.coloring.typeIdentifier = newValue
+                    GlobalLiveConfig.store.preference.coloring.typeIdentifier = newValue
                 }
             
             case .variable(let type):
                 switch type {
                 case .anyVariable:
-                    GlobalLiveConfig.Default.coloring.anyVariable = newValue
+                    GlobalLiveConfig.store.preference.coloring.anyVariable = newValue
                 case .builtin(let builtinType):
                     switch builtinType {
                     case .anyBuiltin:
-                        GlobalLiveConfig.Default.coloring.varableBuiltin = newValue
+                        GlobalLiveConfig.store.preference.coloring.varableBuiltin = newValue
                     case .self_expression:
-                        GlobalLiveConfig.Default.coloring.variableSelfExpression = newValue
+                        GlobalLiveConfig.store.preference.coloring.variableSelfExpression = newValue
                     }
                 case .pattern:
-                    GlobalLiveConfig.Default.coloring.variablePattern = newValue
+                    GlobalLiveConfig.store.preference.coloring.variablePattern = newValue
                 }
             
             case .unknown:
-                GlobalLiveConfig.Default.coloring.unknownToken = newValue
+                GlobalLiveConfig.store.preference.coloring.unknownToken = newValue
             }
         }
     }

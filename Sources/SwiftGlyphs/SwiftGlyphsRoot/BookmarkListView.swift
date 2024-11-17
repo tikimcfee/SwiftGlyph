@@ -159,12 +159,12 @@ extension NumberFormatter {
 
 extension CodeGrid {
     var sliderBinding_canShowRenderSlider: Bool {
-        rootNode.instanceState.instanceBufferCount >= GlobalLiveConfig.Default.maxInstancesPerGrid
+        rootNode.instanceState.instanceBufferCount >= GlobalLiveConfig.store.preference.maxInstancesPerGrid
     }
     
     var sliderBinding_step: Float {
         clamp(
-            GlobalLiveConfig.Default.maxInstancesPerGrid.float / 1.167,
+            GlobalLiveConfig.store.preference.maxInstancesPerGrid.float / 1.167,
             min: 1,
             max: self.rootNode.instanceState.instanceBufferCount.float
         )

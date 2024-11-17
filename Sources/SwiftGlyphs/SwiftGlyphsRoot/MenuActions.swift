@@ -18,10 +18,6 @@ struct MenuActions: View {
     var actionsContent: some View {
         List {
             Section("Atlas") {
-                LabeledContent("Save texture atlas", content: {
-                    saveAtlasButton
-                })
-                
                 LabeledContent("Totally clear atlas", content: {
                     deleteAtlasButton
                 })
@@ -29,13 +25,18 @@ struct MenuActions: View {
                 LabeledContent("Run preload (autosaves)", content: {
                     preloadAtlasButton
                 })
+                
+                LabeledContent("Save texture atlas", content: {
+                    saveAtlasButton
+                })
             }
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             
-            Section("Configs") {
-                saveDefaultConfigButton
-                resetDefaultConfigButton
+            Section("Settings") {
+                LabeledContent("Reset to default settings", content: {
+                    resetDefaultConfigButton
+                })
             }
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
@@ -54,27 +55,21 @@ struct MenuActions: View {
         }
     }
     
-    var saveAtlasButton: some View {
-        Button("Save") {
-            GlobalInstances.defaultAtlas.save()
-        }
-    }
-    
     var preloadAtlasButton: some View {
         Button("Preload") {
             GlobalInstances.defaultAtlas.preload()
         }
     }
     
-    var saveDefaultConfigButton: some View {
-        Button("Save Default") {
-            GlobalLiveConfig.saveDefault()
+    var saveAtlasButton: some View {
+        Button("Save") {
+            GlobalInstances.defaultAtlas.save()
         }
     }
     
     var resetDefaultConfigButton: some View {
-        Button("Reset Default") {
-            GlobalLiveConfig.saveDefault()
+        Button("Reset") {
+            GlobalLiveConfig.store.preference = GlobalLiveConfig()
         }
     }
 }

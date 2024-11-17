@@ -23,8 +23,8 @@ class CodeGridGroup {
     var editor = WorldGridEditor()
     var snapping: WorldGridSnapping { editor.snapping }
     
-    let padding: Float = GlobalLiveConfig.Default.codeGridGroupPadding
-    let maxRowWidth: Float = GlobalLiveConfig.Default.codeGridGroupMaxRowWidth
+    let padding: Float = GlobalLiveConfig.store.preference.codeGridGroupPadding
+    let maxRowWidth: Float = GlobalLiveConfig.store.preference.codeGridGroupMaxRowWidth
     
     init(globalRootGrid: CodeGrid) {
         self.globalRootGrid = globalRootGrid
@@ -180,7 +180,7 @@ class CodeGridGroup {
 
             // Set the front position (Z-axis), adjust as needed
             if !group.childGrids.isEmpty {
-                group.setFront(myDepth.float * GlobalLiveConfig.Default.codeGridGroupDepthPading)
+                group.setFront(myDepth.float * GlobalLiveConfig.store.preference.codeGridGroupDepthPading)
             }
             
 
