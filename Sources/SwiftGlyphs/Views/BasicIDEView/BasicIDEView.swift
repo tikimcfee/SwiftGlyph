@@ -93,7 +93,7 @@ extension BasicIDEView {
                                 .menuActions,
                                 .githubTools,
                                 .editor,
-                                .hoverInfo,
+                                .appStatusInfo
                             ]
                         )
                     }

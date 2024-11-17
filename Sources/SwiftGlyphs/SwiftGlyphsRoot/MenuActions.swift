@@ -13,6 +13,7 @@ import STTextViewSwiftUI
 enum MenuPage {
     case actions
     case settings
+    case coloring
 }
 
 struct MenuActions: View {
@@ -22,22 +23,33 @@ struct MenuActions: View {
         TabView(selection: $selection) {
             actionsContent
                 .tabItem {
-                    Label(title: { Text("Actions") }, icon: { Image(systemName: "") })
+                    Label(title: { Text("Actions") }, icon: { Image(systemName: "filemenu.and.selection") })
                 }
                 .navigationTitle("Actions")
                 .tag(MenuPage.actions)
             
             settingsContent
                 .tabItem {
-                    Label(title: { Text("Settings") }, icon: { Image(systemName: "") })
+                    Label(title: { Text("Settings") }, icon: { Image(systemName: "gear") })
                 }
                 .navigationTitle("Settings Editor")
                 .tag(MenuPage.settings)
+            
+            colorContent
+                .tabItem {
+                    Label(title: { Text("Coloring") }, icon: { Image(systemName: "paintpalette") })
+                }
+                .navigationTitle("Syntax Coloring")
+                .tag(MenuPage.coloring)
         }
     }
     
     var settingsContent: some View {
         GlobalLiveConfigEditor()
+    }
+    
+    var colorContent: some View {
+        GlobalLiveConfigEditorColor()
     }
 
     var actionsContent: some View {

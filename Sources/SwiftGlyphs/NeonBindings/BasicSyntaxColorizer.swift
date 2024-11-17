@@ -74,15 +74,12 @@ public class BasicSyntaxColorizer: MetalLinkReader {
         colorizerQuery: ColorizerQuery,
         on grid: CodeGrid
     ) throws {
-        guard let sourcePath = grid.sourcePath else { return }
-        
-        let sourceExtension = sourcePath.pathExtension
-        let supportedFiles = GlobalLiveConfig.store.preference.supportedFileExtensions
-        
         guard
-            supportedFiles.contains(sourceExtension),
+            let sourcePath = grid.sourcePath,
+            sourcePath.isColorizedFileType,
             let rebuiltString = try? String(contentsOf: sourcePath)
         else {
+            print("Skip coloring: \(grid.fileName)")
             return
         }
         
@@ -96,6 +93,7 @@ public class BasicSyntaxColorizer: MetalLinkReader {
             from: colorBuffer,
             into: grid.rootNode
         )
+        print("Coloring complete: \(grid.fileName)")
     }
     
     public func execute(

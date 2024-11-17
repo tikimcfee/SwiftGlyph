@@ -167,33 +167,7 @@ private extension RenderPlan {
     func computeAllTheGrids() {
         // Gather all the files and directories at once.
         // Threads. Heh.
-        var allFileURLs = [URL]()
-        var allDirectoryURLs = [URL]()
-        let rootIsFile = rootPath.isSupportedFileType
-        
-        if rootIsFile {
-            // Render the root file as well
-            allFileURLs.append(rootPath)
-            let parent = rootPath.deletingLastPathComponent()
-            if parent.isDirectory {
-                allDirectoryURLs.append(parent)
-            }
-        } else if rootPath.isDirectory {
-            // Render the root file as normal directory, then look for it
-            allDirectoryURLs.append(rootPath)
-            
-            // Find all recursive files and directories of the root.
-            // Sort them out.
-            FileBrowser
-                .recursivePaths(rootPath)
-                .forEach {
-                    if $0.isDirectory {
-                        allDirectoryURLs.append($0)
-                    } else {
-                        allFileURLs.append($0)
-                    }
-                }
-        }
+        let (allDirectoryURLs, allFileURLs) = collectFilesFromRoot()
         
         // Check we have something to render
         guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
@@ -256,12 +230,80 @@ private extension RenderPlan {
         _ onComplete: @escaping (RenderPlan) -> Void
     ) {
         watch.start(.cache)
+        let (allDirectoryURLs, allFileURLs) = collectFilesFromRoot()
         
+        // Check we have something to render
+        guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
+            statusObject.update {
+                $0.currentValue += 1
+                $0.title = "Didn't find any supported files to render."
+            }
+            return
+        }
+        
+        statusObject.update {
+            $0.title = "Found \(allFileURLs.count) files to render."
+            $0.totalValue += Double(allFileURLs.count)
+        }
+        
+        // Setup all the directory relationships first
+        cacheCodeGroups(for: allDirectoryURLs)
+                
+        statusObject.update {
+            $0.title = "Kicking off concurrent render..."
+        }
+        
+        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
+            let renderPath = allFileURLs[index]
+            statusObject.update {
+                $0.title = "Started rendering: \(renderPath.lastPathComponent)"
+            }
+            
+            let result = compute.executeManyWithAtlas_Conc(
+                in: renderPath,
+                atlas: builder.atlas
+            )
+            
+            if let result {
+                let grid = cacheCollectionAsGrid(from: result)
+                
+                if let grid {
+                    colorizeIfEnabled(grid)
+                }
+                
+                statusObject.update {
+                    $0.title = "Finished rendering: \(renderPath.lastPathComponent)"
+                    $0.currentValue += 1
+                }
+            } else {
+                statusObject.update {
+                    $0.title = "Failed to create EncodeResult for: \(renderPath.lastPathComponent)"
+                    $0.currentValue += 1
+                }
+            }
+        }
+        watch.stop(.cache)
+        
+        statusObject.update {
+            $0.title = "Rendering complete, kicking off layout..."
+        }
+        
+        watch.start(.layout)
+        doGridLayout()
+        watch.stop(.layout)
+        
+        onComplete(self)
+    }
+    
+    func collectFilesFromRoot() -> (
+        directories: [URL],
+        files: [URL]
+    ) {
         // Gather all the files and directories at once.
         // Threads. Heh.
         var allFileURLs = [URL]()
         var allDirectoryURLs = [URL]()
-        let rootIsFile = rootPath.isSupportedFileType
+        let rootIsFile = !rootPath.isDirectory
         
         if rootIsFile {
             // Render the root file as well
@@ -276,64 +318,21 @@ private extension RenderPlan {
             
             // Find all recursive files and directories of the root.
             // Sort them out.
-            FileBrowser
-                .recursivePaths(rootPath)
-                .forEach {
-                    if $0.isDirectory {
-                        allDirectoryURLs.append($0)
-                    } else {
-                        allFileURLs.append($0)
-                    }
+            let paths = FileBrowser.recursivePaths(rootPath)
+            for path in paths {
+                if path.isDirectory {
+                    allDirectoryURLs.append(path)
+                } else if path.isSupportedFileType {
+                    allFileURLs.append(path)
                 }
-        }
-        
-        // Check we have something to render
-        guard !allFileURLs.isEmpty || !allDirectoryURLs.isEmpty else {
-            statusObject.update {
-                $0.currentValue += 1
-                $0.title = "Didn't find any supported files to render."
-            }
-            return
-        }
-        
-        statusObject.update {
-            $0.title = "Found \(allFileURLs.count) files to render."
-        }
-        
-        // Setup all the directory relationships first
-        cacheCodeGroups(for: allDirectoryURLs)
-        
-        var toBuild = allFileURLs.count
-        func layoutOnComplete() {
-            toBuild -= 1
-            guard toBuild == 0 else {
-                return
-            }
-            
-            self.watch.stop(.cache)
-            
-            self.watch.start(.layout)
-            self.doGridLayout()
-            self.watch.stop(.layout)
-            
-            onComplete(self)
-        }
-        
-        DispatchQueue.concurrentPerform(iterations: allFileURLs.count) { index in
-            let result = compute.executeManyWithAtlas_Conc(
-                in: allFileURLs[index],
-                atlas: builder.atlas
-            )
-            
-            WorkerPool.shared.nextWorker().async {
-                if let result {
-                    self.cacheCollectionAsGrid(from: result)
-                }
-                layoutOnComplete()
             }
         }
+        
+        return (
+            directories: allDirectoryURLs,
+            files: allFileURLs
+        )
     }
-    
     
     private func onDebugStart(_ captureManager: MTLCaptureManager = .shared()) {
 //        do {
@@ -354,7 +353,10 @@ private extension RenderPlan {
     
     // MARK: - Encode result processing
     
-    func cacheCollectionAsGrid(from result: EncodeResult) {
+    @discardableResult
+    func cacheCollectionAsGrid(
+        from result: EncodeResult
+    ) -> CodeGrid? {
         switch result.collection {
         case .built(let collection):
             cacheCollectionAsGrid(
@@ -363,7 +365,7 @@ private extension RenderPlan {
             )
             
         case .notBuilt:
-            break
+            nil
         }
     }
     
@@ -387,8 +389,6 @@ private extension RenderPlan {
                 gridCache.insertGrid(grid)
                 hoverController.attachPickingStream(to: grid)
                 grid.updateBackground()
-                
-                colorizeIfEnabled(grid)
             }
     }
     
@@ -400,10 +400,20 @@ private extension RenderPlan {
             // Colorizing can complete concurrently for now, it's pretty quick and won't hold up
             // the general render, since colorizing huge files takes forever
             WorkerPool.shared.nextConcurrentWorker().async {
+//                self.statusObject.update {
+//                    $0.title = "Starting coloring: \(grid.id)"
+//                    $0.totalValue += 1
+//                }
+                
                 try? GlobalInstances.colorizer.runColorizer(
                     colorizerQuery: .highlights,
                     on: grid
                 )
+                
+//                self.statusObject.update {
+//                    $0.title = "Coloring finished: \(grid.id)"
+//                    $0.currentValue += 1
+//                }
             }
         }
     }
