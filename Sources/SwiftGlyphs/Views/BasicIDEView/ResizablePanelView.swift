@@ -3,6 +3,7 @@ import MetalLink
 import BitHandling
 import STTextViewSwiftUI
 
+#if os(macOS)
 struct ResizablePanelView<Content: View>: View {
     enum LayoutMode {
         case vertical, horizontal
@@ -208,3 +209,4 @@ extension Array {
     }
     .frame(height: 800)
 }
+#endif

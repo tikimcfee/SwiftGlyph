@@ -21,14 +21,10 @@ public struct SwiftGlyphDemoView : View {
     
     public var body: some View {
         #if os(macOS)
-        basicIDERootView
+        BasicIDEView()
         #else
         floatingWindowRootView
         #endif
-    }
-    
-    private var basicIDERootView: some View {
-        BasicIDEView()
     }
     
     private var floatingWindowRootView: some View {

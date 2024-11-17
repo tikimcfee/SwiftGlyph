@@ -4,10 +4,8 @@
 //
 //  Created by Ivan Lugo on 11/16/24.
 //
+#if os(macOS)
 
-#if os(iOS)
-import ARKit
-#endif
 import SwiftUI
 import MetalLink
 import BitHandling
@@ -127,3 +125,5 @@ extension BasicIDEView {
 #Preview {
     BasicIDEView()
 }
+
+#endif
