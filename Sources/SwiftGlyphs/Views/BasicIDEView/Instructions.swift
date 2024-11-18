@@ -9,31 +9,6 @@ import SwiftUI
 import BitHandling
 import MetalLink
 
-public class InstructionsController: ObservableObject {
-    let firstImageName = 1
-    let lastImageName = 16
-    lazy var range = firstImageName...lastImageName
-    
-    var imageIterator: ClosedRange<Int>.Iterator { range.makeIterator() }
-    var coreImages: [NSUIImage] { imageIterator.compactMap { NSUIImage(named: "\($0)") } }
-    lazy var imageModels = coreImages.enumerated().map { ImageModel(id: $0, image: $1) }
-    
-    struct ImageModel: Identifiable {
-        let id: Int
-        let image: NSUIImage
-    }
-}
-
-public extension Image {
-    init(platformImage: NSUIImage) {
-#if os(iOS)
-        self.init(uiImage: platformImage)
-#else
-        self.init(nsImage: platformImage)
-#endif
-    }
-}
-
 public struct InstructionsView: View {
     @StateObject var instructions = InstructionsController()
     
@@ -42,12 +17,12 @@ public struct InstructionsView: View {
     
     public var body: some View {
         content
-            .frame(width: 1024, height: 800)
+            .frame(width: 1280, height: 960)
     }
     
     public var content: some View {
         ZStack {
-            Color.secondaryBackground
+            Color.primaryBackground
             
             VStack {
                 PagerView(
@@ -55,32 +30,13 @@ public struct InstructionsView: View {
                     currentIndex: $currentPage
                 ) {
                     ForEach(instructions.imageModels) { imageModel in
-                        ZStack {
-                            Color.secondaryBackground
-                            
-                            Image(platformImage: imageModel.image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .zIndex(Double(imageModel.id))
-                                .tag(imageModel.id)
-                        }
+                        Page(imageModel: imageModel)
                     }
                 }
                 .padding()
                 
-                Button(action: {
-                    dismiss()
-                }) {
-                    Text("Start Rendering")
-                        .padding()
-                        .background(Color.primaryBackground)
-                        .foregroundColor(Color.primaryForeground)
-                        .cornerRadius(8)
-                        .contentShape(Rectangle())
-                }
-                .padding(.top, 20)
-                .buttonStyle(.plain)
+                Divider()
+                    .padding(.bottom)
                 
                 PageControl(
                     currentPage: $currentPage,
@@ -88,6 +44,71 @@ public struct InstructionsView: View {
                 )
                 .padding(.vertical, 10)
             }
+            
+            dismissButtonGroup
+        }
+    }
+    
+    var dismissButtonGroup: some View {
+        VStack {
+            Spacer()
+            
+            HStack {
+                Spacer()
+                
+                Button(action: {
+                    dismiss()
+                }) {
+                    Text("Close Instructions")
+                        .padding()
+                        .background(Color.secondaryBackground)
+                        .foregroundColor(Color.primaryForeground)
+                        .cornerRadius(8)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+    }
+}
+
+struct Page: View {
+    let imageModel: InstructionsController.ImageModel
+    
+    var body: some View {
+        ZStack {
+            Color.primaryBackground
+            
+            VStack {
+                imageContent
+                titleContent
+                messageContent
+            }
+        }
+    }
+    
+    var imageContent: some View {
+        Image(platformImage: imageModel.image)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .zIndex(Double(imageModel.id))
+            .tag(imageModel.id)
+    }
+    
+    @ViewBuilder
+    var titleContent: some View {
+        Text(imageModel.content.title)
+            .font(.title)
+            .padding(.bottom)
+    }
+        
+    @ViewBuilder
+    var messageContent: some View {
+        ForEach(imageModel.content.messages, id: \.0) { index, message in
+            Text(message)
+                .font(.title2)
         }
     }
 }
@@ -122,7 +143,9 @@ struct PageControl: View {
                 Circle()
                     .frame(width: 20, height: 20)
                     .contentShape(Rectangle())
-                    .foregroundColor(index == currentPage ? .blue : .gray)
+                    .foregroundColor(
+                        index == currentPage ? .blue : .gray
+                    )
                     .onTapGesture {
                         currentPage = index
                     }
