@@ -18,7 +18,7 @@ import AppKit
 public class OmnibarManager: ObservableObject {
     @Published public var state = OmnibarState.inactive
     
-    private lazy var eventMonitor = makeEventMonitor()
+    public lazy var eventMonitor = makeEventMonitor()
     
     public init() {
         attach()
@@ -38,17 +38,6 @@ public class OmnibarManager: ObservableObject {
         GlobalWindowDelegate.instance.withWindow(.omnibar) {
             $0.makeKeyAndOrderFront(nil)
         }
-    }
-    
-    public func attach() {
-        NSEvent.addLocalMonitorForEvents(
-            matching: .keyDown,
-            handler: eventMonitor
-        )
-    }
-
-    public func detach() {
-        NSEvent.removeMonitor(eventMonitor)
     }
     
     public var isOmnibarVisible: Bool {

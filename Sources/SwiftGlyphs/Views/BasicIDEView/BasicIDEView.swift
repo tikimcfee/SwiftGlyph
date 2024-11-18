@@ -19,6 +19,7 @@ struct BasicIDEView: View {
     
     @State var offsetYBrowser = 0.0
     @State var offsetYWindows = 0.0
+    @State var showingInstructions = true
     
     var body: some View {
         ZStack {
@@ -44,6 +45,9 @@ struct BasicIDEView: View {
                 showWindowing: false,
                 sections: PanelSections.usableWindows
             )
+        }
+        .sheet(isPresented: $showingInstructions) {
+            InstructionsView()
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {

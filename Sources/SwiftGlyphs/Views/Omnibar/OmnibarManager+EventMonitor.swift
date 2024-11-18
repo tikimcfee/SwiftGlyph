@@ -14,6 +14,17 @@ import MetalLink
 import AppKit
 
 extension OmnibarManager {
+    public func attach() {
+        NSEvent.addLocalMonitorForEvents(
+            matching: .keyDown,
+            handler: eventMonitor
+        )
+    }
+
+    public func detach() {
+        NSEvent.removeMonitor(eventMonitor)
+    }
+    
     func makeEventMonitor() -> (NSEvent) -> NSEvent? {
         { [weak self] in
             self?.onEvent($0)
