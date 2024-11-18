@@ -15,7 +15,7 @@ import STTextViewSwiftUI
 #endif
 
 struct BasicIDEView: View {
-    @State var leftPanelVisible: Bool = true
+    @State var leftPanelVisible: Bool = false
     
     @State var offsetYBrowser = 0.0
     @State var offsetYWindows = 0.0
