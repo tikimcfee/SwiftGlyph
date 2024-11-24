@@ -47,6 +47,10 @@ extension GlobalSearchViewState {
                     collectionMatched: &didMatch,
                     clearOnly: query.count == 0
                 )
+//                grid.rootNode.pausedInvalidate = true
+//                grid.rootNode.scale = didMatch ? LFloat3(5, 5, 1) : LFloat3(1, 1, 1)
+//                grid.rootNode.pausedInvalidate = false
+//                grid.rootNode.rebuildTreeState()
                 grid.applyFlag(.matchesSearch, didMatch)
                 
             } catch {

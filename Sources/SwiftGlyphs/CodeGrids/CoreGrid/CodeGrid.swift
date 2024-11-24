@@ -71,8 +71,8 @@ public class CodeGrid: Identifiable, Equatable {
     
     public func applyFlag(_ flag: ConstantsFlags, _ bit: Bool) {
         rootNode.rootConstants.setFlag(flag, bit)
-//        wallsBack.constants.setFlag(flag, bit)
-//        nameGrid?.rootNode.rootConstants.setFlag(flag, bit)
+        wallsBack.constants.setFlag(flag, bit)
+        nameGrid?.rootNode.rootConstants.setFlag(flag, bit)
     }
     
     public func derez_global() {
@@ -189,6 +189,18 @@ public class CodeGrid: Identifiable, Equatable {
             .setLeading(rootSize.leading)
             .setTop(rootSize.top)
             .setFront(back - 0.39269)
+        
+        wallsBack.quad.topLeft.position.x  += rootSize.width / 2
+        wallsBack.quad.topLeft.position.y  -= rootSize.height / 2
+        
+        wallsBack.quad.topRight.position.x += rootSize.width / 2
+        wallsBack.quad.topRight.position.y -= rootSize.height / 2
+        
+        wallsBack.quad.bottomLeft.position.x  += rootSize.width / 2
+        wallsBack.quad.bottomLeft.position.y  -= rootSize.height / 2
+        
+        wallsBack.quad.bottomRight.position.x  += rootSize.width / 2
+        wallsBack.quad.bottomRight.position.y  -= rootSize.height / 2
     }
     
     @discardableResult
