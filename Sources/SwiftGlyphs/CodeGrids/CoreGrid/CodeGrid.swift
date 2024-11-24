@@ -71,8 +71,8 @@ public class CodeGrid: Identifiable, Equatable {
     
     public func applyFlag(_ flag: ConstantsFlags, _ bit: Bool) {
         rootNode.rootConstants.setFlag(flag, bit)
-        wallsBack.constants.setFlag(flag, bit)
-        nameGrid?.rootNode.rootConstants.setFlag(flag, bit)
+//        wallsBack.constants.setFlag(flag, bit)
+//        nameGrid?.rootNode.rootConstants.setFlag(flag, bit)
     }
     
     public func derez_global() {
@@ -114,7 +114,6 @@ public class CodeGrid: Identifiable, Equatable {
         guard let sourcePath else { return self }
         
         let isDirectory = sourcePath.isDirectory
-        
         let newNameGrid = GlobalInstances.gridStore.builder.createGrid()
         let (_, nodes) = newNameGrid.consume(text: fileName)
         newNameGrid.removeBackground()
@@ -131,16 +130,12 @@ public class CodeGrid: Identifiable, Equatable {
             ? LFloat3(0.0, 16.0, 0.0)
             : LFloat3(0.0, 4.0, 0.0)
         
-        WordNode.layoutWord(
-            glyphs: nodes,
-            scale: LFloat3(repeating: nameScale),
-            offset: .zero,
-            each: {
-                nameColor.setAddedColor(on: &$0.instanceConstants)
-            }
-        )
+        newNameGrid.rootNode.scale = LFloat3(repeating: nameScale)
+        for node in nodes {
+            nameColor.setAddedColor(on: &node.instanceConstants)
+        }
         
-        self.nameGrid = newNameGrid
+        nameGrid = newNameGrid
         addChildGrid(newNameGrid)
         newNameGrid.position = namePosition
         
@@ -185,11 +180,14 @@ public class CodeGrid: Identifiable, Equatable {
     
     public func updateBackground() {
         let rootSize = rootNode.bounds
-        wallsBack.size = LFloat2(x: rootSize.width, y: rootSize.height)
+        wallsBack.size = LFloat2(
+            x: rootSize.width,
+            y: rootSize.height
+        )
         
         wallsBack
-            .setLeading(rootSize.leading / 2)
-            .setTop(rootSize.top / 2)
+            .setLeading(rootSize.leading)
+            .setTop(rootSize.top)
             .setFront(back - 0.39269)
     }
     
