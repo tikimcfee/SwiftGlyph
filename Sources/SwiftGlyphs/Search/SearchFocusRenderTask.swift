@@ -74,7 +74,7 @@ private extension SearchFocusRenderTask {
             workGroup.enter()
             WorkerPool.shared.nextWorker().async {
                 defer { workGroup.leave() }
-                next.gridBackground.setColor(LFloat4(0.0, 0.0, 0.0, 1.0))
+                next.wallsBack.setColor(LFloat4(0.0, 0.0, 0.0, 1.0))
                 next.rootNode.scale = LFloat3(1, 1, 1)
                 
                 next.updateAllNodeConstants { node, stopFlag in
@@ -191,7 +191,7 @@ private extension SearchFocusRenderTask {
     func defocusNodesForSemanticInfo(source: CodeGrid) throws {
         let clearFocus = newInput.isEmpty
         source.rootNode.scale = LFloat3(0.4, 0.4, 0.4)
-        source.gridBackground.setColor(LFloat4(0.2, 0.2, 0.2, 1))
+        source.wallsBack.setColor(LFloat4(0.2, 0.2, 0.2, 1))
         for rootNode in source.consumedRootSyntaxNodes {
             try source.semanticInfoMap.walkFlattened(
                 from: rootNode.id,

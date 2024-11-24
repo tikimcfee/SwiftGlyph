@@ -200,30 +200,36 @@ class CodeGridGroup {
     }
     
     func addLines(root: MetalLinkNode) {
+        let myPosition = worldPosition
+        
         for childGroup in childGroups {
+            let childPosition = childGroup.worldPosition
+            
             let line = MetalLinkLine(link)
             line.setColor(LFloat4(1.0, 0.0, 0.5, 1.0))
-            line.appendSegment(about: worldPosition.translated(dX: -8, dY: 8, dZ: 4))
-            line.appendSegment(about: LFloat3(childGroup.worldPosition.x,
-                                                         worldPosition.y + 8,
-                                                         worldPosition.z + 4))
-            line.appendSegment(about: childGroup.worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: childGroup.worldPosition.translated(dX: -2))
+            line.appendSegment(about: myPosition.translated(dX: -8, dY: 8, dZ: 4))
+            line.appendSegment(about: LFloat3(
+                childPosition.x,
+                myPosition.y + 8,
+                myPosition.z + 4
+            ))
+            line.appendSegment(about: childPosition.translated(dX: -4, dY: 4))
+            line.appendSegment(about: childPosition.translated(dX: -2))
             
             root.add(child: line)
             childGroup.addLines(root: root)
         }
         
-        for grid in childGrids {
-            let line = MetalLinkLine(link)
-            line.setColor(LFloat4(0.2, 0.2, 0.8, 1.0))
-            line.appendSegment(about: worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: grid.worldPosition.translated(dX: -4, dY: 4))
-            line.appendSegment(about: grid.worldPosition.translated(dX: -2))
-            
-            
-            root.add(child: line)
-        }
+//        for grid in childGrids {
+//            let line = MetalLinkLine(link)
+//            line.setColor(LFloat4(0.2, 0.2, 0.8, 1.0))
+//            line.appendSegment(about: worldPosition.translated(dX: -4, dY: 4))
+//            line.appendSegment(about: grid.worldPosition.translated(dX: -4, dY: 4))
+//            line.appendSegment(about: grid.worldPosition.translated(dX: -2))
+//            
+//            
+//            root.add(child: line)
+//        }
     }
     
     func addChildGrid(_ grid: CodeGrid) {        

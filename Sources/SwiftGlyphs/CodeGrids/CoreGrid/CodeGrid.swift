@@ -29,9 +29,9 @@ public class CodeGrid: Identifiable, Equatable {
     public private(set) var rootNode: GlyphCollection
     
     public private(set) var setName: Bool = false
+    public private(set) var nameGrid: CodeGrid?
     public let tokenCache: CodeGridTokenCache
-    public let gridBackground: BackgroundQuad
-    public var backgroundID: InstanceIDType { gridBackground.constants.pickingId }
+    public var backgroundID: InstanceIDType { wallsBack.constants.pickingId }
     public private(set) var childGrids: [CodeGrid] = []
 
     // Walls leaking into grids, 's'cool
@@ -50,7 +50,7 @@ public class CodeGrid: Identifiable, Equatable {
     func makeWall() -> BackgroundQuad {
         let wall = BackgroundQuad(rootNode.link)
         rootNode.add(child: wall)
-        wall.constants.pickingId = gridBackground.constants.pickingId
+        wall.constants.pickingId = rootNode.rootConstants.pickingId
         return wall
     }
     // ----------------------------------------------
@@ -61,9 +61,18 @@ public class CodeGrid: Identifiable, Equatable {
     ) {
         self.rootNode = rootNode
         self.tokenCache = tokenCache
-        self.gridBackground = BackgroundQuad(rootNode.link)
-        
         setupOnInit()
+    }
+    
+    private func setupOnInit() {
+        rootNode.add(child: wallsBack)
+        wallsBack.constants.pickingId = InstanceCounter.shared.nextGridId()
+    }
+    
+    public func applyFlag(_ flag: ConstantsFlags, _ bit: Bool) {
+        rootNode.rootConstants.setFlag(flag, bit)
+        wallsBack.constants.setFlag(flag, bit)
+        nameGrid?.rootNode.rootConstants.setFlag(flag, bit)
     }
     
     public func derez_global() {
@@ -101,13 +110,14 @@ public class CodeGrid: Identifiable, Equatable {
     @discardableResult
     public func applyName() -> CodeGrid {
 //        guard false else { return self }
-        guard !setName else { return self }
+        guard nameGrid == nil else { return self }
         guard let sourcePath else { return self }
+        
         let isDirectory = sourcePath.isDirectory
         
-        let nameGrid = GlobalInstances.gridStore.builder.createGrid()
-        let (_, nodes) = nameGrid.consume(text: fileName)
-        nameGrid.removeBackground()
+        let newNameGrid = GlobalInstances.gridStore.builder.createGrid()
+        let (_, nodes) = newNameGrid.consume(text: fileName)
+        newNameGrid.removeBackground()
         
         let nameColor = isDirectory
             ? LFloat4(0.33, 0.75, 0.45, 1.0)
@@ -129,8 +139,10 @@ public class CodeGrid: Identifiable, Equatable {
                 nameColor.setAddedColor(on: &$0.instanceConstants)
             }
         )
-        addChildGrid(nameGrid)
-        nameGrid.position = namePosition
+        
+        self.nameGrid = newNameGrid
+        addChildGrid(newNameGrid)
+        newNameGrid.position = namePosition
         
         return self
     }
@@ -167,17 +179,17 @@ public class CodeGrid: Identifiable, Equatable {
     
     @discardableResult
     public func removeBackground() -> CodeGrid {
-        gridBackground.removeFromParent()
+        wallsBack.removeFromParent()
         return self
     }
     
     public func updateBackground() {
-        let size = rootNode.bounds
-        gridBackground.size = LFloat2(x: size.width, y: size.height)
+        let rootSize = rootNode.bounds
+        wallsBack.size = LFloat2(x: rootSize.width, y: rootSize.height)
         
-        gridBackground
-            .setLeading(size.leading)
-            .setTop(size.top)
+        wallsBack
+            .setLeading(rootSize.leading / 2)
+            .setTop(rootSize.top / 2)
             .setFront(back - 0.39269)
     }
     
@@ -201,11 +213,6 @@ public class CodeGrid: Identifiable, Equatable {
     public func removeChildGrid(_ other: CodeGrid) {
         childGrids.removeAll(where: { $0.id == other.id })
         rootNode.remove(child: other.rootNode)
-    }
-        
-    private func setupOnInit() {
-        rootNode.add(child: gridBackground)
-        gridBackground.constants.pickingId = InstanceCounter.shared.nextGridId()
     }
     
     public static func == (_ left: CodeGrid, _ right: CodeGrid) -> Bool {

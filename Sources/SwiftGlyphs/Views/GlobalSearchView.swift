@@ -18,7 +18,8 @@ class GlobalSearchViewState: ObservableObject {
     var bag = Set<AnyCancellable>()
     
     init() {
-        $filterText.removeDuplicates()
+        $filterText
+            .removeDuplicates()
             .receive(on: DispatchQueue.global())
             .sink { streamInput in
                 self.startSearch(for: streamInput)
@@ -26,21 +27,45 @@ class GlobalSearchViewState: ObservableObject {
     }
 }
 
+import BitHandling
+
 extension GlobalSearchViewState {
     func startSearch(for input: String) {
-        GlobalInstances.gridStore.searchContainer.search(input) { task in
-            print("Filter completion reported: \(input)")
-            
-            DispatchQueue.main.async {
-                self.foundGrids = task.searchLayout.values
-                self.missedGrids = task.missedGrids.values
+        let compute = GlobalInstances.gridStore.sharedConvert
+        let grids = GlobalInstances.gridStore.gridCache.cachedGrids.values
+        let query = input.map { $0.glyphComputeHash }
+        
+        DispatchQueue.concurrentPerform(iterations: grids.count) { index in
+            do {
+                let grid = grids[index]
+                if grid.sourcePath?.isDirectory == true { return }
+                
+                var didMatch = false
+                try compute.searchGlyphs_Conc(
+                    in: grid.rootNode,
+                    with: query,
+                    collectionMatched: &didMatch,
+                    clearOnly: query.count == 0
+                )
+                grid.applyFlag(.matchesSearch, didMatch)
+                
+            } catch {
+                print(error)
             }
-            
-//            GlobalInstances.gridStore.editor.applyAllUpdates(
-//                sizeSortedAdditions: task.searchLayout.values,
-//                sizeSortedMissing: task.missedGrids.values
-//            )
         }
+//        GlobalInstances.gridStore.searchContainer.search(input) { task in
+//            print("Filter completion reported: \(input)")
+//            
+//            DispatchQueue.main.async {
+//                self.foundGrids = task.searchLayout.values
+//                self.missedGrids = task.missedGrids.values
+//            }
+//            
+////            GlobalInstances.gridStore.editor.applyAllUpdates(
+////                sizeSortedAdditions: task.searchLayout.values,
+////                sizeSortedMissing: task.missedGrids.values
+////            )
+//        }
     }
 }
 

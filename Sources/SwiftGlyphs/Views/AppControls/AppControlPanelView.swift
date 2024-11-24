@@ -63,11 +63,7 @@ extension AppControlPanelView {
 //            )
             
         case .globalSearch:
-            Text("""
-            Coming soon here:
-            - Global fuzzy text search with visual highlighting.
-            """)
-//            GlobalSearchView()
+            GlobalSearchView()
             
         case .editor:
             TextViewWrapper()

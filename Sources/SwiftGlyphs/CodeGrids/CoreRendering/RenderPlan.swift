@@ -148,8 +148,6 @@ private extension RenderPlan {
         }
         rootGroup.applyAllConstraints(myDepth: 0)
         
-        
-        
         rootGroup.addLines(root: rootGroup.asNode)
         rootGroup.addAllWalls()
         
@@ -437,7 +435,6 @@ private extension RenderPlan {
                 .withSourcePath(directoryURL)
                 .withFileName(directoryURL.fileName)
                 .applyName()
-                .removeBackground()
             
             let group = CodeGridGroup(globalRootGrid: grid)
             state.directoryGroups[directoryURL] = group
