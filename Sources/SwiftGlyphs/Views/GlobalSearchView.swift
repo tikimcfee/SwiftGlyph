@@ -11,6 +11,7 @@ import MetalLink
 
 class GlobalSearchViewState: ObservableObject {
     @Published var filterText = ""
+    @Published var caseInsensitive: Bool = true
     
     @Published var foundGrids = [CodeGrid]()
     @Published var missedGrids = [CodeGrid]()
@@ -20,9 +21,13 @@ class GlobalSearchViewState: ObservableObject {
     init() {
         $filterText
             .removeDuplicates()
+            .combineLatest($caseInsensitive)
             .receive(on: DispatchQueue.global())
-            .sink { streamInput in
-                self.startSearch(for: streamInput)
+            .sink { streamInput, caseInsensitive in
+                self.startSearch(
+                    for: streamInput,
+                    caseInsensitive: caseInsensitive
+                )
             }.store(in: &bag)
     }
 }
@@ -30,10 +35,27 @@ class GlobalSearchViewState: ObservableObject {
 import BitHandling
 
 extension GlobalSearchViewState {
-    func startSearch(for input: String) {
+    func startSearch(
+        for input: String,
+        caseInsensitive: Bool
+    ) {
         let compute = GlobalInstances.gridStore.sharedConvert
         let grids = GlobalInstances.gridStore.gridCache.cachedGrids.values
-        let query = input.map { $0.glyphComputeHash }
+        
+        var rawQuery: [CharacterHashType] {
+            input.map { $0.glyphComputeHash }
+        }
+        var upperCaseQuery: [CharacterHashType] {
+            input.flatMap { $0.uppercased() }.map { $0.glyphComputeHash }
+        }
+        var lowerCaseQuery: [CharacterHashType] {
+            input.flatMap { $0.lowercased() }.map { $0.glyphComputeHash }
+        }
+        var computedMode: QueryMode {
+            caseInsensitive
+            ? .caseInsensitive(upper: upperCaseQuery, lower: lowerCaseQuery)
+            : .exact(raw: rawQuery)
+        }
         
         DispatchQueue.concurrentPerform(iterations: grids.count) { index in
             do {
@@ -43,14 +65,10 @@ extension GlobalSearchViewState {
                 var didMatch = false
                 try compute.searchGlyphs_Conc(
                     in: grid.rootNode,
-                    with: query,
+                    mode: computedMode,
                     collectionMatched: &didMatch,
-                    clearOnly: query.count == 0
+                    clearOnly: input.count == 0
                 )
-//                grid.rootNode.pausedInvalidate = true
-//                grid.rootNode.scale = didMatch ? LFloat3(5, 5, 1) : LFloat3(1, 1, 1)
-//                grid.rootNode.pausedInvalidate = false
-//                grid.rootNode.rebuildTreeState()
                 grid.applyFlag(.matchesSearch, didMatch)
                 
             } catch {
@@ -136,12 +154,18 @@ struct GlobalSearchView: View {
     }
     
     var searchInput: some View {
-        TextField(
-            "Search",
-            text: $searchState.filterText
-        )
-        .padding()
-        .frame(minWidth: 256.0, idealWidth: 256.0, maxWidth: 512.00)
+        HStack {
+            TextField(
+                "Search",
+                text: $searchState.filterText
+            )
+            .padding()
+            .frame(minWidth: 256.0, idealWidth: 256.0, maxWidth: 512.00)
+            
+            Toggle(isOn: $searchState.caseInsensitive) {
+                Text("Ignore case")
+            }
+        }
     }
 }
 
