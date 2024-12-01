@@ -89,7 +89,7 @@ extension AppControlPanelView {
 //            SyntaxHierarchyView()
             
         case .tracingInfo:
-            Text("Trace highlighting coming soon!")
+            Text("Trace highlighting coming soon")
             
         case .githubTools:
             GitHubClientView()
@@ -103,10 +103,7 @@ extension AppControlPanelView {
             MenuActions()
             
         case .bookmarks:
-            Text("""
-            Coming soon here:
-            - Quick jumps and shortcuts between open files and folders.
-            """)
+            WorldFocusView(focus: GlobalInstances.gridStore.worldFocusController)
             
         case .unregistered:
             Text("""
