@@ -44,20 +44,11 @@ public class OmnibarManager: ObservableObject {
 
 extension OmnibarManager {
     func lookup(_ input: String) -> [OmniAction] {
-        GlobalInstances
-            .searchState
-            .startSearch(for: input, caseInsensitive: true)
+//        GlobalInstances
+//            .searchState
+//            .startSearch(for: input, caseInsensitive: true)
         
-        switch stateSubject.value {
-        case .visible(.actions):
-            return showActions(input: input)
-            
-        case .visible(.open):
-            return showOpenList(queryText: input)
-            
-        case .inactive:
-            return []
-        }
+        return allActions(queryText: input)
     }
     
     func showOpenList(queryText: String) -> [OmniAction] {
@@ -76,64 +67,72 @@ extension OmnibarManager {
                         GlobalInstances.gridStore.editor.transformedByAdding(
                             .inNextRow(plan.rootGroup.globalRootGrid)
                         )
+                        
                         GlobalInstances.swiftGlyphRoot.root.add(
                             child: plan.targetParent
                         )
+                        
+                        plan.rootGroup
+                            .globalRootGrid
+                            .displayFocused(GlobalInstances.debugCamera)
                     }
                 }
             )
         }
     }
     
-    func showActions(input: String) -> [OmniAction] {
-        let components = input.components(separatedBy: .whitespaces)
-        guard components.count > 1 else {
-            return search(input)
-        }
-        
-        let actionTriggerText = components[0]
-        let queryText = components[1]
-        
-        switch actionTriggerText {
-        case OmniActionTrigger.gridClose.rawValue:
-            return renderedGridsMatching(queryText).map { foundGrid in
-                .init(
+    func allActions(queryText: String) -> [OmniAction] {
+        let gridActions = renderedGridsMatching(queryText).flatMap { foundGrid in
+            [
+                OmniAction(
                     trigger: .gridJump,
+                    sourceQuery: queryText,
+                    actionDisplay: "Jump to '\(foundGrid.fileName)'",
+                    perform: {
+                        foundGrid.displayFocused(GlobalInstances.debugCamera)
+                    }
+                ),
+                OmniAction(
+                    trigger: .gridClose,
                     sourceQuery: queryText,
                     actionDisplay: "Derez '\(foundGrid.fileName)'",
                     perform: { [weak foundGrid] in
                         foundGrid?.derez_global()
                     }
                 )
-            }
-            
-        case OmniActionTrigger.gridOpen.rawValue:
-            return scopesMatching(queryText).map { scope in
-                .init(
-                    trigger: .gridJump,
-                    sourceQuery: queryText,
-                    actionDisplay: "Open '\(scope.path.lastPathComponent)'",
-                    perform: {
-                        RenderPlan(
-                            mode: .cacheAndLayoutStream,
-                            rootPath: scope.path,
-                            editor: GlobalInstances.gridStore.editor,
-                            focus: GlobalInstances.gridStore.worldFocusController
-                        ).startRender { plan in
-                            GlobalInstances.gridStore.editor.transformedByAdding(
-                                .inNextRow(plan.rootGroup.globalRootGrid)
-                            )
-                            GlobalInstances.swiftGlyphRoot.root.add(
-                                child: plan.targetParent
-                            )
-                        }
-                    }
-                )
-            }
-            
-        default:
-            return []
+            ]
         }
+        
+        let scopeActions = scopesMatching(queryText).map { scope in
+            OmniAction(
+                trigger: .gridJump,
+                sourceQuery: queryText,
+                actionDisplay: "Open '\(scope.path.lastPathComponent)'",
+                perform: {
+                    RenderPlan(
+                        mode: .cacheAndLayoutStream,
+                        rootPath: scope.path,
+                        editor: GlobalInstances.gridStore.editor,
+                        focus: GlobalInstances.gridStore.worldFocusController
+                    ).startRender { plan in
+                        GlobalInstances.gridStore.editor.transformedByAdding(
+                            .inNextRow(plan.rootGroup.globalRootGrid)
+                        )
+                        
+                        GlobalInstances.swiftGlyphRoot.root.add(
+                            child: plan.targetParent
+                        )
+                        
+                        plan.rootGroup
+                            .globalRootGrid
+                            .displayFocused(GlobalInstances.debugCamera)
+                    }
+                }
+            )
+        }
+        
+        return gridActions
+            + scopeActions
     }
     
     func scopesMatching(_ input: String) -> [FileBrowser.Scope] {
@@ -144,7 +143,8 @@ extension OmnibarManager {
     
     func renderedGridsMatching(_ input: String) -> [CodeGrid] {
         GlobalInstances.gridStore.gridCache.cachedGrids.values.filter {
-            $0.fileName.fuzzyMatch(input)
+            print($0.fileName, "fuzzy match (\(input))->", $0.fileName.fuzzyMatch(input))
+            return $0.fileName.fuzzyMatch(input)
         }
     }
     

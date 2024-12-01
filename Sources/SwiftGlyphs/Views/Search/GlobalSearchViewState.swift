@@ -57,6 +57,10 @@ extension GlobalSearchViewState {
             : .exact(raw: rawQuery)
         }
         
+        let resultLock = LockWrapper()
+        var matches: [CodeGrid] = []
+        var misses: [CodeGrid] = []
+        
         DispatchQueue.concurrentPerform(iterations: grids.count) { index in
             do {
                 let grid = grids[index]
@@ -69,11 +73,26 @@ extension GlobalSearchViewState {
                     collectionMatched: &didMatch,
                     clearOnly: input.count == 0
                 )
-                grid.applyFlag(.matchesSearch, didMatch)
+//                grid.applyFlag(.matchesSearch, didMatch)
+                
+                if didMatch {
+                    resultLock.writeLock()
+                    matches.append(grid)
+                    resultLock.unlock()
+                } else {
+                    resultLock.writeLock()
+                    misses.append(grid)
+                    resultLock.unlock()
+                }
                 
             } catch {
                 print(error)
             }
+        }
+        
+        DispatchQueue.main.async {
+            self.foundGrids = matches
+            self.missedGrids = misses
         }
     }
 }

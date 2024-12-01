@@ -23,7 +23,7 @@ public extension CodeGrid {
 //        bounds.min.y -= 8
 //        bounds.max.y += 16
         bounds.min.z -= 8
-        bounds.max.z += 64
+        bounds.max.z += 196
         
 //        let position = bounds.center
         camera.interceptor.resetPositions()
