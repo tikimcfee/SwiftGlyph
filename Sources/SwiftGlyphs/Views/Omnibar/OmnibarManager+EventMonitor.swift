@@ -33,7 +33,7 @@ extension OmnibarManager {
     
     private func onEvent(_ event: NSEvent) -> NSEvent? {
         if event.keyCode == 53 {
-            self.state = .inactive
+            stateSubject.send(.inactive)
             return nil
         }
             
@@ -41,12 +41,12 @@ extension OmnibarManager {
         case .some("o") where
             event.modifierFlags.contains(.command) &&
             event.modifierFlags.contains(.shift):
-            self.state = .visible(.open)
+            stateSubject.send(.visible(.open))
             return nil
         case .some("a") where
             event.modifierFlags.contains(.command) &&
             event.modifierFlags.contains(.shift):
-            self.state = .visible(.actions)
+            stateSubject.send(.visible(.actions))
             return nil
         default:
             return event

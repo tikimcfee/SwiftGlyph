@@ -14,9 +14,10 @@ import MetalLink
 
 #if os(macOS)
 import AppKit
+import SwiftUI
 
 public class OmnibarManager: ObservableObject {
-    @Published public var state = OmnibarState.inactive
+    let stateSubject = CurrentValueSubject<OmnibarState, Never>(.inactive)
     
     public lazy var eventMonitor = makeEventMonitor()
     
@@ -30,7 +31,7 @@ public class OmnibarManager: ObservableObject {
     
     public func dismissOmnibar() {
         DispatchQueue.main.async {
-            self.state = .inactive
+            self.stateSubject.send(.inactive)
         }
     }
     
@@ -39,18 +40,15 @@ public class OmnibarManager: ObservableObject {
             $0.makeKeyAndOrderFront(nil)
         }
     }
-    
-    public var isOmnibarVisible: Bool {
-        switch state {
-        case .visible: return true
-        case .inactive: return false
-        }
-    }
 }
 
 extension OmnibarManager {
     func lookup(_ input: String) -> [OmniAction] {
-        switch self.state {
+        GlobalInstances
+            .searchState
+            .startSearch(for: input, caseInsensitive: true)
+        
+        switch stateSubject.value {
         case .visible(.actions):
             return showActions(input: input)
             

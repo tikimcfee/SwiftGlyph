@@ -41,7 +41,7 @@ public enum OmnibarInvoke {
     case actions
 }
 
-public enum OmnibarState {
+public enum OmnibarState: Equatable {
     case visible(OmnibarInvoke)
     case inactive
 }

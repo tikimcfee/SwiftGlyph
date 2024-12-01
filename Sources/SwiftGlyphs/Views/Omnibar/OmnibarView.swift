@@ -24,34 +24,46 @@ struct OmnibarView: View {
     @FocusState private var focus: Focus?
     
     @State private var searchText = ""
-    @State private var results: [OmniAction] = []
+    @State private var results: [OmniAction]
     @State private var selection: OmniAction?
+    
+    public init(
+        results: [OmniAction] = []
+    ) {
+        self.results = results
+    }
     
     var body: some View {
         VStack {
-            TextField("Search...", text: $searchText)
+            TextField("Quick Search and Actions", text: $searchText)
                 .focused($focus, equals: .input)
                 .onKeyPress(.downArrow) {
                     focus = .list
                     selection = results.first
                     return .handled
                 }
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .textFieldStyle(.plain)
                 .padding()
             
-            List(results, id: \.self, selection: $selection) { result in
-                Text(result.actionDisplay)
-            }
-            .frame(maxHeight: 400)
-            .focused($focus, equals: .list)
-            .onKeyPress(.return) {
-                guard let selection else { return .ignored }
-                selection.perform()
-                omniBarManager.dismissOmnibar()
-                return .handled
+            if !results.isEmpty {
+                List(results, id: \.self, selection: $selection) { result in
+                    Text(result.actionDisplay)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .listRowSeparator(.hidden)
+                }
+                .focused($focus, equals: .list)
+                .onKeyPress(.return) {
+                    guard let selection else { return .ignored }
+                    selection.perform()
+                    omniBarManager.dismissOmnibar()
+                    return .handled
+                }
             }
         }
-        .frame(maxWidth: 600, maxHeight: 400)
+        .padding(2)
+        .background(Color.secondaryBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .frame(maxWidth: 600, maxHeight: 800)
         .onAppear {
             focus = .input
             omniBarManager.focusOmnibar()
@@ -68,4 +80,38 @@ struct OmnibarView: View {
         omniBarManager.lookup(query)
     }
 }
+
+var action: OmniAction {
+    OmniAction(
+        trigger: .gridJump,
+        sourceQuery: "query",
+        actionDisplay: "\(String("23dasdasdq3e2".randomSample(count: 5)))",
+        perform: {
+    
+        }
+    )
+}
+
+#Preview {
+    OmnibarView(
+        results: [
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+            action,
+        ]
+    )
+}
+
 #endif

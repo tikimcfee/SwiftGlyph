@@ -12,9 +12,6 @@ import STTextViewSwiftUI
 public let IsPreview = ProcessInfo.processInfo.environment["IS_PREVIEW"] == "1"
 
 public struct SwiftGlyphDemoView : View {
-    @State var inputState = FloatableViewMode.displayedAsWindow
-    @ObservedObject var bar = GlobalInstances.omnibarManager
-    
     public init() {
         
     }
@@ -34,30 +31,9 @@ public struct SwiftGlyphDemoView : View {
             SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
             
             FloatingControlsCombo(sections: PanelSections.usableWindows)
-            
-            omnibar
         }
         #if os(iOS)
         .ignoresSafeArea()
-        #endif
-    }
-    
-    @ViewBuilder
-    var omnibar: some View {
-        #if os(macOS)
-        FloatableView(
-            displayMode: .init(
-                get: { GlobalInstances.omnibarManager.isOmnibarVisible ? .displayedAsWindow : .hidden },
-                set: { _ in }
-            ),
-            windowKey: .omnibar,
-            resizableAsSibling: false,
-            innerViewBuilder: {
-                OmnibarView()
-            }
-        )
-        #else
-        EmptyView()
         #endif
     }
     

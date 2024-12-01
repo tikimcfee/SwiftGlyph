@@ -86,7 +86,7 @@ public class FloatableWindow: NSWindow {
         if case .omnibar = key {
             updatedStyle.remove([
 //                .titled,
-//                .resizable,
+                .resizable,
                 .closable,
                 .miniaturizable,
             ])
@@ -104,9 +104,14 @@ public class FloatableWindow: NSWindow {
         )
         
         if case .omnibar = key {
-            title = "Quickbar"
+//            title = "Quickbar"
+            titlebarAppearsTransparent = true
             level = .floating
+            level = .modalPanel
             becomeFirstResponder()
+            
+            isOpaque = false
+            backgroundColor = .clear
         } else {
             setFrameAutosaveName(key.title)
             title = key.title

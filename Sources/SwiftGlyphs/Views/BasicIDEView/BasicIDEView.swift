@@ -19,7 +19,10 @@ struct BasicIDEView: View {
     
     @State var offsetYBrowser = 0.0
     @State var offsetYWindows = 0.0
-    @State var showingInstructions = true
+    @State var showingInstructions = false
+    
+    @ObservedObject var bar = GlobalInstances.omnibarManager
+    @State var barMode = FloatableViewMode.hidden
     
     var body: some View {
         ZStack {
@@ -45,6 +48,14 @@ struct BasicIDEView: View {
                 showWindowing: false,
                 sections: PanelSections.usableWindows
             )
+            
+            omnibar
+        }
+        .onReceive(bar.stateSubject) { state in
+            barMode = switch state {
+            case .inactive: .hidden
+            case .visible: .displayedAsWindow
+            }
         }
         .sheet(isPresented: $showingInstructions) {
             InstructionsView()
@@ -57,9 +68,32 @@ struct BasicIDEView: View {
                     }
                 }
             }
+            
+            ToolbarItem(placement: .navigation) {
+                SGButton("", "questionmark.circle", .toolbar) {
+                    withAnimation(.linear(duration: 0.150)) {
+                        showingInstructions.toggle()
+                    }
+                }
+            }
         }
     }
     
+    @ViewBuilder
+    var omnibar: some View {
+        #if os(macOS)
+        FloatableView(
+            displayMode: $barMode,
+            windowKey: .omnibar,
+            resizableAsSibling: false,
+            innerViewBuilder: {
+                OmnibarView()
+            }
+        )
+        #else
+        EmptyView()
+        #endif
+    }
 }
 
 extension BasicIDEView {
