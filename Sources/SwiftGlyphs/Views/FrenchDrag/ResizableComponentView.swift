@@ -42,56 +42,44 @@ public struct ResizableComponentView<Content: View>: View {
     }
     
     public var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                dragBar
-                    .frame(maxWidth: .infinity, maxHeight: 24)
-                    .overlay() {
-                        ZStack(alignment: .center) {
-                            HStack {
-                                dragBarOverlay
-                                Spacer()
-                            }
-                            
-                            Text(windowKey.rawValue)
-                        }
-                        .gesture(dragGesture)
-                        .onTapGesture(count: 2, perform: {
-                            isResizing.toggle()
-                        })
-                    }
-                    .gesture(dragGesture)
-                    .onTapGesture(count: 2, perform: {
-                        isResizing.toggle()
-                    })
-
-                content()
+        GeometryReader { proxy in
+            ZStack {
+                dragBarContentStack(proxy)
+                resizingControlsOverlay(proxy)
             }
-            #if os(iOS)
-            .padding(30)
-            #endif
-            
-            ResizingControlsView(
-                isResizing: $isResizing
-            ) { point, deltaX, deltaY in
-                model.updateForResize(using: point, deltaX: deltaX, deltaY: deltaY)
-                onSave(model)
-            } dragEnded: {
-                model.resizeEnded()
-                onSave(model)
-            }
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(
+                width: model.widthForCardComponent(),
+                height: model.heightForCardComponent()
+            )
+            .position(
+                x: model.xPositionForCardComponent(),
+                y: model.yPositionForCardComponent()
+            )
         }
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .frame(
-            width: model.widthForCardComponent(),
-            height: model.heightForCardComponent()
-        )
-        .position(
-            x: model.xPositionForCardComponent(),
-            y: model.yPositionForCardComponent()
-        )
     }
     
+    @ViewBuilder
+    func resizingControlsOverlay(_ proxy: GeometryProxy) -> some View {
+        ResizingControlsView(
+            isResizing: $isResizing
+        ) { point, deltaX, deltaY in
+            model.updateForResize(using: point, deltaX: deltaX, deltaY: deltaY)
+            onSave(model)
+        } dragEnded: {
+            model.resizeEnded()
+            onSave(model)
+        }
+    }
+        
+    @ViewBuilder
+    func dragBarContentStack(_ proxy: GeometryProxy) -> some View {
+        VStack(spacing: 0) {
+            dragBarWithAttachedGestures(proxy)
+            content()
+        }
+    }
+        
     @ViewBuilder
     var dragBarOverlay: some View {
         #if os(macOS)
@@ -112,6 +100,29 @@ public struct ResizableComponentView<Content: View>: View {
         #endif
     }
     
+    func dragBarWithAttachedGestures(_ proxy: GeometryProxy) -> some View {
+        dragBar
+            .frame(maxWidth: .infinity, maxHeight: 24)
+            .overlay() {
+                ZStack(alignment: .center) {
+                    HStack {
+                        dragBarOverlay
+                        Spacer()
+                    }
+                    
+                    Text(windowKey.rawValue)
+                }
+                .gesture(dragGesture(proxy))
+                .onTapGesture(count: 2, perform: {
+                    isResizing.toggle()
+                })
+            }
+            .gesture(dragGesture(proxy))
+            .onTapGesture(count: 2, perform: {
+                isResizing.toggle()
+            })
+    }
+    
     var dragBar: some View {
         Color.gray
             .opacity(isHovered ? 0.5 : 0.4)
@@ -123,9 +134,17 @@ public struct ResizableComponentView<Content: View>: View {
             .contentShape(Rectangle())
     }
     
-    var dragGesture: some Gesture {
+    func dragGesture(_ proxy: GeometryProxy) -> some Gesture {
         DragGesture(coordinateSpace: .global)
             .onChanged { gesture in
+                print("drag:", gesture.location, "size:", proxy.size, proxy.safeAreaInsets)
+                if gesture.location.y <= (proxy.safeAreaInsets.top + 8) { return }
+                
+                let halfWidth = model.widthForCardComponent() / 4
+                if gesture.translation.width + model.xPositionForCardComponent() + halfWidth > proxy.size.width {
+                    return
+                }
+                
                 model.updateForDrag(
                     deltaX: gesture.translation.width,
                     deltaY: gesture.translation.height

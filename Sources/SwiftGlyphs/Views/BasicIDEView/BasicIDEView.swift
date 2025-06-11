@@ -85,7 +85,6 @@ struct BasicIDEView: View {
         FloatableView(
             displayMode: $barMode,
             windowKey: .omnibar,
-            resizableAsSibling: false,
             innerViewBuilder: {
                 OmnibarView()
             }

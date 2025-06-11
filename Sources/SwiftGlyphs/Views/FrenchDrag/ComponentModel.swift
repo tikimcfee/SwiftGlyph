@@ -144,14 +144,23 @@ public struct ComponentModel: Codable, Equatable {
         
         let clampedWidth = clamp(width, min: minWidth, max: .infinity)
         let clampedHeight = clamp(height, min: minHeight, max: .infinity)
+        let clampedX = clamp(x, min: 0, max: .infinity)
+        let clampedY = clamp(y, min: 0, max: .infinity)
+        
         componentInfo.size = CGSize(width: clampedWidth, height: clampedHeight)
-        componentInfo.origin = CGPoint(x: x, y: y)
+        componentInfo.origin = CGPoint(x: clampedX, y: clampedY)
     }
 
     mutating func dragEnded() {
         guard let dragOffset else { return }
-        componentInfo.origin.x += dragOffset.width
-        componentInfo.origin.y += dragOffset.height
+        let current = componentInfo.origin
+        
+        let clampedX = clamp(current.x + dragOffset.width, min: 0, max: .infinity)
+        let clampedY = clamp(current.y + dragOffset.height, min: 0, max: .infinity)
+        
+        componentInfo.origin.x = clampedX
+        componentInfo.origin.y = clampedY
+        
         self.dragOffset = nil
     }
 }

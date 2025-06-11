@@ -30,55 +30,20 @@ public enum FloatableViewMode: Codable, Identifiable, Equatable, CaseIterable {
 public struct FloatableView<Inner: View>: View {
     @Binding var displayMode: FloatableViewMode
     let windowKey: GlobalWindowKey
-    var resizableAsSibling: Bool = false
     let innerViewBuilder: () -> Inner
     
-    let initialSize: CGSize
-    @State var maxSiblingSize: CGSize
-    
     public init(
         displayMode: Binding<FloatableViewMode>,
         windowKey: GlobalWindowKey,
-        maxSiblingSize: CGSize,
-        resizableAsSibling: Bool,
         innerViewBuilder: @escaping () -> Inner
     ) {
         self._displayMode = displayMode
-        self._maxSiblingSize = State(wrappedValue: maxSiblingSize)
-        self.initialSize = maxSiblingSize
         self.windowKey = windowKey
-        self.resizableAsSibling = resizableAsSibling
-        self.innerViewBuilder = innerViewBuilder
-    }
-    
-    public init(
-        displayMode: Binding<FloatableViewMode>,
-        windowKey: GlobalWindowKey,
-        resizableAsSibling: Bool,
-        innerViewBuilder: @escaping () -> Inner
-    ) {
-        self._displayMode = displayMode
-        self._maxSiblingSize = State(initialValue: CGSize(width: -1, height: -1))
-        self.initialSize = CGSize(width: -1, height: -1)
-        self.windowKey = windowKey
-        self.resizableAsSibling = resizableAsSibling
         self.innerViewBuilder = innerViewBuilder
     }
     
     public var body: some View {
         makePlatformBody()
-            .onChange(of: displayMode, initial: true) {
-                maxSiblingSize = switch displayMode {
-                case .displayedAsWindow:
-                    .init(width: -1, height: -1)
-                case .displayedAsSibling, .hidden:
-                    initialSize
-                }
-            }
-            .frame(
-                maxWidth: maxSiblingSize.width > 0 ? maxSiblingSize.width : nil,
-                maxHeight: maxSiblingSize.height > 0 ? maxSiblingSize.height : nil
-            )
     }
 }
 

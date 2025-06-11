@@ -38,7 +38,6 @@ extension AppControlPanelView {
         FloatableView(
             displayMode: state.vendPanelBinding(panel),
             windowKey: panel,
-            resizableAsSibling: true,
             innerViewBuilder: {
                 panelView(for: panel)
             }

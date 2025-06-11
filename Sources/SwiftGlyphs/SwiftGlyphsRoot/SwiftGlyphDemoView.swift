@@ -27,14 +27,15 @@ public struct SwiftGlyphDemoView : View {
     private var floatingWindowRootView: some View {
         ZStack(alignment: .center) {
             previewSafeRenderView
+            #if os(iOS)
+            .ignoresSafeArea()
+            #endif
             
             SwiftGlyphHoverView(link: GlobalInstances.defaultLink)
             
             FloatingControlsCombo(sections: PanelSections.usableWindows)
         }
-        #if os(iOS)
-        .ignoresSafeArea()
-        #endif
+        
     }
     
     @ViewBuilder

@@ -121,9 +121,11 @@ extension SwiftGlyphRoot {
             GlobalInstances.rootCustomMTKView.isPaused = false
             GlobalInstances.defaultRenderer.paused = false
             
-//            QuickLooper(interval: .milliseconds(100)) { interval in
-//                plan.targetParent.position.translateBy(LFloat3(0, 0, -100 * sin(Float(interval.uptimeNanoseconds))))
-//                plan.targetParent.rotation.y += 0.1
+//            QuickLooper(interval: .milliseconds(16)) { interval in
+//                plan.targetParent.rotation.y = cos(Float(interval.rawValue) / 100_000_000) / 1.3
+//                plan.targetParent.rotation.x = cos(Float(interval.rawValue) / 50_000_000) / 1.3
+//                plan.targetParent.rotation.x += 0.0025
+//                plan.targetParent.rotation.z += 0.005
 //            }.runUntil { false }
         }
     }
