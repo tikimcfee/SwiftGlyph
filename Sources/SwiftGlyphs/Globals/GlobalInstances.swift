@@ -27,16 +27,44 @@ public class GlobalInstances {
     private init () { }
 }
 
+// MARK: - New Architecture (Phase 2 bridge -- coexists with legacy statics)
+// ______________________________________________________________
+public extension GlobalInstances {
+    /// Group transform manager for per-collection GPU transforms.
+    /// Created early so it can be injected into both the renderer and the registry.
+    static let groupTransformManager = GroupTransformManager(device: defaultLink.device)
+
+    /// Central registry of scene entries (grids, windows, etc.).
+    static let sceneRegistry = SceneRegistry(groupManager: groupTransformManager)
+
+    /// Container for core Metal primitives, replacing Metal-related statics over time.
+    static let metalContext = MetalContext(
+        link: defaultLink,
+        renderer: defaultRenderer,
+        atlas: defaultAtlas
+    )
+
+    /// Context object that command handlers receive.
+    static let commandContext = CommandContext(
+        registry: sceneRegistry,
+        groupTransforms: groupTransformManager,
+        metalContext: metalContext
+    )
+
+    /// Central command dispatch.
+    static let commandRouter = CommandRouter(context: commandContext)
+}
+
 // MARK: - App State
 // ______________________________________________________________
 public extension GlobalInstances {
     static let appStatus = AppStatus()
     static let swiftGlyphRoot = try! SwiftGlyphRoot(link: defaultLink)
     static let appPanelState = AppControlPanelState()
-    
+
     static let searchState = GlobalSearchViewState()
     static let omnibarManager = OmnibarManager()
-        
+
 }
 
 // MARK: - Files
@@ -93,7 +121,9 @@ public extension GlobalInstances {
     }
     
     private static func makeDefaultRenderer() -> MetalLinkRenderer {
-        return try! MetalLinkRenderer(link: defaultLink)
+        let renderer = try! MetalLinkRenderer(link: defaultLink)
+        renderer.groupTransformManager = groupTransformManager
+        return renderer
     }
     
     static func createDefaultMetalView() -> MetalView {

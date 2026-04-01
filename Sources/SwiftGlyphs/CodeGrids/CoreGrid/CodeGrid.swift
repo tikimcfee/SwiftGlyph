@@ -305,6 +305,42 @@ extension CodeGrid: MeasuresDelegating {
     public var delegateTarget: any Measures { rootNode }
 }
 
+// MARK: - SceneEntryContent conformance
+extension CodeGrid: SceneEntryContent {
+    /// Uses `fileName` when set, falling back to the grid's unique id.
+    public var name: String {
+        fileName.isEmpty ? id : fileName
+    }
+}
+
+// MARK: - Scene Registration
+extension CodeGrid {
+    /// Registers this grid with the given SceneRegistry, receiving a groupId
+    /// that is written to the rootNode's rootConstants for GPU-side group transforms.
+    ///
+    /// Safe to call multiple times -- subsequent calls are no-ops if already registered.
+    /// Returns the SceneEntry for further configuration.
+    @MainActor
+    @discardableResult
+    public func registerWithScene(_ registry: SceneRegistry) -> SceneEntry {
+        // Avoid double-registration
+        if let existing = registry.entries[id] {
+            return existing
+        }
+        let entry = registry.register(id: id, content: self)
+        rootNode.rootConstants.groupId = entry.groupId
+        return entry
+    }
+
+    /// Unregisters this grid from the SceneRegistry, recycling its groupId.
+    /// Resets rootConstants.groupId to 0 (identity / no group).
+    @MainActor
+    public func unregisterFromScene(_ registry: SceneRegistry) {
+        registry.unregister(id: id)
+        rootNode.rootConstants.groupId = 0
+    }
+}
+
 extension CodeGrid: CustomStringConvertible {
     public var description: String {
 """
