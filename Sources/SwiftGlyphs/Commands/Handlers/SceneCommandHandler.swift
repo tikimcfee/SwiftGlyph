@@ -19,21 +19,23 @@ public struct SceneListHandler: CommandHandler {
     public let name = "scene.list"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        let entries = context.registry.entries
-        let ids = entries.keys.sorted()
+        await MainActor.run {
+            let entries = context.registry.entries
+            let ids = entries.keys.sorted()
 
-        var payload: [String: String] = [
-            "count": "\(ids.count)",
-            "focused": context.registry.currentFocus ?? "none",
-        ]
+            var payload: [String: String] = [
+                "count": "\(ids.count)",
+                "focused": context.registry.currentFocus ?? "none",
+            ]
 
-        for id in ids {
-            if let entry = entries[id] {
-                payload[id] = entry.content.name
+            for id in ids {
+                if let entry = entries[id] {
+                    payload[id] = entry.content.name
+                }
             }
-        }
 
-        return .ok(message: "Scene has \(ids.count) entries", payload: payload)
+            return .ok(message: "Scene has \(ids.count) entries", payload: payload)
+        }
     }
 }
 
@@ -47,20 +49,22 @@ public struct SceneInfoHandler: CommandHandler {
     public let name = "scene.info"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        let entryCount = context.registry.entries.count
-        let neighborCount = context.registry.neighborGraph.count
-        let groupCount = context.groupTransforms.allocatedGroupCount
+        await MainActor.run {
+            let entryCount = context.registry.entries.count
+            let neighborCount = context.registry.neighborGraph.count
+            let groupCount = context.groupTransforms.allocatedGroupCount
 
-        return .ok(
-            message: "Scene info",
-            payload: [
-                "entryCount": "\(entryCount)",
-                "focusStackDepth": "\(context.registry.focusStack.count)",
-                "currentFocus": context.registry.currentFocus ?? "none",
-                "neighborGraphSize": "\(neighborCount)",
-                "allocatedGroups": "\(groupCount)",
-            ]
-        )
+            return .ok(
+                message: "Scene info",
+                payload: [
+                    "entryCount": "\(entryCount)",
+                    "focusStackDepth": "\(context.registry.focusStack.count)",
+                    "currentFocus": context.registry.currentFocus ?? "none",
+                    "neighborGraphSize": "\(neighborCount)",
+                    "allocatedGroups": "\(groupCount)",
+                ]
+            )
+        }
     }
 }
 
@@ -75,16 +79,18 @@ public struct SceneSnapshotHandler: CommandHandler {
     public let name = "scene.snapshot"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        var payload: [String: String] = [:]
+        await MainActor.run {
+            var payload: [String: String] = [:]
 
-        for (id, entry) in context.registry.entries {
-            let transform = context.groupTransforms.getTransform(entry.groupId)
-            let pos = transform.columns.3
-            payload[id] = "(\(pos.x), \(pos.y), \(pos.z))"
+            for (id, entry) in context.registry.entries {
+                let transform = context.groupTransforms.getTransform(entry.groupId)
+                let pos = transform.columns.3
+                payload[id] = "(\(pos.x), \(pos.y), \(pos.z))"
+            }
+
+            payload["count"] = "\(context.registry.entries.count)"
+            return .ok(message: "Scene snapshot captured", payload: payload)
         }
-
-        payload["count"] = "\(context.registry.entries.count)"
-        return .ok(message: "Scene snapshot captured", payload: payload)
     }
 }
 
@@ -100,16 +106,18 @@ public struct SceneClearHandler: CommandHandler {
     public let name = "scene.clear"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        let count = context.registry.entries.count
-        let ids = Array(context.registry.entries.keys)
+        await MainActor.run {
+            let count = context.registry.entries.count
+            let ids = Array(context.registry.entries.keys)
 
-        for id in ids {
-            context.registry.unregister(id: id)
+            for id in ids {
+                context.registry.unregister(id: id)
+            }
+
+            return .ok(
+                message: "Cleared \(count) entries from scene",
+                payload: ["removed": "\(count)"]
+            )
         }
-
-        return .ok(
-            message: "Cleared \(count) entries from scene",
-            payload: ["removed": "\(count)"]
-        )
     }
 }

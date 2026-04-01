@@ -20,17 +20,19 @@ public struct GridListHandler: CommandHandler {
     public let name = "grid.list"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        let entries = context.registry.entries
-        guard !entries.isEmpty else {
-            return .ok(message: "No grids registered", payload: ["count": "0"])
-        }
+        await MainActor.run {
+            let entries = context.registry.entries
+            guard !entries.isEmpty else {
+                return .ok(message: "No grids registered", payload: ["count": "0"])
+            }
 
-        var payload: [String: String] = ["count": "\(entries.count)"]
-        for (id, entry) in entries.sorted(by: { $0.key < $1.key }) {
-            let visibility = entry.isVisible ? "visible" : "hidden"
-            payload[id] = "\(entry.content.name) [\(visibility)] groupId=\(entry.groupId)"
+            var payload: [String: String] = ["count": "\(entries.count)"]
+            for (id, entry) in entries.sorted(by: { $0.key < $1.key }) {
+                let visibility = entry.isVisible ? "visible" : "hidden"
+                payload[id] = "\(entry.content.name) [\(visibility)] groupId=\(entry.groupId)"
+            }
+            return .ok(message: "\(entries.count) grid(s) registered", payload: payload)
         }
-        return .ok(message: "\(entries.count) grid(s) registered", payload: payload)
     }
 }
 
@@ -43,29 +45,31 @@ public struct GridInfoHandler: CommandHandler {
     public let name = "grid.info"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: grid.info <id>")
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: grid.info <id>")
+            }
+
+            guard let entry = context.registry.entries[id] else {
+                return .error("No entry found with id: \(id)")
+            }
+
+            let transform = context.groupTransforms.getTransform(entry.groupId)
+            let position = transform.columns.3
+
+            return .ok(
+                message: "Grid '\(id)': \(entry.content.name)",
+                payload: [
+                    "id": id,
+                    "name": entry.content.name,
+                    "groupId": "\(entry.groupId)",
+                    "visible": "\(entry.isVisible)",
+                    "x": "\(position.x)",
+                    "y": "\(position.y)",
+                    "z": "\(position.z)",
+                ]
+            )
         }
-
-        guard let entry = context.registry.entries[id] else {
-            return .error("No entry found with id: \(id)")
-        }
-
-        let transform = context.groupTransforms.getTransform(entry.groupId)
-        let position = transform.columns.3
-
-        return .ok(
-            message: "Grid '\(id)': \(entry.content.name)",
-            payload: [
-                "id": id,
-                "name": entry.content.name,
-                "groupId": "\(entry.groupId)",
-                "visible": "\(entry.isVisible)",
-                "x": "\(position.x)",
-                "y": "\(position.y)",
-                "z": "\(position.z)",
-            ]
-        )
     }
 }
 
@@ -82,25 +86,27 @@ public struct GridCreateHandler: CommandHandler {
     public let name = "grid.create"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: grid.create <id> [name]")
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: grid.create <id> [name]")
+            }
+
+            if context.registry.entries[id] != nil {
+                return .error("Entry already exists with id: \(id)")
+            }
+
+            let displayName = args.count >= 2 ? args[1] : id
+            let placeholder = PlaceholderContent(name: displayName)
+            let entry = context.registry.register(id: id, content: placeholder)
+
+            return .ok(
+                message: "Created grid '\(id)' with groupId \(entry.groupId)",
+                payload: [
+                    "id": id,
+                    "groupId": "\(entry.groupId)",
+                ]
+            )
         }
-
-        if context.registry.entries[id] != nil {
-            return .error("Entry already exists with id: \(id)")
-        }
-
-        let displayName = args.count >= 2 ? args[1] : id
-        let placeholder = PlaceholderContent(name: displayName)
-        let entry = context.registry.register(id: id, content: placeholder)
-
-        return .ok(
-            message: "Created grid '\(id)' with groupId \(entry.groupId)",
-            payload: [
-                "id": id,
-                "groupId": "\(entry.groupId)",
-            ]
-        )
     }
 }
 
@@ -122,16 +128,18 @@ public struct GridMoveHandler: CommandHandler {
         }
 
         let id = args[0]
-        guard let entry = context.registry.entries[id] else {
-            return .error("No entry found with id: \(id)")
+        return await MainActor.run {
+            guard let entry = context.registry.entries[id] else {
+                return .error("No entry found with id: \(id)")
+            }
+
+            context.groupTransforms.setOffset(entry.groupId, SIMD3<Float>(x, y, z))
+
+            return .ok(
+                message: "Moved '\(id)' to (\(x), \(y), \(z))",
+                payload: ["id": id, "x": "\(x)", "y": "\(y)", "z": "\(z)"]
+            )
         }
-
-        context.groupTransforms.setOffset(entry.groupId, SIMD3<Float>(x, y, z))
-
-        return .ok(
-            message: "Moved '\(id)' to (\(x), \(y), \(z))",
-            payload: ["id": id, "x": "\(x)", "y": "\(y)", "z": "\(z)"]
-        )
     }
 }
 
@@ -147,16 +155,18 @@ public struct GridHideHandler: CommandHandler {
     public let name = "grid.hide"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: grid.hide <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: grid.hide <id>")
+            }
 
-        guard let entry = context.registry.entries[id] else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard let entry = context.registry.entries[id] else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        entry.isVisible = false
-        return .ok(message: "Grid '\(id)' hidden")
+            entry.isVisible = false
+            return .ok(message: "Grid '\(id)' hidden")
+        }
     }
 }
 
@@ -169,16 +179,18 @@ public struct GridShowHandler: CommandHandler {
     public let name = "grid.show"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: grid.show <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: grid.show <id>")
+            }
 
-        guard let entry = context.registry.entries[id] else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard let entry = context.registry.entries[id] else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        entry.isVisible = true
-        return .ok(message: "Grid '\(id)' shown")
+            entry.isVisible = true
+            return .ok(message: "Grid '\(id)' shown")
+        }
     }
 }
 
@@ -193,16 +205,18 @@ public struct GridRemoveHandler: CommandHandler {
     public let name = "grid.remove"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: grid.remove <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: grid.remove <id>")
+            }
 
-        guard context.registry.entries[id] != nil else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard context.registry.entries[id] != nil else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        context.registry.unregister(id: id)
-        return .ok(message: "Grid '\(id)' removed")
+            context.registry.unregister(id: id)
+            return .ok(message: "Grid '\(id)' removed")
+        }
     }
 }
 

@@ -69,7 +69,8 @@ public final class MultipeerCommandBridge {
     private var processedCounts: [String: Int] = [:]
 
     private func processMessages(_ allMessages: MessageHistory) {
-        for (peer, messages) in allMessages {
+        let snapshot = allMessages.directCopy()
+        for (peer, messages) in snapshot {
             let peerKey = peer.displayName
             let alreadyProcessed = processedCounts[peerKey] ?? 0
 
@@ -79,7 +80,7 @@ public final class MultipeerCommandBridge {
             processedCounts[peerKey] = messages.count
 
             for message in newMessages {
-                let commandText = message.trimmingCharacters(in: .whitespacesAndNewlines)
+                let commandText = message.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                 guard !commandText.isEmpty else { continue }
 
                 Task { @MainActor [router] in

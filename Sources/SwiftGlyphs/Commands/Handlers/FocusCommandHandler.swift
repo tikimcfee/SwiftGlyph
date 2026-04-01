@@ -18,19 +18,21 @@ public struct FocusSetHandler: CommandHandler {
     public let name = "focus.set"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: focus.set <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: focus.set <id>")
+            }
 
-        guard context.registry.entries[id] != nil else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard context.registry.entries[id] != nil else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        context.registry.pushFocus(id)
-        return .ok(
-            message: "Focus set to '\(id)'",
-            payload: ["focused": id]
-        )
+            context.registry.pushFocus(id)
+            return .ok(
+                message: "Focus set to '\(id)'",
+                payload: ["focused": id]
+            )
+        }
     }
 }
 
@@ -46,32 +48,35 @@ public struct FocusNextHandler: CommandHandler {
     public let name = "focus.next"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        let sortedIds = context.registry.entries.keys.sorted()
-        guard !sortedIds.isEmpty else {
-            return .error("No entries to focus")
+        await MainActor.run {
+            let sortedIds = context.registry.entries.keys.sorted()
+            guard !sortedIds.isEmpty else {
+                return .error("No entries to focus")
+            }
+
+            let currentId = context.registry.currentFocus
+            let nextId: String
+
+            if let current = currentId, let index = sortedIds.firstIndex(of: current) {
+                let nextIndex = (index + 1) % sortedIds.count
+                nextId = sortedIds[nextIndex]
+            } else {
+                nextId = sortedIds[0]
+            }
+
+            context.registry.pushFocus(nextId)
+            return .ok(
+                message: "Focus moved to '\(nextId)'",
+                payload: ["focused": nextId]
+            )
         }
-
-        let currentId = context.registry.currentFocus
-        let nextId: String
-
-        if let current = currentId, let index = sortedIds.firstIndex(of: current) {
-            let nextIndex = (index + 1) % sortedIds.count
-            nextId = sortedIds[nextIndex]
-        } else {
-            nextId = sortedIds[0]
-        }
-
-        context.registry.pushFocus(nextId)
-        return .ok(
-            message: "Focus moved to '\(nextId)'",
-            payload: ["focused": nextId]
-        )
     }
 }
 
 // MARK: - Directional Focus Helpers
 
 /// Shared logic for directional focus navigation using the NeighborGraph.
+@MainActor
 private func navigateFocus(
     direction: String,
     neighborKeyPath: KeyPath<Neighbors, String?>,
@@ -105,7 +110,9 @@ public struct FocusLeftHandler: CommandHandler {
     public let name = "focus.left"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        navigateFocus(direction: "left", neighborKeyPath: \.left, context: context)
+        await MainActor.run {
+            navigateFocus(direction: "left", neighborKeyPath: \.left, context: context)
+        }
     }
 }
 
@@ -118,7 +125,9 @@ public struct FocusRightHandler: CommandHandler {
     public let name = "focus.right"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        navigateFocus(direction: "right", neighborKeyPath: \.right, context: context)
+        await MainActor.run {
+            navigateFocus(direction: "right", neighborKeyPath: \.right, context: context)
+        }
     }
 }
 
@@ -131,7 +140,9 @@ public struct FocusUpHandler: CommandHandler {
     public let name = "focus.up"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        navigateFocus(direction: "up", neighborKeyPath: \.above, context: context)
+        await MainActor.run {
+            navigateFocus(direction: "up", neighborKeyPath: \.above, context: context)
+        }
     }
 }
 
@@ -144,6 +155,8 @@ public struct FocusDownHandler: CommandHandler {
     public let name = "focus.down"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        navigateFocus(direction: "down", neighborKeyPath: \.below, context: context)
+        await MainActor.run {
+            navigateFocus(direction: "down", neighborKeyPath: \.below, context: context)
+        }
     }
 }

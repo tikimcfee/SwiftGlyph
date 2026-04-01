@@ -19,19 +19,21 @@ public struct SelectSetHandler: CommandHandler {
     public let name = "select.set"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: select.set <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: select.set <id>")
+            }
 
-        guard context.registry.entries[id] != nil else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard context.registry.entries[id] != nil else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        context.registry.focusStack = [id]
-        return .ok(
-            message: "Selection set to '\(id)'",
-            payload: ["selected": id]
-        )
+            context.registry.focusStack = [id]
+            return .ok(
+                message: "Selection set to '\(id)'",
+                payload: ["selected": id]
+            )
+        }
     }
 }
 
@@ -44,8 +46,10 @@ public struct SelectClearHandler: CommandHandler {
     public let name = "select.clear"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        context.registry.focusStack = []
-        return .ok(message: "Selection cleared")
+        await MainActor.run {
+            context.registry.focusStack = []
+            return .ok(message: "Selection cleared")
+        }
     }
 }
 
@@ -61,26 +65,28 @@ public struct SelectToggleHandler: CommandHandler {
     public let name = "select.toggle"
 
     public func execute(args: [String], context: CommandContext) async -> CommandResult {
-        guard let id = args.first else {
-            return .error("Usage: select.toggle <id>")
-        }
+        await MainActor.run {
+            guard let id = args.first else {
+                return .error("Usage: select.toggle <id>")
+            }
 
-        guard context.registry.entries[id] != nil else {
-            return .error("No entry found with id: \(id)")
-        }
+            guard context.registry.entries[id] != nil else {
+                return .error("No entry found with id: \(id)")
+            }
 
-        if context.registry.focusStack.contains(id) {
-            context.registry.focusStack.removeAll { $0 == id }
-            return .ok(
-                message: "Deselected '\(id)'",
-                payload: ["action": "deselected", "id": id]
-            )
-        } else {
-            context.registry.focusStack.append(id)
-            return .ok(
-                message: "Selected '\(id)'",
-                payload: ["action": "selected", "id": id]
-            )
+            if context.registry.focusStack.contains(id) {
+                context.registry.focusStack.removeAll { $0 == id }
+                return .ok(
+                    message: "Deselected '\(id)'",
+                    payload: ["action": "deselected", "id": id]
+                )
+            } else {
+                context.registry.focusStack.append(id)
+                return .ok(
+                    message: "Selected '\(id)'",
+                    payload: ["action": "selected", "id": id]
+                )
+            }
         }
     }
 }

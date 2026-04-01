@@ -40,23 +40,29 @@ public struct LayoutApplyHandler: CommandHandler {
         }
 
         let entryIds = Array(args.dropFirst())
-        let entries: [SceneEntry]
 
-        if entryIds.isEmpty {
-            entries = Array(context.registry.entries.values)
-        } else {
-            entries = entryIds.compactMap { context.registry.entries[$0] }
-            if entries.isEmpty {
-                return .error("No matching entries found for provided IDs")
+        let (entries, positionables) = await MainActor.run {
+            let entries: [SceneEntry]
+
+            if entryIds.isEmpty {
+                entries = Array(context.registry.entries.values)
+            } else {
+                entries = entryIds.compactMap { context.registry.entries[$0] }
             }
+
+            let positionables = entries.map { entry in
+                SimplePositionable(
+                    id: entry.id,
+                    groupId: entry.groupId,
+                    bounds: boundsForEntry(entry, context: context)
+                )
+            }
+
+            return (entries, positionables)
         }
 
-        let positionables = entries.map { entry in
-            SimplePositionable(
-                id: entry.id,
-                groupId: entry.groupId,
-                bounds: boundsForEntry(entry, context: context)
-            )
+        if !entryIds.isEmpty && entries.isEmpty {
+            return .error("No matching entries found for provided IDs")
         }
 
         let result = layoutManager.layout(entries: positionables)
